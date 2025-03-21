@@ -1,0 +1,273 @@
+import numpy as np
+import networkx as nx
+import matplotlib.pyplot as plt
+
+from networkx.drawing.nx_agraph import graphviz_layout
+
+# NOTE: I am not super worried about the performance of this code since it will not be used to compute the losses while training the model. That code exists in loss.py and is optimized for speed.
+
+# Name of the root node for the self
+root_label = "Alert"
+
+# Generic class to represent a taxonomy. Specific taxonomy classes can inherit from this class and add their own nodes and edges.
+class Taxonomy(nx.DiGraph):
+    """
+    Class to represent a taxonomy as a directed graph. 
+    """
+
+    def __init__(self, directed=True, **attr):
+
+        super().__init__(directed=directed, **attr)
+        self.root_label = root_label
+
+    def plot_taxonomy(self):
+        """
+        Plot the taxonomy using networkx and matplotlib.
+
+        returns:
+            None
+        """
+
+        # Plot the taxonomy.
+        pos = graphviz_layout(self, prog='dot')
+        nx.draw_networkx(self, with_labels=True, font_weight='bold', arrows=True, font_size=8, pos=pos)
+        plt.show()
+
+    def get_level_order_traversal(self):
+        """
+        Get the level order traversal of the taxonomy.
+
+        returns:
+            level_order_nodes: list of nodes in the taxonomy ordered by level order traversal.
+        """
+
+        # Do a level order traversal of the tree to get an ordering of the nodes.
+        level_order_nodes = nx.bfs_tree(self, source=self.root_label).nodes()
+        return level_order_nodes
+    
+    def get_parent_nodes(self):
+        """
+        Get the parent nodes for each node in the taxonomy, ordered by level order traversal.
+
+        returns:
+            parents: list of parent nodes for each node in the taxonomy, ordered by level order traversal.
+        """
+
+        # Get the parent nodes for each node in the taxonomy, ordered by level order traversal.
+        level_order_nodes = self.get_level_order_traversal()
+        parents = [list(self.predecessors(node)) for node in level_order_nodes]
+
+        # Make sure the root node has no parent
+        for idx in range(len(parents)):
+
+            # Make sure the graph is a tree.
+            assert len(parents[idx]) == 0 or len(parents[idx]) == 1, 'Number of parents for each node should be 0 (for root) or 1.'
+            
+            if len(parents[idx]) == 0: # Make an exception for the root node since it should have no parent.
+                parents[idx] = ''
+            else:
+                parents[idx] = parents[idx][0]
+
+        return parents
+    
+    def get_sibling_masks(self):
+        """
+        Get the sibling masks for each node in the taxonomy, ordered by level order traversal.
+
+        returns:
+            masks: list of numpy arrays of sibling mask indices for the taxonomy.
+        """
+
+        # NOTE: Sibling nodes are nodes that share the same parent node.
+
+        # Get a list of all parents for all nodes in the taxonomy, ordered by level order traversal.
+        parent_nodes = self.get_parent_nodes()
+
+        # Get the unique parents, sorted alphabetically
+        unique_parent_nodes = list(set(parent_nodes))
+        unique_parent_nodes.sort()
+
+        # Create a mask for sibling nodes.
+        masks = []
+        for parent in unique_parent_nodes:
+            masks.append(np.array(parent_nodes) == parent)
+
+        return masks
+    
+    def get_leaf_nodes(self):
+        """
+        Get the leaf nodes in the taxonomy.
+
+        returns:
+            leaf_nodes: list of leaf nodes in the taxonomy.
+        """
+
+        # Get the leaf nodes in the taxonomy
+        leaf_nodes = [x for x in self.nodes() if self.out_degree(x)==0 and self.in_degree(x)==1]
+        return leaf_nodes
+    
+    def get_hierarchical_one_hot_encoding(self, labels):
+
+        """
+        Get the hierarchical one-hot encoding for the labels.
+        
+        args:
+            labels: list of labels to encode (n_samples). Each label should be a leaf node in the taxonomy.
+
+        returns:
+            all_encodings: 2D numpy array of hierarchical one-hot encodings (n_samples, n_nodes).
+        """
+        leaf_nodes = self.get_leaf_nodes()
+        level_order_nodes = self.get_level_order_traversal()
+
+        # Assert that all labels are one of the leaf nodes of the taxonomy.
+        for label in labels:
+            assert label in leaf_nodes, f'Label {label} is not a leaf node in the taxonomy.'
+
+        # Array to store all the label encodings
+        all_encodings = np.zeros([len(labels), len(level_order_nodes)])
+
+        # Loop through all the labels 
+        for i, label in enumerate(labels):
+            
+            # Get the path from the root to the label. Shortest path is guaranteed to be unique.
+            path = nx.shortest_path(self, source=root_label, target=label)
+
+            # Loop through all the nodes in the the path from the root to the leaf label.
+            for node in path:
+                
+                # Get the index of the node in the level order traversal.
+                idx = list(level_order_nodes).index(node)
+
+                # Encoding of the labels where true nodes are 1 and everything else is 0. Ordered by level order traversal.
+                all_encodings[i,idx] = 1
+
+        return all_encodings
+    
+    def get_paths(self, labels):
+        """
+        Get the paths from the root to the labels.
+
+        args:
+            labels: list of labels to compute paths for (n_samples). Each label should be a leaf node in the taxonomy.
+
+        returns:
+            paths: list of paths from the root to the labels.
+        """
+
+        encodings = self.get_hierarchical_one_hot_encoding(labels)
+        level_order_nodes = np.array(self.get_level_order_traversal())
+
+        paths = []
+        for i in range(encodings.shape[0]):
+            idx = np.where(encodings[i,:]==1)[0]
+            path = level_order_nodes[idx].tolist()
+            paths.append(path)  
+
+        return paths
+        
+    def get_class_probabilities(self, conditional_probabilities):
+        """
+        Get the class probabilities from the conditional probabilities.
+
+        args:
+            conditional_probabilities: 2D numpy array of conditional probabilities (n_samples, n_nodes).
+
+        returns:
+            class_probabilities: 2D numpy array of class probabilities (n_samples, n_nodes).
+        """
+
+        assert conditional_probabilities.shape[1] == len(self.nodes()), 'Number of nodes in the taxonomy should match the number of columns in the conditional probabilities.'
+
+        # TODO: This could probably be sped up. I am implementing the dumb version for now but we might want to optimize this, especially if we want to deploy since this will be used during inference.
+
+        # Conditional probabilities are the output of the model. We use those to compute the class probabilities.
+        class_probabilities = np.zeros(conditional_probabilities.shape)
+
+        # Get the leaf nodes for the taxonomy.
+        level_order_nodes = self.get_level_order_traversal()
+
+        for i, node in enumerate(level_order_nodes):
+            
+            # Skip the root node since its class probability should be equal to its conditional probability and both should be 1.
+            if i != 0: 
+            
+                # Get the path from the root to the another node in the taxonomy.
+                path = nx.shortest_path(self, source=root_label, target=node)
+
+                # Get the indices of the nodes in the path.
+                indices = [list(self.nodes()).index(node) for node in path]
+
+                # Multiply the conditional probabilities of the nodes in the path to get the class probability.
+                class_probabilities[:,i] = np.prod(conditional_probabilities[:,indices])
+
+        return class_probabilities
+
+class BTS_Taxonomy(Taxonomy):
+
+    def __init__(self, **attr):
+
+        super().__init__(**attr)
+        self.add_node(root_label)
+
+        # TODO: Decide on a taxonomy for ZTF/BTS
+
+class ORACLE_Taxonomy(Taxonomy):
+
+    def __init__(self, **attr):
+
+        super().__init__(**attr)
+        self.add_node(root_label)
+
+        # Level 1
+        level_1_nodes = ['Transient', 'Variable']
+        self.add_nodes_from(level_1_nodes)
+        self.add_edges_from([('Alert', level_1_node) for level_1_node in level_1_nodes])
+
+        # Level 2a nodes for Transients
+        level_2a_nodes = ['SN', 'Fast', 'Long']
+        self.add_nodes_from(level_2a_nodes)
+        self.add_edges_from([('Transient', level_2a_node) for level_2a_node in level_2a_nodes])
+
+        # Level 2b nodes for Transients
+        level_2b_nodes = ['Periodic', 'AGN']
+        self.add_nodes_from(level_2b_nodes)
+        self.add_edges_from([('Variable', level_2b_node) for level_2b_node in level_2b_nodes])
+
+        # Level 3a nodes for SN Transients
+        level_3a_nodes = ['SNIa', 'SNIb/c', 'SNIax', 'SNI91bg', 'SNII']
+        self.add_nodes_from(level_3a_nodes)
+        self.add_edges_from([('SN', level_3a_node) for level_3a_node in level_3a_nodes])
+
+        # Level 3b nodes for Fast events Transients
+        level_3b_nodes = ['KN', 'Dwarf Novae', 'uLens', 'M-dwarf Flare']
+        self.add_nodes_from(level_3b_nodes)
+        self.add_edges_from([('Fast', level_3b_node) for level_3b_node in level_3b_nodes])
+
+        # Level 3c nodes for Long events Transients
+        level_3c_nodes = ['SLSN', 'TDE', 'ILOT', 'CART', 'PISN']
+        self.add_nodes_from(level_3c_nodes)
+        self.add_edges_from([('Long', level_3c_node) for level_3c_node in level_3c_nodes])
+
+        # Level 3d nodes for periodic stellar events
+        level_3d_nodes = ['Cepheid', 'RR Lyrae', 'Delta Scuti', 'EB'] 
+        self.add_nodes_from(level_3d_nodes)
+        self.add_edges_from([('Periodic', level_3d_node) for level_3d_node in level_3d_nodes])
+
+if __name__=='__main__':
+
+    #<-- Example usage of the taxonomy class -->
+
+    # Create a taxonomy object
+    taxonomy = ORACLE_Taxonomy()
+
+    # Print the nodes after doing a level order traversal
+    print(taxonomy.get_level_order_traversal())
+    print(taxonomy.get_parent_nodes())
+    print(taxonomy.get_sibling_masks())
+    print(taxonomy.get_leaf_nodes())
+    print(taxonomy.get_hierarchical_one_hot_encoding(['SNIa', 'SNIb/c', 'SNIax', 'SNI91bg', 'SNII']))
+    print(taxonomy.get_paths(['SNIa', 'SNIb/c', 'SNIax', 'SNI91bg', 'SNII']))
+    print(taxonomy.get_class_probabilities(np.random.rand(10, len(taxonomy.nodes()))))
+
+    taxonomy.plot_taxonomy()

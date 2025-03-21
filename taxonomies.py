@@ -187,8 +187,8 @@ class Taxonomy(nx.DiGraph):
 
         # TODO: Implement this method. This will be used to get the conditional probabilities from the output of the model. Not took worried about performance for now.
 
-        pass
-        
+        raise NotImplementedError
+   
     def get_class_probabilities(self, conditional_probabilities):
         """
         Get the class probabilities from the conditional probabilities.

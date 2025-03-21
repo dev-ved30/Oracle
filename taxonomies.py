@@ -9,7 +9,7 @@ from networkx.drawing.nx_agraph import graphviz_layout
 # Name of the root node for the self
 root_label = "Alert"
 
-# Generic class to represent a taxonomy. Specific taxonomy classes can inherit from this class and add their own nodes and edges.
+# Generic class to represent a taxonomy. Specific taxonomy classes inherit from this class and add their own nodes and edges.
 class Taxonomy(nx.DiGraph):
     """
     Class to represent a taxonomy as a directed graph. 
@@ -90,7 +90,7 @@ class Taxonomy(nx.DiGraph):
         # Create a mask for sibling nodes.
         masks = []
         for parent in unique_parent_nodes:
-            masks.append(np.array(parent_nodes) == parent)
+            masks.append(np.where(np.array(parent_nodes) == parent, 1, 0))
 
         return masks
     
@@ -165,6 +165,29 @@ class Taxonomy(nx.DiGraph):
             paths.append(path)  
 
         return paths
+    
+    def get_depths(self):
+        """
+        Get the depths of the nodes in the taxonomy, ordered by level order traversal.
+
+        returns:
+            depths: list of depths of the nodes in the taxonomy, ordered by level order traversal.
+        """
+    
+        path_lengths = []
+        level_order_nodes = self.get_level_order_traversal()
+
+        # Compute the shortest paths from the root node to each of the other nodes in the tree.
+        for node in level_order_nodes:
+            path_lengths.append(len(nx.shortest_path(self, root_label, node)) - 1)
+
+        return np.array(path_lengths)
+    
+    def get_conditional_probabilities(self, nn_output):
+
+        # TODO: Implement this method. This will be used to get the conditional probabilities from the output of the model. Not took worried about performance for now.
+
+        pass
         
     def get_class_probabilities(self, conditional_probabilities):
         """

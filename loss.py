@@ -50,7 +50,7 @@ class WHXE_Loss(nn.Module):
 
         return class_weights
 
-    def forward(self, predicted, true, epsilon=1e-10):
+    def forward(self, logits, true, epsilon=1e-10):
 
         #TODO: This could also be sped up....potentially.
 
@@ -61,9 +61,9 @@ class WHXE_Loss(nn.Module):
         for mask in self.masks:
 
             mask = torch.from_numpy(mask)
-            
+
             # Get the e^logits
-            exps = torch.exp(predicted)
+            exps = torch.exp(logits)
 
             # Multiply (dot product) the e^logits with the mask to maintain just the e^logits values that belong to this mask. All other values will be zeros.
             masked_exps = torch.multiply(exps, mask)
@@ -75,20 +75,20 @@ class WHXE_Loss(nn.Module):
             softmax = masked_exps/masked_sums
 
             # (1 - mask) * y_pred gets the logits for all the values not in this mask and zeros out the values in the mask. Add those back so that we can repeat the process for other masks.
-            predicted =  softmax + ((1 - mask) * predicted)
-        
+            logits = softmax + ((1 - mask) * logits)
+
         # At this point we have the masked soft maxes i.e. the pseudo probabilities. We can take the log of these values
-        predicted = torch.log(predicted)
+        logits = torch.log(logits)
 
         # Weight them by the level at which the corresponding node appears in the hierarchy
-        predicted = predicted * self.lambda_term
+        logits = logits * self.lambda_term
 
         # Weight them by the class weight after using the target_probabilities as indicators. Then sum them up for each batch
-        v1 = torch.sum(class_weights * (predicted * true), dim=1)
+        v1 = torch.sum(class_weights * (logits * true), dim=1)
 
         # Finally, find the mean over all batches. Since we are taking logs of numbers <1 (the pseudo probabilities), we have to multiply by -1 to get a +ve loss value.
         v2 = -1 * torch.mean(v1)
-            
+
         return v2
 
 if __name__ == '__main__':
@@ -99,6 +99,8 @@ if __name__ == '__main__':
 
     # Compute the loss
     loss = WHXE_Loss(taxonomy)
-    print(loss(torch.rand(10, n_nodes), torch.rand(10, n_nodes))) 
+    true = taxonomy.get_hierarchical_one_hot_encoding(taxonomy.get_leaf_nodes())
+
+    print(loss(torch.from_numpy(true * 10**2), torch.from_numpy(true)))
 
 

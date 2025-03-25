@@ -1,3 +1,4 @@
+import torch
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -183,11 +184,30 @@ class Taxonomy(nx.DiGraph):
 
         return np.array(path_lengths)
     
-    def get_conditional_probabilities(self, nn_output):
+    def get_conditional_probabilities(self, logits, epsilon=1e-10):
 
-        # TODO: Implement this method. This will be used to get the conditional probabilities from the output of the model. Not took worried about performance for now.
+        masks = self.get_sibling_masks()
 
-        raise NotImplementedError
+        for mask in masks:
+            
+            mask = torch.from_numpy(mask)
+
+            # Get the e^logits
+            exps = torch.exp(logits)
+
+            # Multiply (dot product) the e^logits with the mask to maintain just the e^logits values that belong to this mask. All other values will be zeros.
+            masked_exps = torch.multiply(exps, mask)
+
+            # Find the sum of the e^logits values that belong to the mask. Do this for each element in the batch separately. Add a small value to avoid numerical problems with floating point numbers.
+            masked_sums = torch.sum(masked_exps, dim=1, keepdim=True) + epsilon
+
+            # Compute the softmax by dividing the e^logits with the sum (e^logits)
+            softmax = masked_exps/masked_sums
+
+            # (1 - mask) * y_pred gets the logits for all the values not in this mask and zeros out the values in the mask. Add those back so that we can repeat the process for other masks.
+            logits = softmax + ((1 - mask) * logits)
+
+        return logits
    
     def get_class_probabilities(self, conditional_probabilities):
         """
@@ -205,7 +225,7 @@ class Taxonomy(nx.DiGraph):
         # TODO: This could probably be sped up. I am implementing the dumb version for now but we might want to optimize this, especially if we want to deploy since this will be used during inference.
 
         # Conditional probabilities are the output of the model. We use those to compute the class probabilities.
-        class_probabilities = np.zeros(conditional_probabilities.shape)
+        class_probabilities = np.ones(conditional_probabilities.shape)
 
         # Get the leaf nodes for the taxonomy.
         level_order_nodes = self.get_level_order_traversal()
@@ -219,10 +239,10 @@ class Taxonomy(nx.DiGraph):
                 path = nx.shortest_path(self, source=root_label, target=node)
 
                 # Get the indices of the nodes in the path.
-                indices = [list(self.nodes()).index(node) for node in path]
+                indices = [list(self.nodes()).index(n) for n in path]
 
                 # Multiply the conditional probabilities of the nodes in the path to get the class probability.
-                class_probabilities[:,i] = np.prod(conditional_probabilities[:,indices])
+                class_probabilities[:,i] = np.prod(conditional_probabilities[:,indices], axis=1)
 
         return class_probabilities
 

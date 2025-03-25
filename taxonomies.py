@@ -321,6 +321,6 @@ if __name__=='__main__':
     print(taxonomy.get_hierarchical_one_hot_encoding(['SNIa', 'SNIb/c', 'SNIax', 'SNI91bg', 'SNII']))
     print(taxonomy.get_paths(['SNIa', 'SNIb/c', 'SNIax', 'SNI91bg', 'SNII']))
     print(taxonomy.get_class_probabilities(np.random.rand(10, len(taxonomy.nodes()))))
-    print(taxonomy.get_conditional_probabilities(np.random.rand(10, len(taxonomy.nodes()))))
+    print(taxonomy.get_conditional_probabilities(torch.from_numpy(np.random.rand(10, len(taxonomy.nodes())))))
 
     taxonomy.plot_taxonomy()

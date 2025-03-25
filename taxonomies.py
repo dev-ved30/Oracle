@@ -185,6 +185,15 @@ class Taxonomy(nx.DiGraph):
         return np.array(path_lengths)
     
     def get_conditional_probabilities(self, logits, epsilon=1e-10):
+        """
+        Get the conditional probabilities from the logits, after applying the softmax function to sets of sibling nodes.
+        
+        args:
+            logits: 2D torch tensor of logits (n_samples, n_nodes).
+            epsilon: small value to avoid numerical problems with floating point numbers.
+            
+        returns:
+            conditional_probabilities: 2D torch tensor of conditional probabilities (n_samples, n_nodes)."""
 
         masks = self.get_sibling_masks()
 
@@ -312,5 +321,6 @@ if __name__=='__main__':
     print(taxonomy.get_hierarchical_one_hot_encoding(['SNIa', 'SNIb/c', 'SNIax', 'SNI91bg', 'SNII']))
     print(taxonomy.get_paths(['SNIa', 'SNIb/c', 'SNIax', 'SNI91bg', 'SNII']))
     print(taxonomy.get_class_probabilities(np.random.rand(10, len(taxonomy.nodes()))))
+    print(taxonomy.get_conditional_probabilities(np.random.rand(10, len(taxonomy.nodes()))))
 
     taxonomy.plot_taxonomy()

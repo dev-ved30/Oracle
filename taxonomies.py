@@ -118,12 +118,11 @@ class Taxonomy(nx.DiGraph):
         returns:
             all_encodings: 2D numpy array of hierarchical one-hot encodings (n_samples, n_nodes).
         """
-        leaf_nodes = self.get_leaf_nodes()
         level_order_nodes = self.get_level_order_traversal()
 
-        # Assert that all labels are one of the leaf nodes of the taxonomy.
+        # Assert that all labels are one of the nodes in the taxonomy.
         for label in labels:
-            assert label in leaf_nodes, f'Label {label} is not a leaf node in the taxonomy.'
+            assert label in level_order_nodes, f'Label {label} is not a node in the taxonomy.'
 
         # Array to store all the label encodings
         all_encodings = np.zeros([len(labels), len(level_order_nodes)])
@@ -318,7 +317,7 @@ if __name__=='__main__':
     print(taxonomy.get_parent_nodes())
     print(taxonomy.get_sibling_masks())
     print(taxonomy.get_leaf_nodes())
-    print(taxonomy.get_hierarchical_one_hot_encoding(['SNIa', 'SNIb/c', 'SNIax', 'SNI91bg', 'SNII']))
+    print(taxonomy.get_hierarchical_one_hot_encoding(['SNIa', 'SNIb/c', 'SNIax', 'SNI91bg', 'SNII', 'SN']))
     print(taxonomy.get_paths(['SNIa', 'SNIb/c', 'SNIax', 'SNI91bg', 'SNII']))
     print(taxonomy.get_class_probabilities(np.random.rand(10, len(taxonomy.nodes()))))
     print(taxonomy.get_conditional_probabilities(torch.from_numpy(np.random.rand(10, len(taxonomy.nodes())))))

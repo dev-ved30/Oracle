@@ -1,0 +1,28 @@
+Metadata-Version: 2.4
+Name: oracle
+Version: 2.0.0
+Summary: A package for real time, hierarchical classification of LSST alerts
+Author: Ved Shah
+Description-Content-Type: text/markdown
+Requires-Dist: astropy==7.0.1
+Requires-Dist: graphviz==0.20.3
+Requires-Dist: matplotlib==3.10.1
+Requires-Dist: networkx==3.4.2
+Requires-Dist: numpy==2.2.4
+Requires-Dist: pandas==2.2.3
+Requires-Dist: polars==0.20.31
+Requires-Dist: scipy==1.15.2
+Requires-Dist: Jinja2==3.1.6
+Requires-Dist: datasets==3.5.0
+Requires-Dist: torch==2.6.0
+
+# Hierarchical-VT
+
+Basics to build real time, hierarchical, multi-modal(?) photometric classifier for ZTF using pre-trained vision transformers.
+
+## References:
+* VT Model - https://arxiv.org/abs/2502.20479
+* HXE Loss Function - https://arxiv.org/abs/1912.09393
+* WHXE Loss Function - https://arxiv.org/abs/2312.02266
+* ORACLE - https://arxiv.org/abs/2501.01496
+

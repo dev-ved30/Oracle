@@ -113,7 +113,7 @@ class Taxonomy(nx.DiGraph):
         Get the hierarchical one-hot encoding for the labels.
         
         args:
-            labels: list of labels to encode (n_samples). Each label should be a leaf node in the taxonomy.
+            labels: list of labels to encode (n_samples). 
 
         returns:
             all_encodings: 2D numpy array of hierarchical one-hot encodings (n_samples, n_nodes).

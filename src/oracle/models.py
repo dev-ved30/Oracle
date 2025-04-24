@@ -5,8 +5,9 @@ import pandas as pd
 import numpy as np
 
 from torchvision.models import swin_v2_b
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
-from taxonomies import Taxonomy, ORACLE_Taxonomy
+from oracle.taxonomies import Taxonomy, ORACLE_Taxonomy
 
 swin_v2_b_output_dim = 1000
 
@@ -85,6 +86,67 @@ class Multi_modal_classifier(Hierarchical_classifier):
     def forward(self, x):
         
         raise NotImplementedError
+    
+class ORACLE_1(Hierarchical_classifier):
+
+    def __init__(self, taxonomy: Taxonomy):
+
+        super(ORACLE_1, self).__init__(taxonomy)
+
+        self.latent_space_dim = 64
+        ts_feature_dim = 5
+        static_feature_dim = 18
+
+        # recurrent backbone
+        self.gru = nn.GRU(input_size=ts_feature_dim, hidden_size=100, num_layers=2, batch_first=True)
+
+        # post‐GRU dense on time‐series path
+        self.dense1 = nn.Linear(100, 100)
+
+        # dense on static path
+        self.dense2 = nn.Linear(static_feature_dim, 10)
+
+        # merge & head
+        self.dense3 = nn.Linear(100 + 10, 100)
+        self.dense4 = nn.Linear(100, self.latent_space_dim)
+
+        self.fc_out = nn.Linear(self.latent_space_dim, self.n_nodes)
+
+        self.tanh = nn.Tanh()
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+
+        x_ts = x['ts_data'] # (batch_size, seq_len, n_ts_features)
+        x_static = x['static_data'] # (batch_size, n_static_features)
+        lengths = x['lengths'] # (batch_size)
+
+        packed = pack_padded_sequence(x_ts, lengths, batch_first=True, enforce_sorted=False)
+
+        # Recurrent backbone
+        gru_out, hidden = self.gru(packed)
+        gru_out, _ = pad_packed_sequence(gru_out, batch_first=True)
+
+        # Take the last output of the GRU
+        gru_out = hidden[-1] # (batch_size, hidden_size)
+
+        # Post-GRU dense on time-series path
+        dense1 = self.dense1(gru_out)
+        dense1 = self.tanh(dense1)
+
+        # Dense on static path
+        dense2 = self.dense2(x_static)
+        dense2 = self.tanh(dense2)
+
+        # Merge & head
+        x = torch.cat((dense1, dense2), dim=1)
+        x = self.relu(x)
+        x = self.dense3(x)
+        x = self.relu(x)
+        x = self.dense4(x)
+        logits = self.fc_out(x)
+
+        return logits
 
 if __name__ == '__main__':
 
@@ -103,3 +165,5 @@ if __name__ == '__main__':
 
     print(model.get_conditional_probabilities_df(x))
     print(model.get_class_probabilities_df(x))
+
+    print(model.state_dict())

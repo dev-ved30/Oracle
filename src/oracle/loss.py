@@ -3,9 +3,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-from taxonomies import Taxonomy, ORACLE_Taxonomy
-
-
+from oracle.taxonomies import Taxonomy, ORACLE_Taxonomy
 
 # Implementation of Weighted Hierarchical Cross Entropy loss function by Villar et. al. 2023 (https://arxiv.org/abs/2312.02266) based on the Hierarchical Cross Entropy loss function by Bertinetto et. al. 2019 (https://arxiv.org/abs/1912.09393)
 class WHXE_Loss(nn.Module):

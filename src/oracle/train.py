@@ -1,21 +1,24 @@
 import torch
 import argparse
+from tqdm import tqdm
 
 from pathlib import Path    
+from torch.utils.data import DataLoader
 
-from loss import WHXE_Loss
-from taxonomies import ORACLE_Taxonomy, BTS_Taxonomy
-from models import Light_curve_classifier, Multi_modal_classifier
+from oracle.loss import WHXE_Loss
+from oracle.taxonomies import ORACLE_Taxonomy, BTS_Taxonomy
+from oracle.models import Light_curve_classifier, Multi_modal_classifier, ORACLE_1
+from oracle.datasets.ELAsTiCC import get_ELAsTiCC_dataset, ELAsTiCC_collate_fn, truncate_light_curves_fractionally
 
 # <----- Defaults for training the models ----->
 default_num_epochs = 10
-default_batch_size = 32
+default_batch_size = 256
 default_learning_rate = 1e-3
 default_alpha = 0.5
 default_model_dir = Path('./base_model')
 
 # <----- Config for the model ----->
-model_choices = ["LC", "MM"]
+model_choices = ["LC", "MM", "ORACLE_1"]
 default_model_type = "LC"
 config = {
     "layer1_neurons": 512,
@@ -26,11 +29,12 @@ config = {
 
 # <----- Config for the taxonomy ----->
 taxonomy_choices = ["ORACLE", "BTS"]
-default_taxonomy_type = "ORACLE"
+default_taxonomy_type = "BTS"
 
 
 # Switch device to GPU if available
-device = "cpu"
+#device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
+device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")
 torch.set_default_device(device)
 
@@ -64,15 +68,26 @@ def run_training_loop(args):
 
     # Assign the taxonomy based on the choice
     if taxonomy_choice == "ORACLE":
+
         taxonomy = ORACLE_Taxonomy()
-    elif taxonomy_choice == "BTS":
-        taxonomy = BTS_Taxonomy()
+        dataset = get_ELAsTiCC_dataset('test')
+        dataset = dataset.with_transform(truncate_light_curves_fractionally)
+        dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=ELAsTiCC_collate_fn, shuffle=True)
+
+    # elif taxonomy_choice == "BTS":
+
+    #     taxonomy = BTS_Taxonomy()
+    #     dataset = BTS_LC_Image_Dataset('data/BTS/bts_lc_images')
 
     # Assign the model based on the choice
     if model_choice == "LC":
         model = Light_curve_classifier(config, taxonomy)
     elif model_choice == "MM":
         model = Multi_modal_classifier(config, taxonomy)
+    elif model_choice == "ORACLE_1":
+        model = ORACLE_1(taxonomy)
+
+    model = model.to(device)
 
     # Assign the loss function and optimizer
     loss_fn = WHXE_Loss(taxonomy, alpha)
@@ -82,31 +97,39 @@ def run_training_loop(args):
     model_dir.mkdir(parents=True, exist_ok=True)      
 
 
-    # TODO: Initialize the dataloader here
-    data = torch.rand(10, 3, 256, 256)
-    labels = torch.rand(10, len(taxonomy.nodes))
-
     # Training loop
-    for i in range(num_epochs):
+    for epoch in range(num_epochs):
 
-        # Forward pass
-        logits = model(data)
-        loss = loss_fn(logits, labels)
+        print(f"Epoch {epoch+1}/{num_epochs} started")
 
-        # Backward pass
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+        # Loop over all the batches in the data set
+        for i, instance in enumerate(tqdm(dataloader)):
+
+            # Get the label encodings
+            label_encodings = torch.from_numpy(taxonomy.get_hierarchical_one_hot_encoding(instance['labels']))           
+
+            # Forward pass
+            logits = model(instance)
+            loss = loss_fn(logits, label_encodings)
+
+            # Backward pass
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
         # Training progress
-        print(f"Epoch {i+1}/{num_epochs}, Loss: {loss.item()}")
+        print(f"Loss: {loss.item()}\n=======")
 
-        # TODO: Add validation loop here
+        # TODO: Log the value of the loss on the training set
 
-        # TODO: Save the model
+        # TODO: Add validation loop here and log the value of the loss
 
+        # TODO: Save the model as checkpoint. We can load the best model based on the validation loss for inference.
+
+def main():
+    args = parse_args()
+    run_training_loop(args)
 
 if __name__=='__main__':
 
-    args = parse_args()
-    run_training_loop(args)
+    main()

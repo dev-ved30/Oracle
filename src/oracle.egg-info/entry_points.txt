@@ -1,0 +1,2 @@
+[console_scripts]
+oracle-train = oracle.train:main

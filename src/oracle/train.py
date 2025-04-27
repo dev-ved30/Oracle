@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from oracle.loss import WHXE_Loss
 from oracle.taxonomies import ORACLE_Taxonomy, BTS_Taxonomy
 from oracle.models import Light_curve_classifier, Multi_modal_classifier, ORACLE_1
-from oracle.datasets.ELAsTiCC import get_ELAsTiCC_dataset, ELAsTiCC_collate_fn, truncate_light_curves_fractionally
+from oracle.datasets.ELAsTiCC import get_ELAsTiCC_dataset, collate_ELAsTiCC_lc_data, truncate_lcs_fractionally
 
 # <----- Defaults for training the models ----->
 default_num_epochs = 10
@@ -71,8 +71,8 @@ def run_training_loop(args):
 
         taxonomy = ORACLE_Taxonomy()
         dataset = get_ELAsTiCC_dataset('test')
-        dataset = dataset.with_transform(truncate_light_curves_fractionally)
-        dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=ELAsTiCC_collate_fn, shuffle=True)
+        dataset = dataset.with_transform(truncate_lcs_fractionally)
+        dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=collate_ELAsTiCC_lc_data, shuffle=True)
 
     # elif taxonomy_choice == "BTS":
 

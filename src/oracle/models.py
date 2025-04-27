@@ -71,7 +71,8 @@ class Light_curve_classifier(Hierarchical_classifier):
     
     def forward(self, x):
         
-        transformer_output = self.swin(x)
+        
+        transformer_output = self.swin(x['reference_images'])
         logits = self.fc(transformer_output)
         return logits
     

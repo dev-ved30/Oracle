@@ -11,15 +11,14 @@ from datasets import load_dataset
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 
-from oracle.models import Light_curve_classifier
+from oracle.models import Lightcurve_image_classifier
 from oracle.taxonomies import ORACLE_Taxonomy
-from oracle.constants import ztf_filter_to_fid
-
+from oracle.constants import ztf_filters, ztf_alert_image_order, ztf_alert_image_dimension, ztf_filter_to_fid
 
 # <----- Hyperparameters for the model.....Unfortunately ----->
 marker_style = 'o'
-marker_size = 3
-linewidth = 0.5
+marker_size = 50
+linewidth = 0.75
 
 ZTF_passband_to_wavelengths = {
     'g': (400 + 552) / (2 * 1000),
@@ -41,17 +40,10 @@ ZTF_fid_to_color = {
 flag_value = -9
 
 
-from oracle.constants import ztf_filters, ztf_alert_image_order, ztf_alert_image_dimension
-
-
 images = ['g_reference', 'g_science', 'g_difference', 'r_reference', 'r_science', 'r_difference', 'i_reference', 'i_science', 'i_difference']
 time_dependent_feature_list = ['jd', 'magpsf', 'sigmapsf', 'fid']
 book_keeping_feature_list = ['ZTFID', 'bts_class']
 
-# Path to this file's directory
-here = Path(__file__).resolve().parent
-
-# Go up to the root, then into data/
 # Path to this file's directory
 here = Path(__file__).resolve().parent
 
@@ -113,17 +105,21 @@ def truncate_lcs_fractionally(examples, fraction=None):
         bands = np.array([ZTF_fid_to_wavelengths[b] for b in examples['fid'][i]]) # Convert the pass band label (ugrizY) to the mean wavelength of the filter
 
         all_bands.append(bands)
-    
+
+    # Add the fractions for the truncation. This is mainly for book-keeping
+    examples['fractions'] = fractions_array
+
+    # Add information about the mean wavelength for the pass bands
     examples['band'] = all_bands
 
     return examples
 
-def get_lc_plots(examples):
+def add_lc_plots(examples):
 
     # Get the number of samples
     N_samples = len(examples['ZTFID'])
 
-    plots_array = []
+    lc_plots_array = []
 
     for i in range(N_samples):
 
@@ -144,8 +140,8 @@ def get_lc_plots(examples):
         for fid in ZTF_fid_to_color.keys():
             
             idx = np.where(filters == fid)[0]
-            ax.errorbar(jd[idx], mag[idx], yerr=mag_err[idx], linewidth=3, color=ZTF_fid_to_color[fid])
-            ax.scatter(jd[idx], mag[idx], marker=marker_style, sizes=marker_sizes, color=ZTF_fid_to_color[fid])
+            ax.errorbar(jd[idx], mag[idx], yerr=mag_err[idx], linewidth=linewidth, color=ZTF_fid_to_color[fid])
+            ax.scatter(jd[idx], mag[idx], marker=marker_style, s=marker_size, color=ZTF_fid_to_color[fid])
 
         # Save the figure as PNG with the desired DPI
         dpi = 100  # Dots per inch (adjust as needed)
@@ -174,32 +170,27 @@ def get_lc_plots(examples):
         img_arr = np.permute_dims(img_arr, (2, 0, 1))
 
         # Add image array to the list
-        plots_array.append(img_arr)
+        lc_plots_array.append(img_arr)
         
         # Close the buffer
         buf.close()
 
-    return plots_array
+    # Add plots of the light curves
+    examples['lc_plots'] = lc_plots_array
 
-def get_postage_stamp_plots(examples):
+    return examples
+
+def add_postage_stamp_plots(examples):
 
     # Get the number of samples
     N_samples = len(examples['ZTFID'])
 
     img_length = ztf_alert_image_dimension[0]
-    plots_array = []
+    postage_plots_array = []
 
     for i in range(N_samples):
 
         canvas = np.zeros((256, 256)) * np.nan
-
-
-        # for j, f in enumerate(ztf_filters):
-
-        #     for k, img_type in enumerate(ztf_alert_image_order):
-
-        #         # get the image
-        #         canvas[(j)*img_length:(j+1)*img_length,(k)*img_length:(k+1)*img_length] = examples[f"{f}_{img_type}"][i]
 
         # Loop through all of the filters
         for j, f in enumerate(ztf_filters):
@@ -237,33 +228,22 @@ def get_postage_stamp_plots(examples):
         img_arr = np.permute_dims(img_arr, (2, 0, 1))
 
         # Add image array to the list
-        plots_array.append(img_arr)
+        postage_plots_array.append(img_arr)
         
         # Close the buffer
         buf.close()
 
-    return plots_array
-
-
-
-def add_fractionally_truncated_lc_plots(examples, fraction=None):
-
-    # Truncate LC's before building the plots
-    examples = truncate_lcs_fractionally(examples, fraction=None)
-
-    # Add plots of the light curve for the vision transformer
-    examples['plot'] = get_lc_plots(examples)
-
     # Add plots of the reference images in the g,r, and i bands. 
-    examples['reference_images'] = get_postage_stamp_plots(examples)
+    examples['reference_images'] = postage_plots_array
 
     return examples
-
 
 def get_BTS_dataset(split):
 
     # Load the whole dataset
     dataset = load_dataset("parquet", data_files=parquet_path, split='train')
+
+    # TODO: load the combined parquet file instead and then do the split
 
     # Only select the useful columns
     dataset = dataset.select_columns(time_dependent_feature_list+images+book_keeping_feature_list)
@@ -300,14 +280,13 @@ def collate_BTS_lc_data(batch, includes_plots=True):
         ztfids.append(b['ZTFID'])
 
         if includes_plots:
-            plots.append(b['plot'])
+            plots.append(b['lc_plots'])
             postage_image_data.append(b['reference_images'])
 
         
     ts_data = [torch.from_numpy(np.squeeze(x)) for x in ts_data]
     ts_data = pad_sequence(ts_data, batch_first=True, padding_value=flag_value)
 
-    
     d = {
         'ts_data':ts_data,
         'lengths':lengths,
@@ -318,7 +297,7 @@ def collate_BTS_lc_data(batch, includes_plots=True):
     if includes_plots:
         plots = torch.from_numpy(np.squeeze(plots))
         postage_image_data = torch.from_numpy(np.squeeze(postage_image_data))
-        d['plots'] = plots
+        d['lc_plots'] = plots
         d['reference_images'] = postage_image_data
 
     return d
@@ -326,9 +305,6 @@ def collate_BTS_lc_data(batch, includes_plots=True):
 def show_batch(images, labels, n=16):
     # Get the first n images
     images = images[:n]
-
-    # Unnormalize if needed (optional)
-    # images = images * 0.5 + 0.5
 
     # Create a grid of images (4x4)
     grid_size = int(n ** 0.5)
@@ -339,16 +315,14 @@ def show_batch(images, labels, n=16):
         label = labels[i]
         if img.shape[0] == 1:  # grayscale
             img = img.squeeze(0)
-            img = np.array(img,dtype=int)
-            ax.imshow(img, cmap='gray')
+            img = img.numpy().astype(int) 
+            ax.imshow(np.asarray(img,dtype=int, copy=True), cmap='gray')
         else:  # RGB
             img = img.permute(1, 2, 0)  # (C, H, W) -> (H, W, C)
-            img = np.array(img,dtype=int)
-            ax.imshow(img)
+            img = img.numpy().astype(int) 
+            ax.imshow(np.asarray(img,dtype=int, copy=True))
 
         ax.set_title(f"{label}", fontsize=8) 
-
-
 
     plt.tight_layout()
     plt.show()
@@ -357,37 +331,40 @@ def show_batch(images, labels, n=16):
 def main():
 
     dataset = get_BTS_dataset('test')
-    dataset = dataset.with_transform(add_fractionally_truncated_lc_plots)
-    dataloader = DataLoader(dataset, batch_size=16, collate_fn=collate_BTS_lc_data)
+
+    # Create a custom function with all the transforms
+    def custom_transforms_function(examples):
+
+        # Truncate LC's before building the plots
+        examples = truncate_lcs_fractionally(examples, fraction=None)
+
+        # Add plots of the light curve for the vision transformer
+        examples = add_lc_plots(examples)
+
+        # Add plots of the reference images in the g,r, and i bands. 
+        examples = add_postage_stamp_plots(examples)
+
+        return examples
+
+    dataset = dataset.with_transform(custom_transforms_function)
+    dataloader = DataLoader(dataset, batch_size=32, collate_fn=collate_BTS_lc_data)
 
     taxonomy = ORACLE_Taxonomy()
-    config = {
-        "layer1_neurons": 512,
-        "layer1_dropout": 0.3,
-        "layer2_neurons": 128,
-        "layer2_dropout": 0.2,
-    }
-    model_VT = Light_curve_classifier(config, taxonomy)
+    model_VT = Lightcurve_image_classifier(taxonomy)
     model_VT.eval()
 
     for batch in dataloader:
 
         logits = model_VT(batch)
-        print(model_VT.get_class_probabilities_df(batch))
+        print(model_VT.predict_class_probabilities_df(batch))
 
         print(list(batch.keys()))
-        
-
+        print(logits.shape)
         print(batch['ts_data'].shape)
         print(batch['reference_images'].shape)
-        print(batch['reference_images'])
+
         show_batch(batch['reference_images'], batch['labels'])
-
-        
-        # print(batch['static_data'].shape)
-        # print(batch['labels'])
-        # print('----------')
-
+        show_batch(batch['lc_plots'], batch['labels'])
         break
         
 

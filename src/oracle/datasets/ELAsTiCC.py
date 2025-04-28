@@ -4,14 +4,13 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 from PIL import Image
 from pathlib import Path
 from datasets import DatasetDict, load_dataset
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 
-from oracle.models import ORACLE_1, Light_curve_classifier
+from oracle.models import ORACLE_v1, Lightcurve_image_classifier
 from oracle.taxonomies import ORACLE_Taxonomy
 
 time_independent_feature_list = ['MWEBV', 'MWEBV_ERR', 'REDSHIFT_HELIO', 'REDSHIFT_HELIO_ERR', 'HOSTGAL_PHOTOZ', 'HOSTGAL_PHOTOZ_ERR', 'HOSTGAL_SPECZ', 'HOSTGAL_SPECZ_ERR', 'HOSTGAL_RA', 'HOSTGAL_DEC', 'HOSTGAL_SNSEP', 'HOSTGAL_ELLIPTICITY', 'HOSTGAL_MAG_u', 'HOSTGAL_MAG_g', 'HOSTGAL_MAG_r', 'HOSTGAL_MAG_i', 'HOSTGAL_MAG_z', 'HOSTGAL_MAG_Y']
@@ -26,8 +25,8 @@ parquet_path = str(here.parent.parent.parent / "data" / 'ELasTiCC' / 'complete.p
 
 # <----- Hyperparameters for the model.....Unfortunately ----->
 marker_style = 'o'
-marker_size = 3
-linewidth = 0.5
+marker_size = 50
+linewidth = 0.75
 
 # Mean wavelengths for the LSST pass bands in micrometers
 LSST_passband_to_wavelengths = {
@@ -103,12 +102,6 @@ def truncate_lcs_fractionally(examples, fraction=None):
         # Use the provided fraction
         fractions_array = np.array([fraction]*N_samples)
 
-    # Mask off any saturations
-    examples = mask_off_saturations(examples)
-
-    # Replace any missing values with a flag
-    examples = replace_missing_value_flags(examples)
-
     for i in range(N_samples):
 
         # Apply the fraction limit on the light curve
@@ -128,12 +121,12 @@ def truncate_lcs_fractionally(examples, fraction=None):
     
     return examples
 
-def get_lc_plots(examples):
+def add_lc_plots(examples):
 
     # Get the number of samples
     N_samples = len(examples['SNID'])
 
-    plots_array = []
+    lc_plots_array = []
 
     for i in range(N_samples):
 
@@ -141,8 +134,6 @@ def get_lc_plots(examples):
         flux_err = examples['FLUXCALERR'][i]
         jd = examples['MJD'][i]
         filters = examples['BAND'][i]
-
-        marker_sizes = np.ones_like(jd, dtype=float) * marker_size
 
         # Create a figure and axes
         fig, ax = plt.subplots(1, 1)
@@ -154,8 +145,8 @@ def get_lc_plots(examples):
         for wavelength in LSST_passband_wavelengths_to_color.keys():
             
             idx = np.where(filters == wavelength)[0]
-            ax.errorbar(jd[idx], flux[idx], yerr=flux_err[idx], linewidth=3, color=LSST_passband_wavelengths_to_color[wavelength])
-            ax.scatter(jd[idx], flux[idx], marker=marker_style, sizes=marker_sizes, color=LSST_passband_wavelengths_to_color[wavelength])
+            ax.errorbar(jd[idx], flux[idx], yerr=flux_err[idx], linewidth=linewidth, color=LSST_passband_wavelengths_to_color[wavelength])
+            ax.scatter(jd[idx], flux[idx], marker=marker_style, s=marker_size, color=LSST_passband_wavelengths_to_color[wavelength])
 
         # Save the figure as PNG with the desired DPI
         dpi = 100  # Dots per inch (adjust as needed)
@@ -183,20 +174,13 @@ def get_lc_plots(examples):
         img_arr = np.permute_dims(img_arr, (2, 0, 1))
 
         # Add image array to the list
-        plots_array.append(img_arr)
+        lc_plots_array.append(img_arr)
         
         # Close the buffer
         buf.close()
 
-    return plots_array
-
-def add_fractionally_truncated_lc_plots(examples, fraction=None):
-
-    # Truncate LC's before building the plots
-    examples = truncate_lcs_fractionally(examples, fraction=None)
-
-    # Add plots of the light curve for the vision transformer
-    examples['plot'] = get_lc_plots(examples)
+    # Add plots of the light curves
+    examples['lc_plots'] = lc_plots_array
 
     return examples
 
@@ -234,7 +218,7 @@ def collate_ELAsTiCC_lc_data(batch, includes_plots=True):
         snids.append(b['SNID'])
 
         if includes_plots:
-            plots.append(b['plot'])
+            plots.append(b['lc_plots'])
 
         
     ts_data = [torch.from_numpy(np.squeeze(x)) for x in ts_data]
@@ -252,7 +236,7 @@ def collate_ELAsTiCC_lc_data(batch, includes_plots=True):
 
     if includes_plots:
         plots = torch.from_numpy(np.squeeze(plots))
-        d['plots'] = plots
+        d['lc_plots'] = plots
 
     return d
 
@@ -285,11 +269,9 @@ def get_ELAsTiCC_dataset(split, parquet_path=parquet_path):
     return dataset
 
 def show_batch(images, labels, n=16):
+
     # Get the first n images
     images = images[:n]
-
-    # Unnormalize if needed (optional)
-    # images = images * 0.5 + 0.5
 
     # Create a grid of images (4x4)
     grid_size = int(n ** 0.5)
@@ -300,14 +282,14 @@ def show_batch(images, labels, n=16):
         label = labels[i]
         if img.shape[0] == 1:  # grayscale
             img = img.squeeze(0)
+            img = img.numpy().astype(int) 
             ax.imshow(img, cmap='gray')
         else:  # RGB
             img = img.permute(1, 2, 0)  # (C, H, W) -> (H, W, C)
+            img = img.numpy().astype(int) 
             ax.imshow(img)
 
         ax.set_title(f"{label}", fontsize=8) 
-
-
 
     plt.tight_layout()
     plt.show()
@@ -315,40 +297,50 @@ def show_batch(images, labels, n=16):
 def main():
 
     dataset = get_ELAsTiCC_dataset('train')
-    dataset = dataset.with_transform(add_fractionally_truncated_lc_plots)
+
+    # Create a custom function with all the transforms
+    def custom_transforms_function(examples):
+
+        # Mask off any saturations
+        examples = mask_off_saturations(examples)
+
+        # Replace any missing values with a flag
+        examples = replace_missing_value_flags(examples)
+
+        # Truncate LC's before building the plots
+        examples = truncate_lcs_fractionally(examples)
+
+        # Add plots of the light curve for the vision transformer
+        examples = add_lc_plots(examples)
+
+        return examples
+
+    dataset = dataset.with_transform(custom_transforms_function)
     dataloader = DataLoader(dataset, batch_size=32, collate_fn=collate_ELAsTiCC_lc_data, shuffle=True)
 
     taxonomy = ORACLE_Taxonomy()
-    model = ORACLE_1(taxonomy)
+    model = ORACLE_v1(taxonomy)
     model.eval()
 
-    config = {
-        "layer1_neurons": 512,
-        "layer1_dropout": 0.3,
-        "layer2_neurons": 128,
-        "layer2_dropout": 0.2,
-    }
-    model_VT = Light_curve_classifier(config, taxonomy)
+    model_VT = Lightcurve_image_classifier(taxonomy)
     model_VT.eval()
 
     for batch in dataloader:
 
-        logits = model(batch)
-        print(logits.shape)
-
-        print(model.get_class_probabilities_df(batch))
-        print(model_VT.get_class_probabilities_df(batch))
-
         print(list(batch.keys()))
-        print(batch['plots'].shape)
+
+        logits = model(batch)
+        
+        print(model.predict_class_probabilities_df(batch))
+        print(model_VT.predict_class_probabilities_df(batch))
+
+        print(logits.shape)
+        print(batch['lc_plots'].shape)
         print(batch['ts_data'].shape)
         print(batch['static_data'].shape)
         print(batch['labels'])
 
-        print('----------')
-
-        show_batch(batch['plots'], batch['labels'])
-
+        show_batch(batch['lc_plots'], batch['labels'])
         break
 
 if __name__ == '__main__':

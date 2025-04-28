@@ -38,7 +38,7 @@ def main(argv=None):
 
     data_df = pd.read_csv(data_csv_path)
     labels_df = pd.read_csv(labels_csv_path)
-    images = np.load(images_np_path)
+    images = np.load(images_np_path, mmap_mode='r')
 
     unique_data_id = np.unique(data_df['objectId'])
     id_with_labels = labels_df['ZTFID'].unique()

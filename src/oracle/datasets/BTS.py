@@ -106,9 +106,6 @@ def truncate_lcs_fractionally(examples, fraction=None):
 
         all_bands.append(bands)
 
-    # Add the fractions for the truncation. This is mainly for book-keeping
-    examples['fractions'] = fractions_array
-
     # Add information about the mean wavelength for the pass bands
     examples['band'] = all_bands
 
@@ -291,7 +288,7 @@ def collate_BTS_lc_data(batch, includes_plots=True):
         'ts_data':ts_data,
         'lengths':lengths,
         'labels':labels,
-        'SNID':ztfids
+        'ZTFID':ztfids
     }
 
     if includes_plots:

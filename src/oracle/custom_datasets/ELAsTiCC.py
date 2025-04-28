@@ -10,8 +10,9 @@ from datasets import DatasetDict, load_dataset
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 
-from oracle.models import ORACLE_v1, Lightcurve_image_classifier
+from oracle.models import ORACLE1, ORACLE2_lite_swin
 from oracle.taxonomies import ORACLE_Taxonomy
+from oracle.constants import ELAsTiCC_to_Astrophysical_mappings
 
 time_independent_feature_list = ['MWEBV', 'MWEBV_ERR', 'REDSHIFT_HELIO', 'REDSHIFT_HELIO_ERR', 'HOSTGAL_PHOTOZ', 'HOSTGAL_PHOTOZ_ERR', 'HOSTGAL_SPECZ', 'HOSTGAL_SPECZ_ERR', 'HOSTGAL_RA', 'HOSTGAL_DEC', 'HOSTGAL_SNSEP', 'HOSTGAL_ELLIPTICITY', 'HOSTGAL_MAG_u', 'HOSTGAL_MAG_g', 'HOSTGAL_MAG_r', 'HOSTGAL_MAG_i', 'HOSTGAL_MAG_z', 'HOSTGAL_MAG_Y']
 time_dependent_feature_list = ['MJD', 'PHOTFLAG', 'FLUXCAL', 'FLUXCALERR', 'BAND']
@@ -184,6 +185,17 @@ def add_lc_plots(examples):
 
     return examples
 
+def replace_labels(examples, mapper: dict):
+
+    # Get the number of samples
+    N_samples = len(examples['SNID'])
+
+    for i in range(N_samples):
+
+        examples['ELASTICC_class'][i] = mapper[examples['ELASTICC_class'][i]]
+
+    return examples
+
 def collate_ELAsTiCC_lc_data(batch, includes_plots=True):
 
     ts_data = []
@@ -313,16 +325,19 @@ def main():
         # Add plots of the light curve for the vision transformer
         examples = add_lc_plots(examples)
 
+        # Convert the labels from ELAsTiCC labels to astrophysically meaningful labels
+        examples = replace_labels(examples, ELAsTiCC_to_Astrophysical_mappings)
+
         return examples
 
     dataset = dataset.with_transform(custom_transforms_function)
     dataloader = DataLoader(dataset, batch_size=32, collate_fn=collate_ELAsTiCC_lc_data, shuffle=True)
 
     taxonomy = ORACLE_Taxonomy()
-    model = ORACLE_v1(taxonomy)
+    model = ORACLE1(taxonomy)
     model.eval()
 
-    model_VT = Lightcurve_image_classifier(taxonomy)
+    model_VT = ORACLE2_lite_swin(taxonomy)
     model_VT.eval()
 
     for batch in dataloader:

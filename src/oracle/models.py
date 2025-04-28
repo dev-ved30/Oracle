@@ -6,6 +6,7 @@ import numpy as np
 
 from torchvision.models import swin_v2_b
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
+from transformers import Swinv2Model
 
 from oracle.taxonomies import Taxonomy, ORACLE_Taxonomy
 
@@ -20,79 +21,95 @@ class Hierarchical_classifier(nn.Module):
         self.taxonomy = taxonomy
         self.n_nodes = len(taxonomy.get_level_order_traversal())
 
-    def get_conditional_probabilities(self, x):
+    def predict_conditional_probabilities(self, batch):
         
-        logits = self.forward(x)
+        logits = self.forward(batch)
         conditional_probabilities = self.taxonomy.get_conditional_probabilities(logits).detach().numpy()
         return conditional_probabilities
 
-    def get_class_probabilities(self, x):
+    def predict_class_probabilities(self, batch):
 
-        conditional_probabilities = self.get_conditional_probabilities(x)
+        conditional_probabilities = self.predict_conditional_probabilities(batch)
         class_probabilities = self.taxonomy.get_class_probabilities(conditional_probabilities)
         return class_probabilities
     
-    def get_conditional_probabilities_df(self, x):
+    def predict_conditional_probabilities_df(self, batch):
 
         level_order_nodes = self.taxonomy.get_level_order_traversal()
-        conditional_probabilities = self.get_conditional_probabilities(x)
+        conditional_probabilities = self.predict_conditional_probabilities(batch)
         df = pd.DataFrame(conditional_probabilities, columns=level_order_nodes)
         return df
     
-    def get_class_probabilities_df(self, x):
+    def predict_class_probabilities_df(self, batch):
 
         level_order_nodes = self.taxonomy.get_level_order_traversal()
-        class_probabilities = self.get_class_probabilities(x)
+        class_probabilities = self.predict_class_probabilities(batch)
         df = pd.DataFrame(class_probabilities, columns=level_order_nodes)
         return df
     
 # TODO: Come up with a catchier name for this class.
     
 # Base version of the classifier which only uses the Light curve image
-class Light_curve_classifier(Hierarchical_classifier):
+class ORACLE2_lite_swin(Hierarchical_classifier):
         
-    def __init__(self, config, taxonomy: Taxonomy):
+    def __init__(self, taxonomy: Taxonomy):
 
-        super(Light_curve_classifier, self).__init__(taxonomy)
+        super(ORACLE2_lite_swin, self).__init__(taxonomy)
 
         # TODO: Think about what weights we want to initialize the transformer with.
-        self.swin = swin_v2_b()
+        self.swin = Swinv2Model.from_pretrained("microsoft/swinv2-tiny-patch4-window8-256", num_labels=0)
 
         # Additional layers for classification
         self.fc = nn.Sequential(
-            nn.Linear(swin_v2_b_output_dim, config['layer1_neurons']),
+            nn.Linear(768, 512),
             nn.ReLU(True),
-            nn.Dropout(config['layer1_dropout']),
-            nn.Linear(config['layer1_neurons'], config['layer2_neurons']),
+            nn.Dropout(0.3),
+            nn.Linear(512, 256),
             nn.ReLU(True),
-            nn.Dropout(config['layer2_dropout']),
-            nn.Linear(config['layer2_neurons'], self.n_nodes),
+            nn.Dropout(0.3),
+            nn.Linear(256, 128),
+            nn.ReLU(True),
+            nn.Dropout(0.3),
+            nn.Linear(128, 64),
+            nn.ReLU(True),
+            nn.Dropout(0.3),
+            nn.Linear(64, self.n_nodes),
         )
     
-    def forward(self, x):
+    def forward(self, batch):
         
-        
-        transformer_output = self.swin(x['reference_images'])
+        transformer_output = self.swin(batch['lc_plots'])
+        transformer_output = transformer_output.last_hidden_state[:, -1, :] 
+
         logits = self.fc(transformer_output)
         return logits
+
+# Base version of the classifier which only uses the Light curve image
+class ORACLE2_lite_chronos(Hierarchical_classifier):
+        
+    def __init__(self, taxonomy: Taxonomy):
+
+        raise NotImplementedError
+    
+
     
 # TODO: Think about multi modal implementation.
-class Multi_modal_classifier(Hierarchical_classifier):
+class ORACLE2_pro_swin(Hierarchical_classifier):
 
     def __init__(self, config, taxonomy: Taxonomy):
 
-        super(Multi_modal_classifier, self).__init__(taxonomy)
+        super(ORACLE2_pro_swin, self).__init__(taxonomy)
 
 
-    def forward(self, x):
+    def forward(self, batch):
         
         raise NotImplementedError
     
-class ORACLE_1(Hierarchical_classifier):
+class ORACLE1(Hierarchical_classifier):
 
     def __init__(self, taxonomy: Taxonomy):
 
-        super(ORACLE_1, self).__init__(taxonomy)
+        super(ORACLE1, self).__init__(taxonomy)
 
         self.latent_space_dim = 64
         ts_feature_dim = 5
@@ -116,11 +133,11 @@ class ORACLE_1(Hierarchical_classifier):
         self.tanh = nn.Tanh()
         self.relu = nn.ReLU()
 
-    def forward(self, x):
+    def forward(self, batch):
 
-        x_ts = x['ts_data'] # (batch_size, seq_len, n_ts_features)
-        x_static = x['static_data'] # (batch_size, n_static_features)
-        lengths = x['lengths'] # (batch_size)
+        x_ts = batch['ts_data'] # (batch_size, seq_len, n_ts_features)
+        x_static = batch['static_data'] # (batch_size, n_static_features)
+        lengths = batch['lengths'] # (batch_size)
 
         packed = pack_padded_sequence(x_ts, lengths, batch_first=True, enforce_sorted=False)
 
@@ -140,14 +157,19 @@ class ORACLE_1(Hierarchical_classifier):
         dense2 = self.tanh(dense2)
 
         # Merge & head
-        x = torch.cat((dense1, dense2), dim=1)
-        x = self.relu(x)
-        x = self.dense3(x)
-        x = self.relu(x)
-        x = self.dense4(x)
-        logits = self.fc_out(x)
+        batch = torch.cat((dense1, dense2), dim=1)
+        batch = self.relu(batch)
+        batch = self.dense3(batch)
+        batch = self.relu(batch)
+        batch = self.dense4(batch)
+        logits = self.fc_out(batch)
 
         return logits
+
+class ORACLE1_lite(Hierarchical_classifier):
+
+    def __init__(self, taxonomy: Taxonomy):
+        raise NotImplementedError
 
 if __name__ == '__main__':
 
@@ -159,12 +181,12 @@ if __name__ == '__main__':
         "layer2_dropout": 0.2,
     }
     
-    model = Light_curve_classifier(config, taxonomy)
+    model = ORACLE2_lite_swin(config, taxonomy)
     model.eval()
 
     x = torch.rand(10, 3, 256, 256)
 
-    print(model.get_conditional_probabilities_df(x))
-    print(model.get_class_probabilities_df(x))
+    print(model.predict_conditional_probabilities_df(x))
+    print(model.predict_class_probabilities_df(x))
 
     print(model.state_dict())

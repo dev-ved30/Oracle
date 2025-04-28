@@ -11,7 +11,7 @@ from datasets import load_dataset
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 
-from oracle.models import Lightcurve_image_classifier
+from oracle.models import ORACLE2_lite_swin
 from oracle.taxonomies import ORACLE_Taxonomy
 from oracle.constants import ztf_filters, ztf_alert_image_order, ztf_alert_image_dimension, ztf_filter_to_fid
 
@@ -347,7 +347,7 @@ def main():
     dataloader = DataLoader(dataset, batch_size=32, collate_fn=collate_BTS_lc_data)
 
     taxonomy = ORACLE_Taxonomy()
-    model_VT = Lightcurve_image_classifier(taxonomy)
+    model_VT = ORACLE2_lite_swin(taxonomy)
     model_VT.eval()
 
     for batch in dataloader:

@@ -7,30 +7,20 @@ from torch.utils.data import DataLoader
 
 from oracle.loss import WHXE_Loss
 from oracle.taxonomies import ORACLE_Taxonomy, BTS_Taxonomy
-from oracle.models import Light_curve_classifier, Multi_modal_classifier, ORACLE_1
-from oracle.datasets.ELAsTiCC import get_ELAsTiCC_dataset, collate_ELAsTiCC_lc_data, truncate_lcs_fractionally
+from oracle.models import *
+from oracle.custom_datasets.ELAsTiCC import *
+#from oracle.datasets.BTS import *
 
 # <----- Defaults for training the models ----->
 default_num_epochs = 10
 default_batch_size = 256
 default_learning_rate = 1e-3
 default_alpha = 0.5
-default_model_dir = Path('./base_model')
+default_model_dir = Path('./models/test_model')
 
 # <----- Config for the model ----->
-model_choices = ["LC", "MM", "ORACLE_1"]
-default_model_type = "LC"
-config = {
-    "layer1_neurons": 512,
-    "layer1_dropout": 0.3,
-    "layer2_neurons": 128,
-    "layer2_dropout": 0.2,
-}
-
-# <----- Config for the taxonomy ----->
-taxonomy_choices = ["ORACLE", "BTS"]
-default_taxonomy_type = "BTS"
-
+model_choices = ["ORACLE1", "ORACLE1-lite", "ORACLE2_swin_LSST", "ORACLE2-lite_swin_LSST", "ORACLE2_swin_BTS", "ORACLE2-lite_swin_BTS", "ORACLE2-pro_swin_BTS"]
+default_model_type = "ORACLE1"
 
 # Switch device to GPU if available
 #device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
@@ -43,8 +33,7 @@ def parse_args():
     Get commandline options
     '''
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_type',choices=model_choices, default=default_model_type, help='Type of model to train.')
-    parser.add_argument('--taxonomy',choices=taxonomy_choices, default=default_taxonomy_type, help='Taxonomies for training the hierarchical model.')
+    parser.add_argument('--model',choices=model_choices, default=default_model_type, help='Type of model to train.')
     parser.add_argument('--num_epochs', type=int, default=default_num_epochs, help='Number of epochs to train the model for.')
     parser.add_argument('--batch_size', type=int, default=default_batch_size, help='Batch size used for training.')
     parser.add_argument('--lr', type=float, default=default_learning_rate, help='Learning rate used for training.')
@@ -62,30 +51,114 @@ def run_training_loop(args):
     lr = args.lr
     alpha = args.alpha
     model_dir = args.dir
+    model_choice = args.model
 
-    taxonomy_choice = args.taxonomy
-    model_choice = args.model_type
+    # Create the model directory if it does not exist   
+    model_dir.mkdir(parents=True, exist_ok=True)      
 
     # Assign the taxonomy based on the choice
-    if taxonomy_choice == "ORACLE":
+    if model_choice == "ORACLE1":
 
+        # Choose the taxonomy
         taxonomy = ORACLE_Taxonomy()
-        dataset = get_ELAsTiCC_dataset('test')
-        dataset = dataset.with_transform(truncate_lcs_fractionally)
+
+        # Choose the model
+        model = ORACLE1(taxonomy)
+
+        # Choose the dataset
+        dataset = get_ELAsTiCC_dataset('train')
+
+        # Create a custom function with all the transforms
+        def custom_transforms_function(examples):
+
+            # Mask off any saturations
+            examples = mask_off_saturations(examples)
+
+            # Replace any missing values with a flag
+            examples = replace_missing_value_flags(examples)
+
+            # Truncate LC's before building the plots
+            examples = truncate_lcs_fractionally(examples)
+
+            # Add plots of the light curve for the vision transformer
+            examples = add_lc_plots(examples)
+
+            # Convert the labels from ELAsTiCC labels to astrophysically meaningful labels
+            examples = replace_labels(examples, ELAsTiCC_to_Astrophysical_mappings)
+
+            return examples
+        
+        dataset = dataset.with_transform(custom_transforms_function)
         dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=collate_ELAsTiCC_lc_data, shuffle=True)
 
-    # elif taxonomy_choice == "BTS":
+    elif model_choice == "ORACLE1-lite":
 
-    #     taxonomy = BTS_Taxonomy()
-    #     dataset = BTS_LC_Image_Dataset('data/BTS/bts_lc_images')
+        # Choose the taxonomy
+        taxonomy = ORACLE_Taxonomy()
 
-    # Assign the model based on the choice
-    if model_choice == "LC":
-        model = Light_curve_classifier(config, taxonomy)
-    elif model_choice == "MM":
-        model = Multi_modal_classifier(config, taxonomy)
-    elif model_choice == "ORACLE_1":
-        model = ORACLE_1(taxonomy)
+        # Choose the model
+        model = ORACLE1_lite(taxonomy)
+        
+        # Choose the dataset
+        dataset = get_ELAsTiCC_dataset('train')
+
+        # Create a custom function with all the transforms
+        def custom_transforms_function(examples):
+
+            # Mask off any saturations
+            examples = mask_off_saturations(examples)
+
+            # Replace any missing values with a flag
+            examples = replace_missing_value_flags(examples)
+
+            # Truncate LC's before building the plots
+            examples = truncate_lcs_fractionally(examples)
+
+            # Add plots of the light curve for the vision transformer
+            examples = add_lc_plots(examples)
+
+            # Convert the labels from ELAsTiCC labels to astrophysically meaningful labels
+            examples = replace_labels(examples, ELAsTiCC_to_Astrophysical_mappings)
+
+            return examples
+        
+        dataset = dataset.with_transform(custom_transforms_function)
+        dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=collate_ELAsTiCC_lc_data, shuffle=True)
+        
+    elif model_choice == "ORACLE2-lite_swin_LSST":
+
+        # Choose the taxonomy
+        taxonomy = ORACLE_Taxonomy()
+
+        # Choose the model
+        model = ORACLE2_lite_swin(taxonomy)
+
+        # Choose the dataset
+        dataset = get_ELAsTiCC_dataset('train')
+
+        # Create a custom function with all the transforms
+        def custom_transforms_function(examples):
+
+            # Mask off any saturations
+            examples = mask_off_saturations(examples)
+
+            # Replace any missing values with a flag
+            examples = replace_missing_value_flags(examples)
+
+            # Truncate LC's before building the plots
+            examples = truncate_lcs_fractionally(examples)
+
+            # Add plots of the light curve for the vision transformer
+            examples = add_lc_plots(examples)
+
+            # Convert the labels from ELAsTiCC labels to astrophysical-ly meaningful labels
+            examples = replace_labels(examples, ELAsTiCC_to_Astrophysical_mappings)
+
+            return examples
+        
+        dataset = dataset.with_transform(custom_transforms_function)
+        dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=collate_ELAsTiCC_lc_data, shuffle=True)
+        
 
     model = model.to(device)
 
@@ -93,23 +166,19 @@ def run_training_loop(args):
     loss_fn = WHXE_Loss(taxonomy, alpha)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
-    # Create the model directory if it does not exist   
-    model_dir.mkdir(parents=True, exist_ok=True)      
-
-
     # Training loop
     for epoch in range(num_epochs):
 
         print(f"Epoch {epoch+1}/{num_epochs} started")
 
         # Loop over all the batches in the data set
-        for i, instance in enumerate(tqdm(dataloader)):
+        for i, batch in enumerate(tqdm(dataloader)):
 
             # Get the label encodings
-            label_encodings = torch.from_numpy(taxonomy.get_hierarchical_one_hot_encoding(instance['labels']))           
+            label_encodings = torch.from_numpy(taxonomy.get_hierarchical_one_hot_encoding(batch['labels']))           
 
             # Forward pass
-            logits = model(instance)
+            logits = model(batch)
             loss = loss_fn(logits, label_encodings)
 
             # Backward pass

@@ -8,10 +8,6 @@ from argparse import ArgumentParser
 
 from oracle.constants import ztf_filter_to_fid, ztf_filters, ztf_alert_image_order
 
-
-data_df = pd.read_csv('./data/BTS/train_cand_v11.csv')
-labels_df = pd.read_csv('./data/BTS/bts_labels.txt')
-
 def parse_args(argv=None):
     parser = ArgumentParser(
         prog='Csv2parquet',

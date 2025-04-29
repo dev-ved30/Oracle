@@ -183,7 +183,7 @@ def run_training_loop(args):
             batch = {k: v.to(device) if torch.is_tensor(v) else v for k, v in batch.items()}
 
             # Get the label encodings
-            label_encodings = torch.from_numpy(taxonomy.get_hierarchical_one_hot_encoding(batch['labels'], device=device))           
+            label_encodings = torch.from_numpy(taxonomy.get_hierarchical_one_hot_encoding(batch['labels'])).to(device=device)           
 
             # Forward pass
             logits = model(batch)

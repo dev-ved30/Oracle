@@ -58,6 +58,10 @@ class ORACLE2_lite_swin(Hierarchical_classifier):
         # TODO: Think about what weights we want to initialize the transformer with.
         self.swin = torch.hub.load("pytorch/vision", "swin_v2_t", weights="DEFAULT", progress=False)
 
+        # Make sure all parameters in Swin are trainable
+        for param in self.swin.parameters():
+            param.requires_grad = True
+
         # Additional layers for classification
         self.fc = nn.Sequential(
             nn.Linear(1000, 512),

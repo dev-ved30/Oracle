@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 
 from oracle.loss import WHXE_Loss
 from oracle.taxonomies import ORACLE_Taxonomy, BTS_Taxonomy
-from oracle.models import *
+from oracle.architectures import *
 from oracle.custom_datasets.ELAsTiCC import *
 #from oracle.datasets.BTS import *
 
@@ -166,6 +166,8 @@ def run_training_loop(args):
     loss_fn = WHXE_Loss(taxonomy, alpha)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
+    model.train()
+
     # Training loop
     for epoch in range(num_epochs):
 
@@ -193,7 +195,9 @@ def run_training_loop(args):
 
         # TODO: Add validation loop here and log the value of the loss
 
-        # TODO: Save the model as checkpoint. We can load the best model based on the validation loss for inference.
+        # TODO: Save the model. We can load the best model based on the validation loss for inference.
+        torch.save(model.state_dict(), f'{model_dir}/model_epoch{epoch+1}.pth')
+
 
 def main():
     args = parse_args()

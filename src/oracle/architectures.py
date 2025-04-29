@@ -6,7 +6,6 @@ import numpy as np
 
 from torchvision.models import swin_v2_b
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
-from transformers import Swinv2Model
 
 from oracle.taxonomies import Taxonomy, ORACLE_Taxonomy
 
@@ -57,11 +56,11 @@ class ORACLE2_lite_swin(Hierarchical_classifier):
         super(ORACLE2_lite_swin, self).__init__(taxonomy)
 
         # TODO: Think about what weights we want to initialize the transformer with.
-        self.swin = Swinv2Model.from_pretrained("microsoft/swinv2-tiny-patch4-window8-256", num_labels=0)
+        self.swin = torch.hub.load("pytorch/vision", "swin_v2_t", weights="DEFAULT", progress=False)
 
         # Additional layers for classification
         self.fc = nn.Sequential(
-            nn.Linear(768, 512),
+            nn.Linear(1000, 512),
             nn.ReLU(True),
             nn.Dropout(0.3),
             nn.Linear(512, 256),
@@ -78,10 +77,8 @@ class ORACLE2_lite_swin(Hierarchical_classifier):
     
     def forward(self, batch):
         
-        transformer_output = self.swin(batch['lc_plots'])
-        transformer_output = transformer_output.last_hidden_state[:, -1, :] 
-
-        logits = self.fc(transformer_output)
+        swin_output = self.swin(batch['lc_plots'])
+        logits = self.fc(swin_output)
         return logits
 
 # Base version of the classifier which only uses the Light curve image

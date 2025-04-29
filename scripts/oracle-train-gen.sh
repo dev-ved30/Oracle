@@ -11,6 +11,7 @@
 
 cd /projects/b1094/ved/code/Hierarchical-VT/
 module purge all
+conda init bash
 conda deactivate
 source activate oracle2
 

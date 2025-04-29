@@ -236,7 +236,7 @@ def collate_ELAsTiCC_lc_data(batch, includes_plots=True):
     ts_data = [torch.from_numpy(x) for x in ts_data]
     ts_data = pad_sequence(ts_data, batch_first=True, padding_value=flag_value)
 
-    static_data = torch.from_numpy(np.squeeze(static_data))
+    static_data = torch.from_numpy(np.array(static_data))
     
     d = {
         'ts_data':ts_data,
@@ -247,7 +247,7 @@ def collate_ELAsTiCC_lc_data(batch, includes_plots=True):
     }
 
     if includes_plots:
-        plots = torch.from_numpy(np.squeeze(plots))
+        plots = torch.from_numpy(np.array(plots))
         d['lc_plots'] = plots
 
     return d

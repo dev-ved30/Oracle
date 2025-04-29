@@ -263,8 +263,8 @@ def collate_BTS_lc_data(batch, includes_plots=True):
     }
 
     if includes_plots:
-        plots = torch.from_numpy(np.squeeze(plots))
-        postage_image_data = torch.from_numpy(np.squeeze(postage_image_data))
+        plots = torch.from_numpy(np.array(plots))
+        postage_image_data = torch.from_numpy(np.array(postage_image_data))
         d['lc_plots'] = plots
         d['reference_images'] = postage_image_data
 
@@ -282,8 +282,7 @@ def show_batch(images, labels, n=16):
         img = images[i]
         label = labels[i]
         img = img.permute(1, 2, 0).numpy().astype(float)   # (C, H, W) -> (H, W, C)
-        ax.imshow(img[:,:, :], vmin=0.01, vmax=0.5)
-
+        ax.imshow(img)
         ax.set_title(f"{label}", fontsize=8) 
 
     plt.tight_layout()
@@ -329,7 +328,7 @@ def main():
         print(batch['reference_images'].shape)
         print(batch['lc_plots'].shape)
 
-        show_batch(batch['reference_images'], batch['labels'])
+        #show_batch(batch['reference_images'], batch['labels'])
         show_batch(batch['lc_plots'], batch['labels'])
         break
         

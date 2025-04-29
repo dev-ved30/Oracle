@@ -10,6 +10,9 @@ from networkx.drawing.nx_agraph import graphviz_layout
 # Name of the root node for the self
 root_label = "Alert"
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+torch.set_default_device(device)
+
 # Generic class to represent a taxonomy. Specific taxonomy classes inherit from this class and add their own nodes and edges.
 class Taxonomy(nx.DiGraph):
     """
@@ -198,7 +201,7 @@ class Taxonomy(nx.DiGraph):
 
         for mask in masks:
             
-            mask = torch.from_numpy(mask)
+            mask = torch.from_numpy(mask).to(device=device)
 
             # Get the e^logits
             exps = torch.exp(logits)

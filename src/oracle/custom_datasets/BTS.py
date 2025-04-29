@@ -7,11 +7,11 @@ import matplotlib.pyplot as plt
 
 from PIL import Image
 from pathlib import Path
-from datasets import load_dataset
+from datasets import load_dataset, DatasetDict
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 
-from oracle.models import ORACLE2_lite_swin
+from oracle.architectures import ORACLE2_lite_swin
 from oracle.taxonomies import ORACLE_Taxonomy
 from oracle.constants import ztf_filters, ztf_alert_image_order, ztf_alert_image_dimension, ztf_filter_to_fid
 
@@ -48,7 +48,9 @@ book_keeping_feature_list = ['ZTFID', 'bts_class']
 here = Path(__file__).resolve().parent
 
 # Go up to the root, then into data/ and then get the parquet file
-parquet_path = str(here.parent.parent.parent / "data" / 'BTS' / 'val.parquet')
+train_parquet_path = str(here.parent.parent.parent / "data" / 'BTS' / 'train.parquet')
+test_parquet_path = str(here.parent.parent.parent / "data" / 'BTS' / 'test.parquet')
+val_parquet_path = str(here.parent.parent.parent / "data" / 'BTS' / 'val.parquet')
 
 def reconstruct_images(examples):
 
@@ -63,7 +65,7 @@ def reconstruct_images(examples):
                 img_data = examples[f"{f}_{img_type}"][i]
 
                 if img_data == None:
-                    examples[f"{f}_{img_type}"][i] = np.zeros(ztf_alert_image_dimension) * np.nan
+                    examples[f"{f}_{img_type}"][i] = np.zeros(ztf_alert_image_dimension)
                 else:
                     examples[f"{f}_{img_type}"][i] = np.reshape(img_data, ztf_alert_image_dimension)
 
@@ -81,9 +83,6 @@ def truncate_lcs_fractionally(examples, fraction=None):
     else:
         # Use the provided fraction
         fractions_array = np.array([fraction]*N_samples)
-
-    # Reconstruct the images
-    examples = reconstruct_images(examples)
 
     all_bands = []
 
@@ -187,49 +186,15 @@ def add_postage_stamp_plots(examples):
 
     for i in range(N_samples):
 
-        canvas = np.zeros((256, 256)) * np.nan
+        canvas = np.zeros((len(ztf_filters), img_length, img_length)) 
 
         # Loop through all of the filters
         for j, f in enumerate(ztf_filters):
-            canvas[:img_length,(j)*img_length:(j+1)*img_length] = examples[f"{f}_reference"][i]
-
-
-        # Create a figure and axes
-        fig, ax = plt.subplots(1, 1)
-
-        ax.imshow(canvas, cmap='viridis')
-
-        # Save the figure as PNG with the desired DPI
-        dpi = 100  # Dots per inch (adjust as needed)
-
-        # Set the figure size in inches
-        width_in = 2.56  # Desired width in inches (256 pixels / 100 dpi)
-        height_in = 2.56  # Desired height in inches (256 pixels / 100 dpi)
-
-        fig.set_size_inches(width_in, height_in)
-
-        ax.set_xticks([])
-        ax.set_yticks([])
-
-        plt.tight_layout()
-
-        # Write the plot data to a buffer
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png', dpi=dpi)
-        plt.close()
-
-        # Go to the start of the buffer and read into an image
-        buf.seek(0)
-        im = Image.open(buf).convert('RGB')
-        img_arr = np.array(im, dtype=np.float32)
-        img_arr = np.permute_dims(img_arr, (2, 0, 1))
+            canvas[j,:,:] = examples[f"{f}_reference"][i]
 
         # Add image array to the list
-        postage_plots_array.append(img_arr)
+        postage_plots_array.append(canvas)
         
-        # Close the buffer
-        buf.close()
-
     # Add plots of the reference images in the g,r, and i bands. 
     examples['reference_images'] = postage_plots_array
 
@@ -237,8 +202,14 @@ def add_postage_stamp_plots(examples):
 
 def get_BTS_dataset(split):
 
+    dataset_splits = DatasetDict({
+        'train': load_dataset("parquet", data_files=train_parquet_path, split='train'),
+        'validation': load_dataset("parquet", data_files=val_parquet_path, split='train'),
+        'test': load_dataset("parquet", data_files=test_parquet_path, split='train'),
+    })
+
     # Load the whole dataset
-    dataset = load_dataset("parquet", data_files=parquet_path, split='train')
+    dataset = dataset_splits[split]
 
     # TODO: load the combined parquet file instead and then do the split
 
@@ -280,8 +251,8 @@ def collate_BTS_lc_data(batch, includes_plots=True):
             plots.append(b['lc_plots'])
             postage_image_data.append(b['reference_images'])
 
-        
-    ts_data = [torch.from_numpy(np.squeeze(x)) for x in ts_data]
+    
+    ts_data = [torch.from_numpy(x) for x in ts_data]
     ts_data = pad_sequence(ts_data, batch_first=True, padding_value=flag_value)
 
     d = {
@@ -310,14 +281,8 @@ def show_batch(images, labels, n=16):
     for i, ax in enumerate(axes.flat):
         img = images[i]
         label = labels[i]
-        if img.shape[0] == 1:  # grayscale
-            img = img.squeeze(0)
-            img = img.numpy().astype(int) 
-            ax.imshow(np.asarray(img,dtype=int, copy=True), cmap='gray')
-        else:  # RGB
-            img = img.permute(1, 2, 0)  # (C, H, W) -> (H, W, C)
-            img = img.numpy().astype(int) 
-            ax.imshow(np.asarray(img,dtype=int, copy=True))
+        img = img.permute(1, 2, 0).numpy().astype(float)   # (C, H, W) -> (H, W, C)
+        ax.imshow(img[:,:, :], vmin=0.01, vmax=0.5)
 
         ax.set_title(f"{label}", fontsize=8) 
 
@@ -331,6 +296,9 @@ def main():
 
     # Create a custom function with all the transforms
     def custom_transforms_function(examples):
+
+        # Reconstruct the images
+        examples = reconstruct_images(examples)
 
         # Truncate LC's before building the plots
         examples = truncate_lcs_fractionally(examples, fraction=None)
@@ -359,6 +327,7 @@ def main():
         print(logits.shape)
         print(batch['ts_data'].shape)
         print(batch['reference_images'].shape)
+        print(batch['lc_plots'].shape)
 
         show_batch(batch['reference_images'], batch['labels'])
         show_batch(batch['lc_plots'], batch['labels'])

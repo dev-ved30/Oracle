@@ -10,7 +10,7 @@ from datasets import DatasetDict, load_dataset
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 
-from oracle.models import ORACLE1, ORACLE2_lite_swin
+from oracle.architectures import ORACLE1, ORACLE2_lite_swin
 from oracle.taxonomies import ORACLE_Taxonomy
 from oracle.constants import ELAsTiCC_to_Astrophysical_mappings
 
@@ -233,7 +233,7 @@ def collate_ELAsTiCC_lc_data(batch, includes_plots=True):
             plots.append(b['lc_plots'])
 
         
-    ts_data = [torch.from_numpy(np.squeeze(x)) for x in ts_data]
+    ts_data = [torch.from_numpy(x) for x in ts_data]
     ts_data = pad_sequence(ts_data, batch_first=True, padding_value=flag_value)
 
     static_data = torch.from_numpy(np.squeeze(static_data))

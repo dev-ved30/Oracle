@@ -5,6 +5,8 @@ import numpy as np
 
 from oracle.taxonomies import Taxonomy, ORACLE_Taxonomy
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
 # Implementation of Weighted Hierarchical Cross Entropy loss function by Villar et. al. 2023 (https://arxiv.org/abs/2312.02266) based on the Hierarchical Cross Entropy loss function by Bertinetto et. al. 2019 (https://arxiv.org/abs/1912.09393)
 class WHXE_Loss(nn.Module):
 
@@ -32,7 +34,7 @@ class WHXE_Loss(nn.Module):
         # Compute the secondary weight term, which emphasizes different levels of the tree. See paper for more details.
 
         # Lambda term of size (N_nodes), ordered in level order traversal
-        self.lambda_term = torch.from_numpy(np.exp(-self.alpha * self.depths))
+        self.lambda_term = torch.from_numpy(np.exp(-self.alpha * self.depths)).to(device=device)
 
     def get_class_weights(self, true, epsilon=1e-10):
         

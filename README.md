@@ -2,6 +2,14 @@
 
 Basics to build real time, hierarchical, multi-modal(?) photometric classifier for ZTF using pre-trained vision transformers.
 
+## Basic Setup:
+
+`conda create --name oracle2 python=3.11`
+
+`conda activate oracle2`
+
+`pip install -e .`
+
 ## References:
 * VT Model - https://arxiv.org/abs/2502.20479
 * HXE Loss Function - https://arxiv.org/abs/1912.09393

@@ -56,6 +56,9 @@ def run_training_loop(args):
     # Create the model directory if it does not exist   
     model_dir.mkdir(parents=True, exist_ok=True)      
 
+    # Keep generator on the CPU
+    generator = torch.Generator(device=device)
+
     # Assign the taxonomy based on the choice
     if model_choice == "ORACLE1":
 
@@ -89,7 +92,7 @@ def run_training_loop(args):
             return examples
         
         dataset = dataset.with_transform(custom_transforms_function)
-        dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=collate_ELAsTiCC_lc_data, shuffle=True, device=device)
+        dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=collate_ELAsTiCC_lc_data, shuffle=True, generator=generator)
 
     elif model_choice == "ORACLE1-lite":
 
@@ -123,7 +126,7 @@ def run_training_loop(args):
             return examples
         
         dataset = dataset.with_transform(custom_transforms_function)
-        dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=collate_ELAsTiCC_lc_data, shuffle=True, device=device)
+        dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=collate_ELAsTiCC_lc_data, shuffle=True, generator=generator)
         
     elif model_choice == "ORACLE2-lite_swin_LSST":
 
@@ -157,8 +160,9 @@ def run_training_loop(args):
             return examples
         
         dataset = dataset.with_transform(custom_transforms_function)
-        dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=collate_ELAsTiCC_lc_data, shuffle=True, device=device)
+        dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=collate_ELAsTiCC_lc_data, shuffle=True, generator=generator)
         
+
     model = model.to(device)
 
     # Assign the loss function and optimizer

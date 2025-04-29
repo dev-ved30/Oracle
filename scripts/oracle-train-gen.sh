@@ -14,6 +14,6 @@ module purge all
 conda deactivate
 source activate oracle2
 
-pip install -e .
+#pip install -e .
 
 oracle-train --model ORACLE2-lite_swin_LSST

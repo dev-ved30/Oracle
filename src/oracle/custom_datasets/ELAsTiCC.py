@@ -22,7 +22,7 @@ book_keeping_feature_list = ['SNID', 'ELASTICC_class']
 here = Path(__file__).resolve().parent
 
 # Go up to the root, then into data/ and then get the parquet file
-parquet_path = str(here.parent.parent.parent / "data" / 'ELasTiCC' / 'complete.parquet')
+parquet_path = str(here.parent.parent.parent / "data" / 'ELAsTiCC' / 'complete.parquet')
 
 # <----- Hyperparameters for the model.....Unfortunately ----->
 marker_style = 'o'

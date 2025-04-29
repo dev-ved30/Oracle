@@ -8,6 +8,9 @@
 #SBATCH --mem=90G
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=vedshah2029@u.northwestern.edu
+#SBATCH --output=oracle-train-gen.out
+#SBATCH --error=oracle-train-gen.err
+
 
 cd /projects/b1094/ved/code/Hierarchical-VT/
 module purge all

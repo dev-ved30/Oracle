@@ -186,14 +186,52 @@ def add_postage_stamp_plots(examples):
 
     for i in range(N_samples):
 
-        canvas = np.zeros((len(ztf_filters), img_length, img_length)) 
+        canvas = np.zeros((img_length, len(ztf_filters)*img_length)) 
 
         # Loop through all of the filters
         for j, f in enumerate(ztf_filters):
-            canvas[j,:,:] = examples[f"{f}_reference"][i]
+            canvas[:, j*img_length:(j+1)*img_length] = examples[f"{f}_reference"][i]
+
+        # Create a figure and axes
+        fig, ax = plt.subplots(1, 1)
+
+        # Remove all spines (black frame)
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+
+        # Save the figure as PNG with the desired DPI
+        dpi = 100  # Dots per inch (adjust as needed)
+
+        # Set the figure size in inches
+        width_in = 2.56  # Desired width in inches (256 pixels / 100 dpi)
+        height_in = 2.56  # Desired height in inches (256 pixels / 100 dpi)
+
+        fig.set_size_inches(width_in, height_in)
+
+        ax.imshow(canvas)
+
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+        plt.tight_layout()
+
+        # Write the plot data to a buffer
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', dpi=dpi)
+        plt.savefig('1.png')
+        plt.close()
+
+        # Go to the start of the buffer and read into an image
+        buf.seek(0)
+        im = Image.open(buf).convert('RGB')
+        im = np.array(im, dtype=np.float32)
+        im = np.permute_dims(im, (2, 0, 1))
 
         # Add image array to the list
-        postage_plots_array.append(canvas)
+        postage_plots_array.append(im)
+        
+        # Close the buffer
+        buf.close()
         
     # Add plots of the reference images in the g,r, and i bands. 
     examples['reference_images'] = postage_plots_array
@@ -281,7 +319,7 @@ def show_batch(images, labels, n=16):
     for i, ax in enumerate(axes.flat):
         img = images[i]
         label = labels[i]
-        img = img.permute(1, 2, 0).numpy().astype(float)   # (C, H, W) -> (H, W, C)
+        img = img.permute(1, 2, 0).numpy().astype(int)   # (C, H, W) -> (H, W, C)
         ax.imshow(img)
         ax.set_title(f"{label}", fontsize=8) 
 
@@ -328,7 +366,7 @@ def main():
         print(batch['reference_images'].shape)
         print(batch['lc_plots'].shape)
 
-        #show_batch(batch['reference_images'], batch['labels'])
+        show_batch(batch['reference_images'], batch['labels'])
         show_batch(batch['lc_plots'], batch['labels'])
         break
         

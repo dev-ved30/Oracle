@@ -9,7 +9,7 @@
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=vedshah2029@u.northwestern.edu
 #SBATCH --output=oracle-train-gen.out
-#SBATCH --error=oracle-train-gen.err
+#SBATCH --error=oracle-train-gen.out
 
 
 cd /projects/b1094/ved/code/Hierarchical-VT/

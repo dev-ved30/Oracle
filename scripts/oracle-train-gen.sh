@@ -2,7 +2,7 @@
 #SBATCH --account=p32795
 #SBATCH --partition=gengpu
 #SBATCH --gres=gpu:h100:1
-#SBATCH --time=3:00:00
+#SBATCH --time=15:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=5
 #SBATCH --mem=90G
@@ -20,4 +20,4 @@ source activate oracle2
 
 #pip install -e .
 
-oracle-train --model ORACLE1 --batch_size 1024
+oracle-train --model ORACLE1 --batch_size 1024 --num_epoch 100

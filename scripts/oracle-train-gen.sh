@@ -20,4 +20,4 @@ source activate oracle2
 
 #pip install -e .
 
-oracle-train --model ORACLE2-lite_swin_LSST
+oracle-train --model ORACLE1 --batch_size 1024

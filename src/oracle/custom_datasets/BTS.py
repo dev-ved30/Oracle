@@ -1,19 +1,33 @@
 import io
 import torch
 
-import numpy as np
+import polars as pl
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 
-from PIL import Image
 from pathlib import Path
-from datasets import load_dataset, DatasetDict
-from torch.utils.data import DataLoader
+from PIL import Image
+from tqdm import tqdm
 from torch.nn.utils.rnn import pad_sequence
 
-from oracle.architectures import ORACLE2_lite_swin
-from oracle.taxonomies import ORACLE_Taxonomy
-from oracle.constants import ztf_filters, ztf_alert_image_order, ztf_alert_image_dimension, ztf_filter_to_fid
+from oracle.constants import ztf_filters, ztf_alert_image_order, ztf_alert_image_dimension, ztf_filter_to_fid, BTS_to_Astrophysical_mappings
+
+# Path to this file's directory
+here = Path(__file__).resolve().parent
+
+# Go up to the root, then into data/ and then get the parquet file
+train_parquet_path = str(here.parent.parent.parent / "data" / 'BTS' / 'train.parquet')
+test_parquet_path = str(here.parent.parent.parent / "data" / 'BTS' / 'test.parquet')
+val_parquet_path = str(here.parent.parent.parent / "data" / 'BTS' / 'val.parquet')
+
+# <----- constant for the dataset ----->
+
+batch_size = 512
+
+img_height = 256
+img_width = 256
+n_channels = 3
 
 # <----- Hyperparameters for the model.....Unfortunately ----->
 marker_style = 'o'
@@ -37,116 +51,143 @@ ZTF_fid_to_color = {
     ztf_filter_to_fid['i']: np.array((0, 0, 255))/255,
 }
 
+ZTF_wavelength_to_color = {
+    ZTF_fid_to_wavelengths[1]: np.array((255, 0, 0))/255,
+    ZTF_fid_to_wavelengths[2]: np.array((0, 255, 0))/255,
+    ZTF_fid_to_wavelengths[3]: np.array((0, 0, 255))/255,
+}
+
 flag_value = -9
 
-
-images = ['g_reference', 'g_science', 'g_difference', 'r_reference', 'r_science', 'r_difference', 'i_reference', 'i_science', 'i_difference']
+images_list = ['g_reference', 'g_science', 'g_difference', 'r_reference', 'r_science', 'r_difference', 'i_reference', 'i_science', 'i_difference']
 time_dependent_feature_list = ['jd', 'magpsf', 'sigmapsf', 'fid']
 book_keeping_feature_list = ['ZTFID', 'bts_class']
 
-# Path to this file's directory
-here = Path(__file__).resolve().parent
+n_images = len(images_list)
+n_ts_features = len(time_dependent_feature_list)
+n_book_keeping_features = len(book_keeping_feature_list)
 
-# Go up to the root, then into data/ and then get the parquet file
-train_parquet_path = str(here.parent.parent.parent / "data" / 'BTS' / 'train.parquet')
-test_parquet_path = str(here.parent.parent.parent / "data" / 'BTS' / 'test.parquet')
-val_parquet_path = str(here.parent.parent.parent / "data" / 'BTS' / 'val.parquet')
+def truncate_light_curve_fractionally(x_ts, f=None):
 
-def reconstruct_images(examples):
+    if f == None:
+        # Get a random fraction between 0.1 and 1
+        f = np.random.uniform(0.1, 1.0)
+    
+    original_obs_count = x_ts.shape[0]
 
-    # Get the number of samples
-    N_samples = len(examples['ZTFID'])
+    # Find the new length of the light curve
+    new_obs_count = int(original_obs_count * f)
+    if new_obs_count < 1:
+        new_obs_count = 1
 
-    for i in range(N_samples):
+    # Truncate the light curve
+    x_ts = x_ts[:new_obs_count, :]
 
+    return x_ts
+
+
+class BTS_LC_Dataset(torch.utils.data.Dataset):
+
+    def __init__(self, parquet_file_path, include_lc_plots=False, transform=None):
+        super(BTS_LC_Dataset, self).__init__()
+
+        # Columns to be read from the parquet file
+        self.columns = time_dependent_feature_list + images_list + book_keeping_feature_list
+        self.parquet_file_path = parquet_file_path
+        self.parquet_df = pl.read_parquet(self.parquet_file_path, columns=self.columns)
+
+        self.transform = transform
+        self.include_lc_plots = include_lc_plots
+
+        self.clean_up_dataset()
+               
+    def __len__(self):
+
+        return len(self.parquet_df)
+
+    def __getitem__(self, index):
+
+        row = self.parquet_df.row(index, named=True) 
+
+        ztfid = row['ZTFID']
+        BTS_class = row['bts_class']
+        astrophysical_class = BTS_to_Astrophysical_mappings[BTS_class]
+
+        lc_length = len(row['jd'])
+
+        time_series_data = np.zeros((lc_length, n_ts_features), dtype=np.float32)
+        for i, feature in enumerate(time_dependent_feature_list):
+            time_series_data[:,i] = np.array(row[feature], dtype=np.float32)
+        time_series_data = torch.from_numpy(time_series_data)
+
+        if self.transform != None:
+            time_series_data = self.transform(time_series_data)
+
+        postage_stamps = {}
         for f in ztf_filters:
             for img_type in ztf_alert_image_order:
 
-                img_data = examples[f"{f}_{img_type}"][i]
+                img_data = row[f"{f}_{img_type}"]
 
                 if img_data == None:
-                    examples[f"{f}_{img_type}"][i] = np.zeros(ztf_alert_image_dimension)
+                    postage_stamps[f"{f}_{img_type}"] = np.zeros(ztf_alert_image_dimension)
                 else:
-                    examples[f"{f}_{img_type}"][i] = np.reshape(img_data, ztf_alert_image_dimension)
+                    postage_stamps[f"{f}_{img_type}"] = np.reshape(img_data, ztf_alert_image_dimension)
+        postage_stamps = self.get_postage_stamp_plot(postage_stamps)
 
-    return examples
+        dictionary = {
+            'ts': time_series_data,
+            'postage_stamp': postage_stamps,
+            'label': astrophysical_class,
+            'ZTFID': ztfid,
+        }
 
-def truncate_lcs_fractionally(examples, fraction=None):
-
-    # Get the number of samples
-    N_samples = len(examples['ZTFID'])
-
-    # Fraction of their original length to augment the light curves to
-    if fraction is None:
-        # Randomly sample a fraction between 0.1 and 1.0
-        fractions_array = np.random.uniform(0.1, 1.0, N_samples)
-    else:
-        # Use the provided fraction
-        fractions_array = np.array([fraction]*N_samples)
-
-    all_bands = []
-
-    for i in range(N_samples):
-
-        # Apply the fraction limit on the light curve
-        original_obs_count = len(examples['jd'][i])
-
-        # Find the new length of the light curve
-        new_obs_count = int(original_obs_count * fractions_array[i])
-        if new_obs_count < 1:
-            new_obs_count = 1
+        if self.include_lc_plots:
+            light_curve_plot = self.get_lc_plots(row)
+            dictionary['lc_plot'] = light_curve_plot
         
-        # Truncate the light curve to its new length and apply other transforms
-        examples['jd'][i] = np.array(examples['jd'][i])[:new_obs_count] - examples['jd'][i][0] # Subtract out time of first observation (could be a detection or a non detection)
-        examples['magpsf'][i] =  np.array(examples['magpsf'][i])[:new_obs_count] 
-        examples['sigmapsf'][i] = np.array(examples['sigmapsf'][i])[:new_obs_count]
-        examples['fid'][i] =  np.array(examples['fid'][i])[:new_obs_count]
-        bands = np.array([ZTF_fid_to_wavelengths[b] for b in examples['fid'][i]]) # Convert the pass band label (ugrizY) to the mean wavelength of the filter
+        return dictionary
+    
+    def clean_up_dataset(self):
+            
+        #TODO. Subtract out time
 
-        all_bands.append(bands)
 
-    # Add information about the mean wavelength for the pass bands
-    examples['band'] = all_bands
+        # Map pass bands to wavelengths
+        print("Replacing band labels with mean wavelengths")
+        self.parquet_df = self.parquet_df.with_columns(
+            pl.col("fid").map_elements(lambda x: [ZTF_fid_to_wavelengths[band] for band in x]).alias("band")
+        )
 
-    return examples
 
-def add_lc_plots(examples):
+    def get_lc_plots(self, row):
 
-    # Get the number of samples
-    N_samples = len(examples['ZTFID'])
-
-    lc_plots_array = []
-
-    for i in range(N_samples):
-
-        mag = examples['magpsf'][i]
-        mag_err = examples['sigmapsf'][i]
-        jd = examples['jd'][i]
-        filters = examples['fid'][i]
-
-        marker_sizes = np.ones_like(jd, dtype=float) * marker_size
+        # Get the light curve data
+        jd = np.array(row['jd'])
+        flux = np.array(row['magpsf'])
+        flux_err = np.array(row['sigmapsf'])
+        filters = np.array(row['band'])
 
         # Create a figure and axes
         fig, ax = plt.subplots(1, 1)
-
-        # Remove all spines (black frame)
-        for spine in ax.spines.values():
-            spine.set_visible(False)
-
-        for fid in ZTF_fid_to_color.keys():
-            
-            idx = np.where(filters == fid)[0]
-            ax.errorbar(jd[idx], mag[idx], yerr=mag_err[idx], linewidth=linewidth, color=ZTF_fid_to_color[fid])
-            ax.scatter(jd[idx], mag[idx], marker=marker_style, s=marker_size, color=ZTF_fid_to_color[fid])
-
-        # Save the figure as PNG with the desired DPI
-        dpi = 100  # Dots per inch (adjust as needed)
 
         # Set the figure size in inches
         width_in = 2.56  # Desired width in inches (256 pixels / 100 dpi)
         height_in = 2.56  # Desired height in inches (256 pixels / 100 dpi)
 
         fig.set_size_inches(width_in, height_in)
+
+        # Remove all spines (black frame)
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+
+        for wavelength in ZTF_wavelength_to_color.keys():
+            
+            idx = np.where(filters == wavelength)[0]
+            ax.errorbar(jd[idx], flux[idx], yerr=flux_err[idx], linewidth=linewidth, fmt=marker_style, color=ZTF_wavelength_to_color[wavelength])
+
+        # Save the figure as PNG with the desired DPI
+        dpi = 100  # Dots per inch (adjust as needed)
 
         ax.set_xticks([])
         ax.set_yticks([])
@@ -164,33 +205,23 @@ def add_lc_plots(examples):
         im = Image.open(buf).convert('RGB')
         img_arr = np.array(im, dtype=np.float32)
         img_arr = np.permute_dims(img_arr, (2, 0, 1))
+        img_arr = torch.from_numpy(img_arr)
 
-        # Add image array to the list
-        lc_plots_array.append(img_arr)
-        
         # Close the buffer
         buf.close()
 
-    # Add plots of the light curves
-    examples['lc_plots'] = lc_plots_array
+        return img_arr
+    
+    def get_postage_stamp_plot(self, examples):
 
-    return examples
+        img_length = ztf_alert_image_dimension[0]
 
-def add_postage_stamp_plots(examples):
-
-    # Get the number of samples
-    N_samples = len(examples['ZTFID'])
-
-    img_length = ztf_alert_image_dimension[0]
-    postage_plots_array = []
-
-    for i in range(N_samples):
 
         canvas = np.zeros((img_length, len(ztf_filters)*img_length)) 
 
         # Loop through all of the filters
         for j, f in enumerate(ztf_filters):
-            canvas[:, j*img_length:(j+1)*img_length] = examples[f"{f}_reference"][i]
+            canvas[:, j*img_length:(j+1)*img_length] = examples[f"{f}_reference"]
 
         # Create a figure and axes
         fig, ax = plt.subplots(1, 1)
@@ -218,7 +249,6 @@ def add_postage_stamp_plots(examples):
         # Write the plot data to a buffer
         buf = io.BytesIO()
         plt.savefig(buf, format='png', dpi=dpi)
-        plt.savefig('1.png')
         plt.close()
 
         # Go to the start of the buffer and read into an image
@@ -226,89 +256,57 @@ def add_postage_stamp_plots(examples):
         im = Image.open(buf).convert('RGB')
         im = np.array(im, dtype=np.float32)
         im = np.permute_dims(im, (2, 0, 1))
-
-        # Add image array to the list
-        postage_plots_array.append(im)
+        im = torch.from_numpy(im)
         
         # Close the buffer
         buf.close()
         
-    # Add plots of the reference images in the g,r, and i bands. 
-    examples['reference_images'] = postage_plots_array
+        return im
 
-    return examples
+def custom_collate_BTS(batch):
 
-def get_BTS_dataset(split):
+    batch_size = len(batch)
 
-    dataset_splits = DatasetDict({
-        'train': load_dataset("parquet", data_files=train_parquet_path, split='train'),
-        'validation': load_dataset("parquet", data_files=val_parquet_path, split='train'),
-        'test': load_dataset("parquet", data_files=test_parquet_path, split='train'),
-    })
+    ts_array = []
+    label_array = []
+    ztfid_array = []
 
-    # Load the whole dataset
-    dataset = dataset_splits[split]
+    lengths = np.zeros((batch_size), dtype=np.float32)
+    lc_plot_tensor = torch.zeros((batch_size, n_channels, img_height, img_width), dtype=torch.float32)
+    postage_stamps_tensor = torch.zeros((batch_size, n_channels, img_height, img_width), dtype=torch.float32)
 
-    # TODO: load the combined parquet file instead and then do the split
+    for i, sample in enumerate(batch):
 
-    # Only select the useful columns
-    dataset = dataset.select_columns(time_dependent_feature_list+images+book_keeping_feature_list)
+        ts_array.append(sample['ts'])
+        label_array.append(sample['label'])
+        ztfid_array.append(sample['ZTFID'])
 
-    # Set the appropriate formatting for all the data
-    dataset.set_format(type="torch")
+        lengths[i] = sample['ts'].shape[0]
+        postage_stamps_tensor[i,:,:,:] = sample['postage_stamp']        
 
-    return dataset
+        if 'lc_plot' in sample.keys():
+            lc_plot_tensor[i,:,:,:] = sample['lc_plot']
 
-def collate_BTS_lc_data(batch, includes_plots=True):
+    lengths = torch.from_numpy(lengths)
+    label_array = np.array(label_array)
 
-    ts_data = []
-    postage_image_data = []
-    plots = []
-    labels = []
-    ztfids = []
-    lengths = []
-
-    for b in batch:
-
-        length = len(b['jd'])
-        n_ts_features = len(time_dependent_feature_list)
-
-        # Fill the array with the time series data
-        array = np.zeros((length, n_ts_features), dtype=np.float32)
-        array[:, 0] = b['jd']
-        array[:, 1] = b['magpsf']
-        array[:, 2] = b['sigmapsf']
-        array[:, 3] = b['band']
-        ts_data.append(array)
-
-        lengths.append(length)
-        labels.append(b['bts_class'])
-        ztfids.append(b['ZTFID'])
-
-        if includes_plots:
-            plots.append(b['lc_plots'])
-            postage_image_data.append(b['reference_images'])
-
-    
-    ts_data = [torch.from_numpy(x) for x in ts_data]
-    ts_data = pad_sequence(ts_data, batch_first=True, padding_value=flag_value)
+    ts_tensor = pad_sequence(ts_array, batch_first=True, padding_value=flag_value)
 
     d = {
-        'ts_data':ts_data,
-        'lengths':lengths,
-        'labels':labels,
-        'ZTFID':ztfids
+        'ts': ts_tensor,
+        'postage_stamp': postage_stamps_tensor,
+        'length': lengths,
+        'label': label_array,
+        'ZTFID': ztfid_array,
     }
 
-    if includes_plots:
-        plots = torch.from_numpy(np.array(plots))
-        postage_image_data = torch.from_numpy(np.array(postage_image_data))
-        d['lc_plots'] = plots
-        d['reference_images'] = postage_image_data
+    if 'lc_plot' in sample.keys():
+        d['lc_plot'] = lc_plot_tensor
 
     return d
 
 def show_batch(images, labels, n=16):
+
     # Get the first n images
     images = images[:n]
 
@@ -319,58 +317,36 @@ def show_batch(images, labels, n=16):
     for i, ax in enumerate(axes.flat):
         img = images[i]
         label = labels[i]
-        img = img.permute(1, 2, 0).numpy().astype(int)   # (C, H, W) -> (H, W, C)
-        ax.imshow(img)
+        if img.shape[0] == 1:  # grayscale
+            img = img.squeeze(0)
+            img = img.numpy().astype(int) 
+            ax.imshow(img, cmap='gray')
+        else:  # RGB
+            img = img.permute(1, 2, 0)  # (C, H, W) -> (H, W, C)
+            img = img.numpy().astype(int) 
+            ax.imshow(img)
+
         ax.set_title(f"{label}", fontsize=8) 
 
     plt.tight_layout()
     plt.show()
 
+if __name__=='__main__':
+    # <--- Example usage of the dataset --->
+    # dataset = BTS_LC_Image_Dataset('data/BTS/bts_lc_images')
+    # dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-def main():
+    # for i, item in enumerate(dataloader):
+    #     data, labels = item
+    #     print(data.shape)
+    #     print(labels)
+    #     break
 
-    dataset = get_BTS_dataset('test')
+    dataset = BTS_LC_Dataset(test_parquet_path, include_lc_plots=True, transform=truncate_light_curve_fractionally)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate)
 
-    # Create a custom function with all the transforms
-    def custom_transforms_function(examples):
-
-        # Reconstruct the images
-        examples = reconstruct_images(examples)
-
-        # Truncate LC's before building the plots
-        examples = truncate_lcs_fractionally(examples, fraction=None)
-
-        # Add plots of the light curve for the vision transformer
-        examples = add_lc_plots(examples)
-
-        # Add plots of the reference images in the g,r, and i bands. 
-        examples = add_postage_stamp_plots(examples)
-
-        return examples
-
-    dataset = dataset.with_transform(custom_transforms_function)
-    dataloader = DataLoader(dataset, batch_size=32, collate_fn=collate_BTS_lc_data)
-
-    taxonomy = ORACLE_Taxonomy()
-    model_VT = ORACLE2_lite_swin(taxonomy)
-    model_VT.eval()
-
-    for batch in dataloader:
-
-        logits = model_VT(batch)
-        print(model_VT.predict_class_probabilities_df(batch))
-
-        print(list(batch.keys()))
-        print(logits.shape)
-        print(batch['ts_data'].shape)
-        print(batch['reference_images'].shape)
-        print(batch['lc_plots'].shape)
-
-        show_batch(batch['reference_images'], batch['labels'])
-        show_batch(batch['lc_plots'], batch['labels'])
-        break
+    for batch in tqdm(dataloader):
+        show_batch(batch['postage_stamp'], batch['label'])
+        pass
         
 
-if __name__ == '__main__':
-
-    main()

@@ -236,7 +236,7 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
 
         return img_arr
 
-def custom_collate(batch):
+def custom_collate_ELAsTiCC(batch):
 
     batch_size = len(batch)
 
@@ -306,17 +306,9 @@ def show_batch(images, labels, n=16):
 
 if __name__=='__main__':
     # <--- Example usage of the dataset --->
-    # dataset = BTS_LC_Image_Dataset('data/BTS/bts_lc_images')
-    # dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
-
-    # for i, item in enumerate(dataloader):
-    #     data, labels = item
-    #     print(data.shape)
-    #     print(labels)
-    #     break
 
     dataset = ELAsTiCC_LC_Dataset('data/ELAsTiCC/test.parquet', include_lc_plots=False, transform=truncate_light_curve_fractionally)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_ELAsTiCC)
 
     for batch in tqdm(dataloader):
         pass

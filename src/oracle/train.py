@@ -15,7 +15,7 @@ from oracle.custom_datasets.BTS import *
 # <----- Defaults for training the models ----->
 default_num_epochs = 100
 default_batch_size = 1
-default_learning_rate = 1e-3
+default_learning_rate = 1e-5
 default_alpha = 0.5
 default_model_dir = Path('./models/test_model')
 

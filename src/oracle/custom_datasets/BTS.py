@@ -103,7 +103,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
                
     def __len__(self):
 
-        return 100
+        return len(self.parquet_df)
 
     def __getitem__(self, index):
 

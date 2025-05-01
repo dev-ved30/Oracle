@@ -81,7 +81,7 @@ class ORACLE2_lite_swin(Hierarchical_classifier):
     
     def forward(self, batch):
         
-        swin_output = self.swin(batch['lc_plots'])
+        swin_output = self.swin(batch['lc_plot'])
         logits = self.fc(swin_output)
         return logits
 
@@ -97,14 +97,49 @@ class ORACLE2_lite_chronos(Hierarchical_classifier):
 # TODO: Think about multi modal implementation.
 class ORACLE2_pro_swin(Hierarchical_classifier):
 
-    def __init__(self, config, taxonomy: Taxonomy):
+    def __init__(self, taxonomy: Taxonomy):
 
         super(ORACLE2_pro_swin, self).__init__(taxonomy)
 
 
+        # TODO: Think about what weights we want to initialize the transformer with.
+        self.swin_lc = torch.hub.load("pytorch/vision", "swin_v2_t", weights="DEFAULT", progress=False)
+
+        # Make sure all parameters in Swin are trainable
+        for param in self.swin_lc.parameters():
+            param.requires_grad = True
+
+        # TODO: Think about what weights we want to initialize the transformer with.
+        self.swin_postage = torch.hub.load("pytorch/vision", "swin_v2_t", weights="DEFAULT", progress=False)
+
+        # Make sure all parameters in Swin are trainable
+        for param in self.swin_postage.parameters():
+            param.requires_grad = True
+
+        # Additional layers for classification
+        self.fc = nn.Sequential(
+            nn.Linear(2000, 512),
+            nn.ReLU(True),
+            nn.Dropout(0.3),
+            nn.Linear(512, 256),
+            nn.ReLU(True),
+            nn.Dropout(0.3),
+            nn.Linear(256, 128),
+            nn.ReLU(True),
+            nn.Dropout(0.3),
+            nn.Linear(128, 64),
+            nn.ReLU(True),
+            nn.Dropout(0.3),
+            nn.Linear(64, self.n_nodes),
+        )
+
     def forward(self, batch):
         
-        raise NotImplementedError
+        swin_lc_output = self.swin_lc(batch['lc_plot'])
+        swin_postage_output = self.swin_lc(batch['postage_stamp'])
+        combined_output = torch.concat((swin_lc_output, swin_postage_output), dim=1)
+        logits = self.fc(combined_output)
+        return logits
     
 class ORACLE1(Hierarchical_classifier):
 
@@ -136,9 +171,9 @@ class ORACLE1(Hierarchical_classifier):
 
     def forward(self, batch):
 
-        x_ts = batch['ts_data'] # (batch_size, seq_len, n_ts_features)
-        x_static = batch['static_data'] # (batch_size, n_static_features)
-        lengths = batch['lengths'] # (batch_size)
+        x_ts = batch['ts'] # (batch_size, seq_len, n_ts_features)
+        x_static = batch['static'] # (batch_size, n_static_features)
+        lengths = batch['length'] # (batch_size)
 
         packed = pack_padded_sequence(x_ts, lengths, batch_first=True, enforce_sorted=False)
 

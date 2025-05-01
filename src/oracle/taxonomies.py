@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 
 from networkx.drawing.nx_agraph import graphviz_layout
 
+from oracle.constants import BTS_to_Astrophysical_mappings
+
 # NOTE: I am not super worried about the performance of this code since it will not be used to compute the losses while training the model. That code exists in loss.py and is optimized for speed.
 
 # Name of the root node for the self
@@ -265,6 +267,54 @@ class BTS_Taxonomy(Taxonomy):
         self.add_node(root_label)
 
         # TODO: Decide on a taxonomy for ZTF/BTS
+        level_1_nodes = ['SN-like','nova/nova-like','afterglow']
+        self.add_nodes_from(level_1_nodes)
+        self.add_edges_from([(root_label, level_1_node) for level_1_node in level_1_nodes])
+
+        # Level 2a nodes for SN-like
+        level_2a_nodes = ['SN', 'ILOT', 'TDE', 'CART', 'FBOT']
+        self.add_nodes_from(level_2a_nodes)
+        self.add_edges_from([('SN-like', level_2a_node) for level_2a_node in level_2a_nodes])
+
+        # Level 3a nodes for SN
+        level_3a_nodes = ['SN-Ia', 'SN-CC']
+        self.add_nodes_from(level_3a_nodes)
+        self.add_edges_from([('SN', level_3a_node) for level_3a_node in level_3a_nodes])
+
+        # Level 3b nodes for ILOT
+        level_3b_nodes = ['LBV', 'ILRT', 'LRN']
+        self.add_nodes_from(level_3b_nodes)
+        self.add_edges_from([('ILOT', level_3b_node) for level_3b_node in level_3b_nodes])
+
+        # Level 4a nodes for SN-Ia
+        level_4a_nodes = ['SN-Ia-normal', 'SN-Ia-00cx', 'SN-Ia-03fg', 'SN-Ia-91T', 'SN-Ia-91bg', 'SN-Ia-99aa', 'SN-Ia-CSM', 'SN-Ia-peculiar', 'SN-Iax']
+        self.add_nodes_from(level_4a_nodes)
+        self.add_edges_from([('SN-Ia', level_4a_node) for level_4a_node in level_4a_nodes])
+
+        # Level 4b nodes for SN-CC
+        level_4b_nodes = ['SLSN-I', 'SN-II', 'SN-Ib/c', 'SLSN-II']
+        self.add_nodes_from(level_4b_nodes)
+        self.add_edges_from([('SN-CC', level_4b_node) for level_4b_node in level_4b_nodes])
+
+        # Level 5b nodes for SN-II
+        level_5b_nodes = ['SN-II-normal', 'SN-II-peculiar', 'SN-IIL', 'SN-IIP', 'SN-IIb', 'SN-IIb-peculiar', 'SN-IIn']
+        self.add_nodes_from(level_5b_nodes)
+        self.add_edges_from([('SN-II', level_5b_node) for level_5b_node in level_5b_nodes])
+
+        # Level 5c nodes for SN-Ib/c
+        level_5c_nodes = ['SN-Ib', 'SN-Ic']
+        self.add_nodes_from(level_5c_nodes)
+        self.add_edges_from([('SN-Ib/c', level_5c_node) for level_5c_node in level_5c_nodes])
+
+        # Level 6a nodes for SN-Ib
+        level_6a_nodes = ['SN-Ib-peculiar', 'SN-Ibn']
+        self.add_nodes_from(level_6a_nodes)
+        self.add_edges_from([('SN-Ib', level_6a_node) for level_6a_node in level_6a_nodes])
+
+        # Level 6b nodes for SN-Ic
+        level_6b_nodes = ['SN-Ic-BL', 'SN-Ic-SL', 'SN-Icn']
+        self.add_nodes_from(level_6b_nodes)
+        self.add_edges_from([('SN-Ic', level_6b_node) for level_6b_node in level_6b_nodes])
 
 class ORACLE_Taxonomy(Taxonomy):
 
@@ -276,7 +326,7 @@ class ORACLE_Taxonomy(Taxonomy):
         # Level 1
         level_1_nodes = ['Transient', 'Variable']
         self.add_nodes_from(level_1_nodes)
-        self.add_edges_from([('Alert', level_1_node) for level_1_node in level_1_nodes])
+        self.add_edges_from([(root_label, level_1_node) for level_1_node in level_1_nodes])
 
         # Level 2a nodes for Transients
         level_2a_nodes = ['SN', 'Fast', 'Long']
@@ -311,6 +361,13 @@ class ORACLE_Taxonomy(Taxonomy):
 if __name__=='__main__':
 
     #<-- Example usage of the taxonomy class -->
+
+    taxonomy = BTS_Taxonomy()
+    taxonomy.plot_taxonomy()
+
+    all_classes = list(BTS_to_Astrophysical_mappings.values())
+    taxonomy.get_hierarchical_one_hot_encoding(all_classes)
+
 
     # Create a taxonomy object
     taxonomy = ORACLE_Taxonomy()

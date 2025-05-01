@@ -1,7 +1,8 @@
+import time
 import torch
 import argparse
-from tqdm import tqdm
 
+from tqdm import tqdm
 from pathlib import Path    
 from torch.utils.data import DataLoader
 
@@ -9,10 +10,10 @@ from oracle.loss import WHXE_Loss
 from oracle.taxonomies import ORACLE_Taxonomy, BTS_Taxonomy
 from oracle.architectures import *
 from oracle.custom_datasets.ELAsTiCC import *
-#from oracle.datasets.BTS import *
+from oracle.custom_datasets.BTS import *
 
 # <----- Defaults for training the models ----->
-default_num_epochs = 10
+default_num_epochs = 100
 default_batch_size = 256
 default_learning_rate = 1e-3
 default_alpha = 0.5
@@ -62,106 +63,32 @@ def run_training_loop(args):
     # Assign the taxonomy based on the choice
     if model_choice == "ORACLE1":
 
-        # Choose the taxonomy
         taxonomy = ORACLE_Taxonomy()
-
-        # Choose the model
         model = ORACLE1(taxonomy)
-
-        # Choose the dataset
-        dataset = get_ELAsTiCC_dataset('train')
-
-        # Create a custom function with all the transforms
-        def custom_transforms_function(examples):
-
-            # Mask off any saturations
-            examples = mask_off_saturations(examples)
-
-            # Replace any missing values with a flag
-            examples = replace_missing_value_flags(examples)
-
-            # Truncate LC's before building the plots
-            examples = truncate_lcs_fractionally(examples)
-
-            # Add plots of the light curve for the vision transformer
-            examples = add_lc_plots(examples)
-
-            # Convert the labels from ELAsTiCC labels to astrophysically meaningful labels
-            examples = replace_labels(examples, ELAsTiCC_to_Astrophysical_mappings)
-
-            return examples
-        
-        dataset = dataset.with_transform(custom_transforms_function)
-        dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=collate_ELAsTiCC_lc_data, shuffle=True, generator=generator)
+        dataset = ELAsTiCC_LC_Dataset('data/ELAsTiCC/test.parquet', include_lc_plots=False, transform=truncate_light_curve_fractionally)
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_ELAsTiCC, generator=generator)
 
     elif model_choice == "ORACLE1-lite":
 
-        # Choose the taxonomy
         taxonomy = ORACLE_Taxonomy()
-
-        # Choose the model
         model = ORACLE1_lite(taxonomy)
-        
-        # Choose the dataset
-        dataset = get_ELAsTiCC_dataset('train')
+        dataset = ELAsTiCC_LC_Dataset('data/ELAsTiCC/train.parquet', include_lc_plots=False, transform=truncate_light_curve_fractionally)
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_ELAsTiCC, generator=generator)
 
-        # Create a custom function with all the transforms
-        def custom_transforms_function(examples):
 
-            # Mask off any saturations
-            examples = mask_off_saturations(examples)
-
-            # Replace any missing values with a flag
-            examples = replace_missing_value_flags(examples)
-
-            # Truncate LC's before building the plots
-            examples = truncate_lcs_fractionally(examples)
-
-            # Add plots of the light curve for the vision transformer
-            examples = add_lc_plots(examples)
-
-            # Convert the labels from ELAsTiCC labels to astrophysically meaningful labels
-            examples = replace_labels(examples, ELAsTiCC_to_Astrophysical_mappings)
-
-            return examples
-        
-        dataset = dataset.with_transform(custom_transforms_function)
-        dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=collate_ELAsTiCC_lc_data, shuffle=True, generator=generator)
-        
     elif model_choice == "ORACLE2-lite_swin_LSST":
 
-        # Choose the taxonomy
         taxonomy = ORACLE_Taxonomy()
-
-        # Choose the model
         model = ORACLE2_lite_swin(taxonomy)
+        dataset = ELAsTiCC_LC_Dataset('data/ELAsTiCC/train.parquet', include_lc_plots=True, transform=truncate_light_curve_fractionally)
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_ELAsTiCC, generator=generator)
 
-        # Choose the dataset
-        dataset = get_ELAsTiCC_dataset('train')
+    elif model_choice == "ORACLE2-pro_swin_BTS":
 
-        # Create a custom function with all the transforms
-        def custom_transforms_function(examples):
-
-            # Mask off any saturations
-            examples = mask_off_saturations(examples)
-
-            # Replace any missing values with a flag
-            examples = replace_missing_value_flags(examples)
-
-            # Truncate LC's before building the plots
-            examples = truncate_lcs_fractionally(examples)
-
-            # Add plots of the light curve for the vision transformer
-            examples = add_lc_plots(examples)
-
-            # Convert the labels from ELAsTiCC labels to astrophysical-ly meaningful labels
-            examples = replace_labels(examples, ELAsTiCC_to_Astrophysical_mappings)
-
-            return examples
-        
-        dataset = dataset.with_transform(custom_transforms_function)
-        dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=collate_ELAsTiCC_lc_data, shuffle=True, generator=generator)
-        
+        taxonomy = BTS_Taxonomy()
+        model = ORACLE2_pro_swin(taxonomy)
+        dataset = BTS_LC_Dataset("data/BTS/train.parquet", include_lc_plots=True, transform=truncate_light_curve_fractionally)
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_BTS, generator=generator)
 
     model = model.to(device)
 
@@ -171,10 +98,16 @@ def run_training_loop(args):
 
     model.train()
 
+    avg_train_losses = []
+
     # Training loop
     for epoch in range(num_epochs):
 
         print(f"Epoch {epoch+1}/{num_epochs} started")
+        start_time = time.time()
+
+
+        train_loss_values = []
 
         # Loop over all the batches in the data set
         for i, batch in enumerate(tqdm(dataloader)):
@@ -183,27 +116,31 @@ def run_training_loop(args):
             batch = {k: v.to(device) if torch.is_tensor(v) else v for k, v in batch.items()}
 
             # Get the label encodings
-            label_encodings = torch.from_numpy(taxonomy.get_hierarchical_one_hot_encoding(batch['labels'])).to(device=device)           
+            label_encodings = torch.from_numpy(taxonomy.get_hierarchical_one_hot_encoding(batch['label'])).to(device=device)           
 
             # Forward pass
             logits = model(batch)
             loss = loss_fn(logits, label_encodings)
+
+            train_loss_values.append(loss.item())
 
             # Backward pass
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-        # Training progress
-        print(f"Loss: {loss.item()}\n=======")
-
-        # TODO: Log the value of the loss on the training set
-
         # TODO: Add validation loop here and log the value of the loss
+        avg_train_loss = np.mean(train_loss_values)
+        avg_train_losses.append(avg_train_loss)
+        print(f"Avg training loss: {float(avg_train_loss):.4f}\n=======")
+
+        if np.isnan(avg_train_loss) == True:
+            print("Training loss was nan. Exiting the loop.")
+            break
 
         # TODO: Save the model. We can load the best model based on the validation loss for inference.
         torch.save(model.state_dict(), f'{model_dir}/model_epoch{epoch+1}.pth')
-
+        print(f"Time taken: {time.time() - start_time:.2f}s")
 
 def main():
     args = parse_args()

@@ -175,7 +175,7 @@ class ORACLE1(Hierarchical_classifier):
         x_static = batch['static'] # (batch_size, n_static_features)
         lengths = batch['length'] # (batch_size)
 
-        packed = pack_padded_sequence(x_ts, lengths, batch_first=True, enforce_sorted=False)
+        packed = pack_padded_sequence(x_ts, lengths.cpu(), batch_first=True, enforce_sorted=False)
 
         # Recurrent backbone
         gru_out, hidden = self.gru(packed)

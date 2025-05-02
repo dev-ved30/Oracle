@@ -151,9 +151,6 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
                     return float(flag_value)
             else:
                 return x
-            
-        #TODO. Subtract out time
-
 
         # Map pass bands to wavelengths
         print("Replacing band labels with mean wavelengths")
@@ -164,7 +161,7 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         # Remove the saturations form the time series data. PHOTFLAG is handled later
         ts_feature_list = [x for x in time_dependent_feature_list if x != "PHOTFLAG"]
         for feature in ts_feature_list:
-            print(f"Removing saturations from {feature} series...")
+            print(f"Dropping saturations from {feature} series...")
             self.parquet_df = self.parquet_df.with_columns(
                 pl.struct(["PHOTFLAG", feature]).map_elements(lambda x: remove_saturations_from_series(x['PHOTFLAG'], x[feature])).alias(f"{feature}_clean")
             )
@@ -173,6 +170,12 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         print(f"Removing saturations from PHOTFLAG series...")
         self.parquet_df = self.parquet_df.with_columns(
             pl.col("PHOTFLAG").map_elements(lambda x: remove_saturations_from_series(x, x)).alias("PHOTFLAG_clean")
+        )
+
+        # Subtract out time of first obs
+        print("Subtract time of first observation")
+        self.parquet_df = self.parquet_df.with_columns(
+            pl.col("MJD_clean").map_elements(lambda x: np.array(x) - min(x)).alias("MJD_clean")
         )
 
         # Replace the missing flags with a single missing value
@@ -186,11 +189,11 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
     def get_lc_plots(self, row):
 
         # Get the light curve data
-        jd = np.array(row['MJD'])
-        flux = np.array(row['FLUXCAL'])
-        flux_err = np.array(row['FLUXCALERR'])
-        filters = np.array(row['BAND'])
-        phot_flag = np.array(row['PHOTFLAG']) # NOTE: might want to use a different marker for ND
+        jd = np.array(row['MJD_clean'])
+        flux = np.array(row['FLUXCAL_clean'])
+        flux_err = np.array(row['FLUXCALERR_clean'])
+        filters = np.array(row['BAND_clean'])
+        phot_flag = np.array(row['PHOTFLAG_clean']) # NOTE: might want to use a different marker for ND
 
         # Create a figure and axes
         fig, ax = plt.subplots(1, 1)
@@ -308,9 +311,10 @@ if __name__=='__main__':
     # <--- Example usage of the dataset --->
 
     dataset = ELAsTiCC_LC_Dataset('data/ELAsTiCC/test.parquet', include_lc_plots=False, transform=truncate_light_curve_fractionally)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_ELAsTiCC)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True, collate_fn=custom_collate_ELAsTiCC)
 
     for batch in tqdm(dataloader):
+        print(batch['ts'])
         pass
         
 

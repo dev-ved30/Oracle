@@ -14,7 +14,7 @@ from oracle.custom_datasets.BTS import *
 
 # <----- Defaults for training the models ----->
 default_num_epochs = 100
-default_batch_size = 1
+default_batch_size = 1024
 default_learning_rate = 1e-5
 default_alpha = 0.5
 default_model_dir = Path('./models/test_model')
@@ -44,6 +44,11 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+def save_args_to_csv(args, filepath):
+
+    df = pd.DataFrame([vars(args)])  # Wrap in list to make a single-row DataFrame
+    df.to_csv(filepath, index=False)    
+
 def run_training_loop(args):
 
     # Assign the arguments to variables
@@ -55,7 +60,8 @@ def run_training_loop(args):
     model_choice = args.model
 
     # Create the model directory if it does not exist   
-    model_dir.mkdir(parents=True, exist_ok=True)      
+    model_dir.mkdir(parents=True, exist_ok=True)     
+    save_args_to_csv(args, f'{model_dir}/train_args.csv')
 
     # Keep generator on the CPU
     generator = torch.Generator(device=device)
@@ -65,16 +71,15 @@ def run_training_loop(args):
 
         taxonomy = ORACLE_Taxonomy()
         model = ORACLE1(taxonomy)
-        dataset = ELAsTiCC_LC_Dataset('data/ELAsTiCC/test.parquet', include_lc_plots=False, transform=truncate_light_curve_fractionally)
-        dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_ELAsTiCC, generator=generator)
-
-    elif model_choice == "ORACLE1-lite":
-
-        taxonomy = ORACLE_Taxonomy()
-        model = ORACLE1_lite(taxonomy)
         dataset = ELAsTiCC_LC_Dataset('data/ELAsTiCC/train.parquet', include_lc_plots=False, transform=truncate_light_curve_fractionally)
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_ELAsTiCC, generator=generator)
 
+    # elif model_choice == "ORACLE1-lite":
+
+    #     taxonomy = ORACLE_Taxonomy()
+    #     model = ORACLE1_lite(taxonomy)
+    #     dataset = ELAsTiCC_LC_Dataset('data/ELAsTiCC/train.parquet', include_lc_plots=False, transform=truncate_light_curve_fractionally)
+    #     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_ELAsTiCC, generator=generator)
 
     elif model_choice == "ORACLE2-lite_swin_LSST":
 
@@ -132,7 +137,7 @@ def run_training_loop(args):
         # TODO: Add validation loop here and log the value of the loss
         avg_train_loss = np.mean(train_loss_values)
         avg_train_losses.append(avg_train_loss)
-        print(f"Avg training loss: {float(avg_train_loss):.4f}\n=======")
+        print(f"Avg training loss: {float(avg_train_loss):.4f}")
 
         if np.isnan(avg_train_loss) == True:
             print("Training loss was nan. Exiting the loop.")
@@ -140,7 +145,7 @@ def run_training_loop(args):
 
         # TODO: Save the model. We can load the best model based on the validation loss for inference.
         torch.save(model.state_dict(), f'{model_dir}/model_epoch{epoch+1}.pth')
-        print(f"Time taken: {time.time() - start_time:.2f}s")
+        print(f"Time taken: {time.time() - start_time:.2f}s\n=======")
 
 def main():
     args = parse_args()

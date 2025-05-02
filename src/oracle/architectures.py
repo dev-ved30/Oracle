@@ -193,12 +193,12 @@ class ORACLE1(Hierarchical_classifier):
         dense2 = self.tanh(dense2)
 
         # Merge & head
-        batch = torch.cat((dense1, dense2), dim=1)
-        batch = self.relu(batch)
-        batch = self.dense3(batch)
-        batch = self.relu(batch)
-        batch = self.dense4(batch)
-        logits = self.fc_out(batch)
+        x = torch.cat((dense1, dense2), dim=1)
+        x = self.relu(x)
+        x = self.dense3(x)
+        x = self.relu(x)
+        x = self.dense4(x)
+        logits = self.fc_out(x)
 
         return logits
 

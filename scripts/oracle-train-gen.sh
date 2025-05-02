@@ -20,4 +20,4 @@ source activate oracle2
 
 #pip install -e .
 
-oracle-train --model ORACLE2-pro_swin_BTS
+oracle-train --model ORACLE1 --num_epochs 2000 --alpha 0.5 --lr 0.0002

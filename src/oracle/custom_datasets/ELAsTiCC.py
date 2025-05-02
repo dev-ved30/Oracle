@@ -244,7 +244,7 @@ def custom_collate_ELAsTiCC(batch):
     label_array = []
     snid_array = np.zeros((batch_size))
 
-    lengths = np.zeros((batch_size), dtype=np.float32)
+    lengths = np.zeros((batch_size), dtype=np.int)
     static_features_tensor = torch.zeros((batch_size, n_static_features),  dtype=torch.float32)
     lc_plot_tensor = torch.zeros((batch_size, n_channels, img_height, img_width), dtype=torch.float32)
 

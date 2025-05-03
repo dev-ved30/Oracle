@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+from functools import partial
 from pathlib import Path
 from PIL import Image
 from tqdm import tqdm
@@ -23,14 +24,12 @@ BTS_val_parquet_path = str(here.parent.parent.parent / "data" / 'BTS' / 'val.par
 
 # <----- constant for the dataset ----->
 
-batch_size = 512
-
 img_height = 256
 img_width = 256
 n_channels = 3
 
 # <----- Hyperparameters for the model.....Unfortunately ----->
-marker_style = 'o'
+marker_style = '-o'
 marker_size = 50
 linewidth = 0.75
 
@@ -131,7 +130,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
 
         # This operation is costly. Only do it if include_lc_plots stamps is true
         if self.include_lc_plots:
-            light_curve_plot = self.get_lc_plots(row)
+            light_curve_plot = self.get_lc_plots(time_series_data)
             dictionary['lc_plot'] = light_curve_plot
         
         return dictionary
@@ -154,13 +153,13 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
 
         print('Done!\n')
 
-    def get_lc_plots(self, row):
+    def get_lc_plots(self, x_ts):
 
         # Get the light curve data
-        jd = np.array(row['jd'])
-        flux = np.array(row['magpsf'])
-        flux_err = np.array(row['sigmapsf'])
-        filters = np.array(row['fid'])
+        jd = x_ts[:,time_dependent_feature_list.index('jd')]
+        flux = x_ts[:,time_dependent_feature_list.index('magpsf')]
+        flux_err = x_ts[:,time_dependent_feature_list.index('sigmapsf')]
+        filters = x_ts[:,time_dependent_feature_list.index('fid')]
 
         # Create a figure and axes
         fig, ax = plt.subplots(1, 1)
@@ -275,6 +274,22 @@ def truncate_BTS_light_curve_fractionally(x_ts, f=None):
 
     return x_ts
 
+def truncate_BTS_light_curve_by_days_since_trigger(x_ts, d):
+
+    # NOTE: For BTS we are making the assumption that the data set does not contain any non detections. This is not the case with ELAsTiCC
+
+    # Get the days data
+    jd_index = time_dependent_feature_list.index('jd')
+    jd = x_ts[:, jd_index]
+
+    # Get indices of observations within d days of the first detection (trigger)
+    idx = np.where(jd < d)[0]
+
+    # Truncate the light curve
+    x_ts = x_ts[idx, :]
+
+    return x_ts
+
 def custom_collate_BTS(batch):
 
     batch_size = len(batch)
@@ -349,22 +364,40 @@ def show_batch(images, labels, n=16):
     plt.show()
 
 if __name__=='__main__':
-
+    
     # <--- Example usage of the dataset --->
+
     dataset = BTS_LC_Dataset(BTS_test_parquet_path, include_postage_stamps=True, include_lc_plots=True, transform=truncate_BTS_light_curve_fractionally)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True, collate_fn=custom_collate_BTS)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, collate_fn=custom_collate_BTS)
 
     for batch in tqdm(dataloader):
 
         pass
 
-        # for k in (batch.keys()):
-        #     print(f"{k}: \t{batch[k].shape}")
+        for k in (batch.keys()):
+            print(f"{k}: \t{batch[k].shape}")
 
-        # if 'postage_stamp' in batch.keys():
-        #     show_batch(batch['postage_stamp'], batch['label'])
+        if 'postage_stamp' in batch.keys():
+            show_batch(batch['postage_stamp'], batch['label'])
         
-        # if 'lc_plot' in batch.keys():
-        #     show_batch(batch['lc_plot'], batch['label'])
-        
+        if 'lc_plot' in batch.keys():
+            show_batch(batch['lc_plot'], batch['label'])
 
+    # imgs = []
+    # lc_d = []
+    # days = np.linspace(10,100,16)
+    # for d in days:
+
+    #     k = 1
+        
+    #     transform = partial(truncate_BTS_light_curve_by_days_since_trigger, d=d)
+    #     dataset = BTS_LC_Dataset(BTS_test_parquet_path, include_postage_stamps=True, include_lc_plots=True, transform=transform)
+    #     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, collate_fn=custom_collate_BTS)
+    #     for batch in tqdm(dataloader):
+    #         imgs.append(batch['lc_plot'][k,:,:,:])
+    #         lc_d.append(max(batch['ts'][k,:,0]))
+    #         break
+    
+    # plt.scatter(days, lc_d)
+    # plt.show()
+    # show_batch(imgs, batch['label'])

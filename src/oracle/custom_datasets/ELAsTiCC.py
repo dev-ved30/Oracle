@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+from functools import partial
 from pathlib import Path
 from PIL import Image
 from tqdm import tqdm
@@ -23,22 +24,15 @@ ELAsTiCC_test_parquet_path = str(here.parent.parent.parent / "data" / 'ELAsTiCC'
 
 # <----- constant for the dataset ----->
 
-batch_size = 512
-
 img_height = 256
 img_width = 256
 n_channels = 3
 
 # <----- Hyperparameters for the model.....Unfortunately ----->
-marker_style = 'o'
+marker_style_detection = 'o'
+marker_style_non_detection = '*'
 marker_size = 50
 linewidth = 0.75
-
-flag_value = -9
-
-# Flag values for missing data of static feature according to elasticc
-missing_data_flags = [-9, -99, -999, -9999, 999]
-
 
 # Mean wavelengths for the LSST pass bands in micrometers
 LSST_passband_to_wavelengths = {
@@ -59,6 +53,11 @@ LSST_passband_wavelengths_to_color = {
     LSST_passband_to_wavelengths['z']: np.array((255, 127, 0))/255,
     LSST_passband_to_wavelengths['Y']: np.array((255, 0, 127))/255,
 }
+
+flag_value = -9
+
+# Flag values for missing data of static feature according to elasticc
+missing_data_flags = [-9, -99, -999, -9999, 999]
 
 time_independent_feature_list = ['MWEBV', 'MWEBV_ERR', 'REDSHIFT_HELIO', 'REDSHIFT_HELIO_ERR', 'HOSTGAL_PHOTOZ', 'HOSTGAL_PHOTOZ_ERR', 'HOSTGAL_SPECZ', 'HOSTGAL_SPECZ_ERR', 'HOSTGAL_RA', 'HOSTGAL_DEC', 'HOSTGAL_SNSEP', 'HOSTGAL_ELLIPTICITY', 'HOSTGAL_MAG_u', 'HOSTGAL_MAG_g', 'HOSTGAL_MAG_r', 'HOSTGAL_MAG_i', 'HOSTGAL_MAG_z', 'HOSTGAL_MAG_Y']
 time_dependent_feature_list = ['MJD', 'FLUXCAL', 'FLUXCALERR', 'BAND', 'PHOTFLAG']
@@ -122,7 +121,7 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
 
         # This operation is costly. Only do it if include_lc_plots stamps is true
         if self.include_lc_plots:
-            light_curve_plot = self.get_lc_plots(row)
+            light_curve_plot = self.get_lc_plots(time_series_data)
             dictionary['lc_plot'] = light_curve_plot
         
         return dictionary
@@ -163,6 +162,12 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
             pl.col("PHOTFLAG").map_elements(lambda x: remove_saturations_from_series(x, x), return_dtype=pl.List(pl.Int64)).alias("PHOTFLAG_clean")
         )
 
+        # Setting flag as 1 for detections and 0 for anything else
+        print(f"Replacing PHOTFLAG bitmask with binary values...")
+        self.parquet_df = self.parquet_df.with_columns(
+            pl.col("PHOTFLAG_clean").map_elements(lambda x: np.where(np.array(x) & 4096 != 0, 1, 0).tolist(), return_dtype=pl.List(pl.Int64)).alias("PHOTFLAG_clean")
+        )
+
         print("Subtracting time of first observation...")
         self.parquet_df = self.parquet_df.with_columns(
             pl.col("MJD_clean").map_elements(lambda x: (np.array(x) - min(x)).tolist(), return_dtype=pl.List(pl.Float64)).alias("MJD_clean")
@@ -175,14 +180,14 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
             )
         print('Done!\n')
 
-    def get_lc_plots(self, row):
+    def get_lc_plots(self, x_ts):
 
         # Get the light curve data
-        jd = np.array(row['MJD_clean'])
-        flux = np.array(row['FLUXCAL_clean'])
-        flux_err = np.array(row['FLUXCALERR_clean'])
-        filters = np.array(row['BAND_clean'])
-        phot_flag = np.array(row['PHOTFLAG_clean']) # NOTE: might want to use a different marker for ND
+        jd = x_ts[:,time_dependent_feature_list.index('MJD')] 
+        flux = x_ts[:,time_dependent_feature_list.index('FLUXCAL')]
+        flux_err =  x_ts[:,time_dependent_feature_list.index('FLUXCALERR')]
+        filters =  x_ts[:,time_dependent_feature_list.index('BAND')]
+        phot_flag = x_ts[:,time_dependent_feature_list.index('PHOTFLAG')] # NOTE: might want to use a different marker for ND
 
         # Create a figure and axes
         fig, ax = plt.subplots(1, 1)
@@ -200,8 +205,12 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         for wavelength in LSST_passband_wavelengths_to_color.keys():
             
             idx = np.where(filters == wavelength)[0]
-            ax.errorbar(jd[idx], flux[idx], yerr=flux_err[idx], linewidth=linewidth, fmt=marker_style, color=LSST_passband_wavelengths_to_color[wavelength])
-            #ax.scatter(jd[idx], flux[idx], marker=marker_style, s=marker_size, color=LSST_passband_wavelengths_to_color[wavelength])
+            detection_idx = np.where((filters == wavelength) & (phot_flag==1))[0]
+            non_detection_idx = np.where((filters == wavelength) & (phot_flag==0))[0]
+
+            ax.errorbar(jd[detection_idx], flux[detection_idx], yerr=flux_err[detection_idx], fmt=marker_style_detection, color=LSST_passband_wavelengths_to_color[wavelength])
+            ax.errorbar(jd[non_detection_idx], flux[non_detection_idx], yerr=flux_err[non_detection_idx], fmt=marker_style_non_detection, color=LSST_passband_wavelengths_to_color[wavelength])
+            ax.plot(jd[idx], flux[idx], linewidth=linewidth, color=LSST_passband_wavelengths_to_color[wavelength])
 
         # Save the figure as PNG with the desired DPI
         dpi = 100  # Dots per inch (adjust as needed)
@@ -227,6 +236,45 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         buf.close()
 
         return img_arr
+    
+def truncate_ELAsTiCC_light_curve_by_days_since_trigger(x_ts, d):
+
+    # Get the first detection index
+    photflags = x_ts[:,time_dependent_feature_list.index('PHOTFLAG')]
+    first_detection_idx = np.where(photflags==1)[0][0]
+
+    # Get the days data
+    mjd_index = time_dependent_feature_list.index('MJD')
+    jd = x_ts[:,mjd_index]
+
+    # Get the days since first detection
+    days_since_first_detection = jd - jd[first_detection_idx]
+
+    # Get indices of observations within d days of the first detection (trigger)
+    idx = np.where(days_since_first_detection < d)[0]
+
+    # Truncate the light curve
+    x_ts = x_ts[idx, :]
+
+    return x_ts
+
+def truncate_ELAsTiCC_light_curve_fractionally(x_ts, f=None):
+
+    if f == None:
+        # Get a random fraction between 0.1 and 1
+        f = np.random.uniform(0.1, 1.0)
+    
+    original_obs_count = x_ts.shape[0]
+
+    # Find the new length of the light curve
+    new_obs_count = int(original_obs_count * f)
+    if new_obs_count < 1:
+        new_obs_count = 1
+
+    # Truncate the light curve
+    x_ts = x_ts[:new_obs_count, :]
+
+    return x_ts
 
 def custom_collate_ELAsTiCC(batch):
 
@@ -270,24 +318,6 @@ def custom_collate_ELAsTiCC(batch):
 
     return d
 
-def truncate_ELAsTiCC_light_curve_fractionally(x_ts, f=None):
-
-    if f == None:
-        # Get a random fraction between 0.1 and 1
-        f = np.random.uniform(0.1, 1.0)
-    
-    original_obs_count = x_ts.shape[0]
-
-    # Find the new length of the light curve
-    new_obs_count = int(original_obs_count * f)
-    if new_obs_count < 1:
-        new_obs_count = 1
-
-    # Truncate the light curve
-    x_ts = x_ts[:new_obs_count, :]
-
-    return x_ts
-
 def show_batch(images, labels, n=16):
 
     # Get the first n images
@@ -315,6 +345,7 @@ def show_batch(images, labels, n=16):
     plt.show()
 
 if __name__=='__main__':
+
     # <--- Example usage of the dataset --->
 
     dataset = ELAsTiCC_LC_Dataset(ELAsTiCC_test_parquet_path, include_lc_plots=True, transform=truncate_ELAsTiCC_light_curve_fractionally)
@@ -329,4 +360,22 @@ if __name__=='__main__':
         
         if 'lc_plot' in batch.keys():
             show_batch(batch['lc_plot'], batch['label'])
+    
+    # imgs = []
+    # lc_d = []
+    # days = np.linspace(10,100,16)
+    # for d in days:
+
+    #     k = 4
         
+    #     transform = partial(truncate_ELAsTiCC_light_curve_by_days_since_trigger, d=d)
+    #     dataset = ELAsTiCC_LC_Dataset(ELAsTiCC_train_parquet_path, include_lc_plots=True, transform=transform)
+    #     dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, collate_fn=custom_collate_ELAsTiCC)
+    #     for batch in tqdm(dataloader):
+    #         imgs.append(batch['lc_plot'][k,:,:,:])
+    #         lc_d.append(max(batch['ts'][k,:,0]))
+    #         break
+    
+    # plt.scatter(days, lc_d)
+    # plt.show()
+    # show_batch(imgs, batch['label'])

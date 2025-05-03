@@ -87,13 +87,15 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         self.columns = time_dependent_feature_list + time_independent_feature_list + book_keeping_feature_list
 
         self.parquet_file_path = parquet_file_path
-        self.parquet_df = pl.read_parquet(self.parquet_file_path, columns=self.columns)
         self.transform = transform
         self.include_lc_plots = include_lc_plots
 
+        print(f'Loading dataset from {self.parquet_file_path}\n')
+        self.parquet_df = pl.read_parquet(self.parquet_file_path, columns=self.columns)
+        self.columns_dtypes = self.parquet_df.schema
+
         self.clean_up_dataset()
                
-
     def __len__(self):
 
         return len(self.parquet_df)
@@ -138,24 +140,22 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         def remove_saturations_from_series(phot_flag_arr, feature_arr):
             
             saturation_mask =  (np.array(phot_flag_arr) & 1024) == 0 
-            feature_arr = np.array(feature_arr)[saturation_mask]
+            feature_arr = np.array(feature_arr)[saturation_mask].tolist()
 
             return feature_arr
         
         def replace_missing_flags(x):
 
             if x in missing_data_flags:
-                if type(x) == int:
-                    return int(flag_value)
-                else:
-                    return float(flag_value)
+                return float(flag_value)
             else:
                 return x
+            
+        print("Starting Dataset Transformation:")
 
-        # Map pass bands to wavelengths
-        print("Replacing band labels with mean wavelengths")
+        print("Replacing band labels with mean wavelengths...")
         self.parquet_df = self.parquet_df.with_columns(
-            pl.col("BAND").map_elements(lambda x: [LSST_passband_to_wavelengths[band] for band in x]).alias("BAND")
+            pl.col("BAND").map_elements(lambda x: [LSST_passband_to_wavelengths[band] for band in x], return_dtype=pl.List(pl.Float64)).alias("BAND")
         )
 
         # Remove the saturations form the time series data. PHOTFLAG is handled later
@@ -163,28 +163,25 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         for feature in ts_feature_list:
             print(f"Dropping saturations from {feature} series...")
             self.parquet_df = self.parquet_df.with_columns(
-                pl.struct(["PHOTFLAG", feature]).map_elements(lambda x: remove_saturations_from_series(x['PHOTFLAG'], x[feature])).alias(f"{feature}_clean")
+                pl.struct(["PHOTFLAG", feature]).map_elements(lambda x: remove_saturations_from_series(x['PHOTFLAG'], x[feature]), return_dtype=pl.List(pl.Float64)).alias(f"{feature}_clean")
             )
 
-        # Correct the phot flag
         print(f"Removing saturations from PHOTFLAG series...")
         self.parquet_df = self.parquet_df.with_columns(
-            pl.col("PHOTFLAG").map_elements(lambda x: remove_saturations_from_series(x, x)).alias("PHOTFLAG_clean")
+            pl.col("PHOTFLAG").map_elements(lambda x: remove_saturations_from_series(x, x), return_dtype=pl.List(pl.Int64)).alias("PHOTFLAG_clean")
         )
 
-        # Subtract out time of first obs
-        print("Subtract time of first observation")
+        print("Subtracting time of first observation...")
         self.parquet_df = self.parquet_df.with_columns(
-            pl.col("MJD_clean").map_elements(lambda x: np.array(x) - min(x)).alias("MJD_clean")
+            pl.col("MJD_clean").map_elements(lambda x: (np.array(x) - min(x)).tolist(), return_dtype=pl.List(pl.Float64)).alias("MJD_clean")
         )
 
-        # Replace the missing flags with a single missing value
         for feature in time_independent_feature_list:
-            print(f"Replacing missing values in {feature} series with single flag value...")
+            print(f"Replacing missing values in {feature} series...")
             self.parquet_df = self.parquet_df.with_columns(
-                pl.col(feature).map_elements(lambda x: replace_missing_flags(x)).alias(f"{feature}_clean")
+                pl.col(feature).map_elements(lambda x: replace_missing_flags(x), return_dtype=self.columns_dtypes[feature]).alias(f"{feature}_clean")
             )
-
+        print('Done!\n')
 
     def get_lc_plots(self, row):
 
@@ -314,7 +311,7 @@ if __name__=='__main__':
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True, collate_fn=custom_collate_ELAsTiCC)
 
     for batch in tqdm(dataloader):
-        print(batch['ts'])
+        #print(batch['ts'])
         pass
         
 

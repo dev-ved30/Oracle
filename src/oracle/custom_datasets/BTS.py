@@ -17,9 +17,9 @@ from oracle.constants import ztf_filters, ztf_alert_image_order, ztf_alert_image
 here = Path(__file__).resolve().parent
 
 # Go up to the root, then into data/ and then get the parquet file
-train_parquet_path = str(here.parent.parent.parent / "data" / 'BTS' / 'train.parquet')
-test_parquet_path = str(here.parent.parent.parent / "data" / 'BTS' / 'test.parquet')
-val_parquet_path = str(here.parent.parent.parent / "data" / 'BTS' / 'val.parquet')
+BTS_train_parquet_path = str(here.parent.parent.parent / "data" / 'BTS' / 'train.parquet')
+BTS_test_parquet_path = str(here.parent.parent.parent / "data" / 'BTS' / 'test.parquet')
+BTS_val_parquet_path = str(here.parent.parent.parent / "data" / 'BTS' / 'val.parquet')
 
 # <----- constant for the dataset ----->
 
@@ -67,43 +67,27 @@ n_images = len(images_list)
 n_ts_features = len(time_dependent_feature_list)
 n_book_keeping_features = len(book_keeping_feature_list)
 
-def truncate_light_curve_fractionally(x_ts, f=None):
-
-    if f == None:
-        # Get a random fraction between 0.1 and 1
-        f = np.random.uniform(0.1, 1.0)
-    
-    original_obs_count = x_ts.shape[0]
-
-    # Find the new length of the light curve
-    new_obs_count = int(original_obs_count * f)
-    if new_obs_count < 1:
-        new_obs_count = 1
-
-    # Truncate the light curve
-    x_ts = x_ts[:new_obs_count, :]
-
-    return x_ts
-
-
 class BTS_LC_Dataset(torch.utils.data.Dataset):
 
-    def __init__(self, parquet_file_path, include_lc_plots=False, transform=None):
+    def __init__(self, parquet_file_path, include_postage_stamps=False, include_lc_plots=False, transform=None):
         super(BTS_LC_Dataset, self).__init__()
 
         # Columns to be read from the parquet file
-        self.columns = time_dependent_feature_list + images_list + book_keeping_feature_list
         self.parquet_file_path = parquet_file_path
-        self.parquet_df = pl.read_parquet(self.parquet_file_path, columns=self.columns)
-
         self.transform = transform
         self.include_lc_plots = include_lc_plots
+        self.include_postage_stamps = include_postage_stamps
+
+        print(f'Loading dataset from {self.parquet_file_path}\n')
+        self.columns = time_dependent_feature_list + images_list + book_keeping_feature_list
+        self.parquet_df = pl.read_parquet(self.parquet_file_path, columns=self.columns)
+        self.columns_dtypes = self.parquet_df.schema
 
         self.clean_up_dataset()
                
     def __len__(self):
 
-        return len(self.parquet_df)
+        return self.parquet_df.shape[0]
 
     def __getitem__(self, index):
 
@@ -123,25 +107,29 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         if self.transform != None:
             time_series_data = self.transform(time_series_data)
 
-        postage_stamps = {}
-        for f in ztf_filters:
-            for img_type in ztf_alert_image_order:
-
-                img_data = row[f"{f}_{img_type}"]
-
-                if img_data == None:
-                    postage_stamps[f"{f}_{img_type}"] = np.zeros(ztf_alert_image_dimension)
-                else:
-                    postage_stamps[f"{f}_{img_type}"] = np.reshape(img_data, ztf_alert_image_dimension)
-        postage_stamps = self.get_postage_stamp_plot(postage_stamps)
-
         dictionary = {
             'ts': time_series_data,
-            'postage_stamp': postage_stamps,
             'label': astrophysical_class,
             'ZTFID': ztfid,
         }
 
+        # This operation is costly. Only do it if include_postage stamps is true
+        if self.include_postage_stamps:
+
+            postage_stamps = {}
+            for f in ztf_filters:
+                for img_type in ztf_alert_image_order:
+
+                    img_data = row[f"{f}_{img_type}"]
+
+                    if img_data == None:
+                        postage_stamps[f"{f}_{img_type}"] = np.zeros(ztf_alert_image_dimension)
+                    else:
+                        postage_stamps[f"{f}_{img_type}"] = np.reshape(img_data, ztf_alert_image_dimension)
+            postage_stamps = self.get_postage_stamp_plot(postage_stamps)
+            dictionary['postage_stamp'] = postage_stamps
+
+        # This operation is costly. Only do it if include_lc_plots stamps is true
         if self.include_lc_plots:
             light_curve_plot = self.get_lc_plots(row)
             dictionary['lc_plot'] = light_curve_plot
@@ -149,16 +137,22 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         return dictionary
     
     def clean_up_dataset(self):
+
+        print("Starting Dataset Transformations:")
             
-        #TODO. Subtract out time
-
-
-        # Map pass bands to wavelengths
-        print("Replacing band labels with mean wavelengths")
+        # Subtract out time of first obs
+        print("Subtracting time of first observation...")
         self.parquet_df = self.parquet_df.with_columns(
-            pl.col("fid").map_elements(lambda x: [ZTF_fid_to_wavelengths[band] for band in x]).alias("band")
+            pl.col("jd").map_elements(lambda x: (np.array(x) - min(x)).tolist(), return_dtype=pl.List(pl.Float64)).alias("jd")
         )
 
+        # Map pass bands to wavelengths
+        print("Replacing band labels with mean wavelengths...")
+        self.parquet_df = self.parquet_df.with_columns(
+            pl.col("fid").map_elements(lambda x: [ZTF_fid_to_wavelengths[band] for band in x], return_dtype=pl.List(pl.Float64)).alias("fid")
+        )
+
+        print('Done!\n')
 
     def get_lc_plots(self, row):
 
@@ -166,7 +160,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         jd = np.array(row['jd'])
         flux = np.array(row['magpsf'])
         flux_err = np.array(row['sigmapsf'])
-        filters = np.array(row['band'])
+        filters = np.array(row['fid'])
 
         # Create a figure and axes
         fig, ax = plt.subplots(1, 1)
@@ -262,6 +256,24 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         buf.close()
         
         return im
+    
+def truncate_BTS_light_curve_fractionally(x_ts, f=None):
+
+    if f == None:
+        # Get a random fraction between 0.1 and 1
+        f = np.random.uniform(0.1, 1.0)
+    
+    original_obs_count = x_ts.shape[0]
+
+    # Find the new length of the light curve
+    new_obs_count = int(original_obs_count * f)
+    if new_obs_count < 1:
+        new_obs_count = 1
+
+    # Truncate the light curve
+    x_ts = x_ts[:new_obs_count, :]
+
+    return x_ts
 
 def custom_collate_BTS(batch):
 
@@ -282,27 +294,32 @@ def custom_collate_BTS(batch):
         ztfid_array.append(sample['ZTFID'])
 
         lengths[i] = sample['ts'].shape[0]
-        postage_stamps_tensor[i,:,:,:] = sample['postage_stamp']        
+
+        if 'postage_stamp' in sample.keys():
+            postage_stamps_tensor[i,:,:,:] = sample['postage_stamp']        
 
         if 'lc_plot' in sample.keys():
             lc_plot_tensor[i,:,:,:] = sample['lc_plot']
 
     lengths = torch.from_numpy(lengths)
     label_array = np.array(label_array)
+    ztfid_array = np.array(ztfid_array)
 
     ts_tensor = pad_sequence(ts_array, batch_first=True, padding_value=flag_value)
 
     d = {
         'ts': ts_tensor,
-        'postage_stamp': postage_stamps_tensor,
         'length': lengths,
         'label': label_array,
         'ZTFID': ztfid_array,
     }
 
+    if 'postage_stamp' in sample.keys():
+        d['postage_stamp'] = postage_stamps_tensor
+
     if 'lc_plot' in sample.keys():
         d['lc_plot'] = lc_plot_tensor
-
+        
     return d
 
 def show_batch(images, labels, n=16):
@@ -332,21 +349,22 @@ def show_batch(images, labels, n=16):
     plt.show()
 
 if __name__=='__main__':
+
     # <--- Example usage of the dataset --->
-    # dataset = BTS_LC_Image_Dataset('data/BTS/bts_lc_images')
-    # dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
-
-    # for i, item in enumerate(dataloader):
-    #     data, labels = item
-    #     print(data.shape)
-    #     print(labels)
-    #     break
-
-    dataset = BTS_LC_Dataset(test_parquet_path, include_lc_plots=True, transform=truncate_light_curve_fractionally)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate)
+    dataset = BTS_LC_Dataset(BTS_test_parquet_path, include_postage_stamps=True, include_lc_plots=True, transform=truncate_BTS_light_curve_fractionally)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True, collate_fn=custom_collate_BTS)
 
     for batch in tqdm(dataloader):
-        show_batch(batch['postage_stamp'], batch['label'])
+
         pass
+
+        # for k in (batch.keys()):
+        #     print(f"{k}: \t{batch[k].shape}")
+
+        # if 'postage_stamp' in batch.keys():
+        #     show_batch(batch['postage_stamp'], batch['label'])
+        
+        # if 'lc_plot' in batch.keys():
+        #     show_batch(batch['lc_plot'], batch['label'])
         
 

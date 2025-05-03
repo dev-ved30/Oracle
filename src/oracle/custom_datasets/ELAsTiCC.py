@@ -6,11 +6,20 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+from pathlib import Path
 from PIL import Image
 from tqdm import tqdm
 from torch.nn.utils.rnn import pad_sequence
 
 from oracle.constants import ELAsTiCC_to_Astrophysical_mappings
+
+# Path to this file's directory
+here = Path(__file__).resolve().parent
+
+# Go up to the root, then into data/ and then get the parquet file
+ELAsTiCC_train_parquet_path = str(here.parent.parent.parent / "data" / 'ELAsTiCC' / 'train.parquet')
+ELAsTiCC_test_parquet_path = str(here.parent.parent.parent / "data" / 'ELAsTiCC' / 'test.parquet')
+#ELAsTiCC_val_parquet_path = str(here.parent.parent.parent / "data" / 'ELAsTiCC' / 'val.parquet')
 
 # <----- constant for the dataset ----->
 
@@ -59,24 +68,6 @@ n_static_features = len(time_independent_feature_list)
 n_ts_features = len(time_dependent_feature_list)
 n_book_keeping_features = len(book_keeping_feature_list)
 
-def truncate_light_curve_fractionally(x_ts, f=None):
-
-    if f == None:
-        # Get a random fraction between 0.1 and 1
-        f = np.random.uniform(0.1, 1.0)
-    
-    original_obs_count = x_ts.shape[0]
-
-    # Find the new length of the light curve
-    new_obs_count = int(original_obs_count * f)
-    if new_obs_count < 1:
-        new_obs_count = 1
-
-    # Truncate the light curve
-    x_ts = x_ts[:new_obs_count, :]
-
-    return x_ts
-
 
 class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
 
@@ -98,7 +89,7 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
                
     def __len__(self):
 
-        return len(self.parquet_df)
+        return self.parquet_df.shape[0]
 
     def __getitem__(self, index):
 
@@ -129,6 +120,7 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
             'SNID': snid,
         }
 
+        # This operation is costly. Only do it if include_lc_plots stamps is true
         if self.include_lc_plots:
             light_curve_plot = self.get_lc_plots(row)
             dictionary['lc_plot'] = light_curve_plot
@@ -151,7 +143,7 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
             else:
                 return x
             
-        print("Starting Dataset Transformation:")
+        print("Starting Dataset Transformations:")
 
         print("Replacing band labels with mean wavelengths...")
         self.parquet_df = self.parquet_df.with_columns(
@@ -278,6 +270,24 @@ def custom_collate_ELAsTiCC(batch):
 
     return d
 
+def truncate_ELAsTiCC_light_curve_fractionally(x_ts, f=None):
+
+    if f == None:
+        # Get a random fraction between 0.1 and 1
+        f = np.random.uniform(0.1, 1.0)
+    
+    original_obs_count = x_ts.shape[0]
+
+    # Find the new length of the light curve
+    new_obs_count = int(original_obs_count * f)
+    if new_obs_count < 1:
+        new_obs_count = 1
+
+    # Truncate the light curve
+    x_ts = x_ts[:new_obs_count, :]
+
+    return x_ts
+
 def show_batch(images, labels, n=16):
 
     # Get the first n images
@@ -307,11 +317,16 @@ def show_batch(images, labels, n=16):
 if __name__=='__main__':
     # <--- Example usage of the dataset --->
 
-    dataset = ELAsTiCC_LC_Dataset('data/ELAsTiCC/test.parquet', include_lc_plots=False, transform=truncate_light_curve_fractionally)
+    dataset = ELAsTiCC_LC_Dataset(ELAsTiCC_test_parquet_path, include_lc_plots=True, transform=truncate_ELAsTiCC_light_curve_fractionally)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True, collate_fn=custom_collate_ELAsTiCC)
 
     for batch in tqdm(dataloader):
-        #print(batch['ts'])
-        pass
-        
 
+        pass
+
+        for k in (batch.keys()):
+            print(f"{k}: \t{batch[k].shape}")
+        
+        if 'lc_plot' in batch.keys():
+            show_batch(batch['lc_plot'], batch['label'])
+        

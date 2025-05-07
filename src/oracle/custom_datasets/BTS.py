@@ -68,7 +68,7 @@ n_book_keeping_features = len(book_keeping_feature_list)
 
 class BTS_LC_Dataset(torch.utils.data.Dataset):
 
-    def __init__(self, parquet_file_path, include_postage_stamps=False, include_lc_plots=False, transform=None):
+    def __init__(self, parquet_file_path,  max_n_per_class=None, include_postage_stamps=False, include_lc_plots=False, transform=None):
         super(BTS_LC_Dataset, self).__init__()
 
         # Columns to be read from the parquet file
@@ -76,6 +76,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         self.transform = transform
         self.include_lc_plots = include_lc_plots
         self.include_postage_stamps = include_postage_stamps
+        self.max_n_per_class = max_n_per_class
 
         print(f'Loading dataset from {self.parquet_file_path}\n')
         self.columns = time_dependent_feature_list + images_list + book_keeping_feature_list
@@ -83,6 +84,9 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         self.columns_dtypes = self.parquet_df.schema
 
         self.clean_up_dataset()
+
+        if self.max_n_per_class != None:
+            self.limit_max_samples_per_class()
                
     def __len__(self):
 
@@ -93,8 +97,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         row = self.parquet_df.row(index, named=True) 
 
         ztfid = row['ZTFID']
-        BTS_class = row['bts_class']
-        astrophysical_class = BTS_to_Astrophysical_mappings[BTS_class]
+        astrophysical_class = row['class']
 
         lc_length = len(row['jd'])
 
@@ -151,7 +154,26 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
             pl.col("fid").map_elements(lambda x: [ZTF_fid_to_wavelengths[band] for band in x], return_dtype=pl.List(pl.Float64)).alias("fid")
         )
 
+        print("Mapping BTS samples explorer classes to astrophysical classes...")
+        self.parquet_df = self.parquet_df.with_columns(
+            pl.col("bts_class").replace(BTS_to_Astrophysical_mappings, return_dtype=pl.String).alias("class")
+        )
+
         print('Done!\n')
+
+    def limit_max_samples_per_class(self):
+
+        print(f"Limiting the number of samples to a maximum of {self.max_n_per_class} per class.")
+
+        class_dfs = []
+        unique_classes = np.unique(self.parquet_df['class'])
+
+        for c in unique_classes:
+
+            class_df = self.parquet_df.filter(pl.col("class") == c).slice(0, self.max_n_per_class)
+            class_dfs.append(class_df)
+
+        self.parquet_df = pl.concat(class_dfs)
 
     def get_lc_plots(self, x_ts):
 
@@ -367,7 +389,7 @@ if __name__=='__main__':
     
     # <--- Example usage of the dataset --->
 
-    dataset = BTS_LC_Dataset(BTS_test_parquet_path, include_postage_stamps=True, include_lc_plots=True, transform=truncate_BTS_light_curve_fractionally)
+    dataset = BTS_LC_Dataset(BTS_test_parquet_path, include_postage_stamps=True, include_lc_plots=True, transform=truncate_BTS_light_curve_fractionally, max_n_per_class=1000)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, collate_fn=custom_collate_BTS)
 
     for batch in tqdm(dataloader):

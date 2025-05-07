@@ -70,7 +70,7 @@ n_book_keeping_features = len(book_keeping_feature_list)
 
 class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
 
-    def __init__(self, parquet_file_path, include_lc_plots=False, transform=None):
+    def __init__(self, parquet_file_path, max_n_per_class=None, include_lc_plots=False, transform=None):
         super(ELAsTiCC_LC_Dataset, self).__init__()
 
         # Columns to be read from the parquet file
@@ -79,12 +79,16 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         self.parquet_file_path = parquet_file_path
         self.transform = transform
         self.include_lc_plots = include_lc_plots
+        self.max_n_per_class = max_n_per_class
 
         print(f'Loading dataset from {self.parquet_file_path}\n')
         self.parquet_df = pl.read_parquet(self.parquet_file_path, columns=self.columns)
         self.columns_dtypes = self.parquet_df.schema
 
         self.clean_up_dataset()
+
+        if self.max_n_per_class != None:
+            self.limit_max_samples_per_class()
                
     def __len__(self):
 
@@ -95,8 +99,7 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         row = self.parquet_df.row(index, named=True) 
 
         snid = row['SNID']
-        ELAsTiCC_class_name = row['ELASTICC_class']
-        astrophysical_class = ELAsTiCC_to_Astrophysical_mappings[ELAsTiCC_class_name]
+        astrophysical_class = row['class']
 
         lc_length = len(row['MJD_clean'])
 
@@ -173,12 +176,31 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
             pl.col("MJD_clean").map_elements(lambda x: (np.array(x) - min(x)).tolist(), return_dtype=pl.List(pl.Float64)).alias("MJD_clean")
         )
 
+        print("Mapping ELAsTiCC classes to astrophysical classes...")
+        self.parquet_df = self.parquet_df.with_columns(
+            pl.col("ELASTICC_class").replace(ELAsTiCC_to_Astrophysical_mappings, return_dtype=pl.String).alias("class")
+        )
+
         for feature in time_independent_feature_list:
             print(f"Replacing missing values in {feature} series...")
             self.parquet_df = self.parquet_df.with_columns(
                 pl.col(feature).map_elements(lambda x: replace_missing_flags(x), return_dtype=self.columns_dtypes[feature]).alias(f"{feature}_clean")
             )
         print('Done!\n')
+
+    def limit_max_samples_per_class(self):
+
+        print(f"Limiting the number of samples to a maximum of {self.max_n_per_class} per class.")
+
+        class_dfs = []
+        unique_classes = np.unique(self.parquet_df['class'])
+
+        for c in unique_classes:
+
+            class_df = self.parquet_df.filter(pl.col("class") == c).slice(0, self.max_n_per_class)
+            class_dfs.append(class_df)
+
+        self.parquet_df = pl.concat(class_dfs)
 
     def get_lc_plots(self, x_ts):
 
@@ -348,18 +370,20 @@ if __name__=='__main__':
 
     # <--- Example usage of the dataset --->
 
-    dataset = ELAsTiCC_LC_Dataset(ELAsTiCC_test_parquet_path, include_lc_plots=True, transform=truncate_ELAsTiCC_light_curve_fractionally)
+    dataset = ELAsTiCC_LC_Dataset(ELAsTiCC_test_parquet_path, include_lc_plots=False, transform=truncate_ELAsTiCC_light_curve_fractionally, max_n_per_class=20000)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True, collate_fn=custom_collate_ELAsTiCC)
 
     for batch in tqdm(dataloader):
 
         pass
 
-        for k in (batch.keys()):
-            print(f"{k}: \t{batch[k].shape}")
+        # print(batch['label'])
+
+        # for k in (batch.keys()):
+        #     print(f"{k}: \t{batch[k].shape}")
         
-        if 'lc_plot' in batch.keys():
-            show_batch(batch['lc_plot'], batch['label'])
+        # if 'lc_plot' in batch.keys():
+        #     show_batch(batch['lc_plot'], batch['label'])
     
     # imgs = []
     # lc_d = []

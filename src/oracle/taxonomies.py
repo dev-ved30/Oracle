@@ -36,7 +36,23 @@ class Taxonomy(nx.DiGraph):
 
         # Plot the taxonomy.
         pos = graphviz_layout(self, prog='dot')
-        nx.draw_networkx(self, with_labels=True, font_weight='bold', arrows=True, font_size=8, pos=pos)
+        nx.draw_networkx(self, with_labels=True, font_weight='bold', arrows=True, font_size=8, pos=pos, alpha=0.7)
+        plt.show()
+
+    def plot_colored_taxonomy(self, probabilities):
+        """
+        Plot the taxonomy, colored by values in 
+        """
+
+        level_order_traversal = self.get_level_order_traversal()
+
+        color_map = {node: label for node, label in zip(level_order_traversal, probabilities.tolist())}
+        node_colors = [color_map[node] for node in self.nodes()]
+
+        pos = graphviz_layout(self, prog='dot')
+        nx.draw_networkx(self, with_labels=True, font_weight='bold', arrows=True, node_color=node_colors, font_size = 8, pos=pos, cmap='Wistia')
+        plt.tight_layout()
+
         plt.show()
 
     def get_level_order_traversal(self):
@@ -252,7 +268,7 @@ class Taxonomy(nx.DiGraph):
                 path = nx.shortest_path(self, source=root_label, target=node)
 
                 # Get the indices of the nodes in the path.
-                indices = [list(self.nodes()).index(n) for n in path]
+                indices = [list(self.get_level_order_traversal()).index(n) for n in path]
 
                 # Multiply the conditional probabilities of the nodes in the path to get the class probability.
                 class_probabilities[:,i] = np.prod(conditional_probabilities[:,indices], axis=1)
@@ -266,55 +282,45 @@ class BTS_Taxonomy(Taxonomy):
         super().__init__(**attr)
         self.add_node(root_label)
 
-        # TODO: Decide on a taxonomy for ZTF/BTS
-        level_1_nodes = ['SN-like','nova/nova-like','afterglow']
+        level_1_nodes = ['Fast','SN-like','Long']
         self.add_nodes_from(level_1_nodes)
-        self.add_edges_from([(root_label, level_1_node) for level_1_node in level_1_nodes])
+        self.add_edges_from([(root_label, node) for node in level_1_nodes])
 
-        # Level 2a nodes for SN-like
-        level_2a_nodes = ['SN', 'ILOT', 'TDE', 'CART', 'FBOT']
+        # Level 2a nodes for Long Transients
+        level_2a_nodes = ['TDE','SLSN-I','SLSN-II','SN-IIn','ILOT']
         self.add_nodes_from(level_2a_nodes)
-        self.add_edges_from([('SN-like', level_2a_node) for level_2a_node in level_2a_nodes])
+        self.add_edges_from([('Long', node) for node in level_2a_nodes])
 
-        # Level 3a nodes for SN
-        level_3a_nodes = ['SN-Ia', 'SN-CC']
+        # Level 2b nodes for SN-like events
+        level_2b_nodes = ['SN-Ia','SN-II','SN-Ib/c','CART']
+        self.add_nodes_from(level_2b_nodes)
+        self.add_edges_from([('SN-like', node) for node in level_2b_nodes])
+
+        # Level 2c nodes for Short Transients
+        level_2c_nodes = ['FBOT','afterglow','nova/nova-like']
+        self.add_nodes_from(level_2c_nodes)
+        self.add_edges_from([('Fast', node) for node in level_2c_nodes])
+
+        # Level 3a nodes for ILOT
+        level_3a_nodes = ['ILRT', 'LBV','LRN']
         self.add_nodes_from(level_3a_nodes)
-        self.add_edges_from([('SN', level_3a_node) for level_3a_node in level_3a_nodes])
+        self.add_edges_from([('ILOT', node) for node in level_3a_nodes])
 
-        # Level 3b nodes for ILOT
-        level_3b_nodes = ['LBV', 'ILRT', 'LRN']
+        # Level 3b nodes for Type 1a
+        level_3b_nodes = ['SN-Ia-normal','SN-Ia-peculiar']
         self.add_nodes_from(level_3b_nodes)
-        self.add_edges_from([('ILOT', level_3b_node) for level_3b_node in level_3b_nodes])
+        self.add_edges_from([('SN-Ia', node) for node in level_3b_nodes])
 
-        # Level 4a nodes for SN-Ia
-        level_4a_nodes = ['SN-Ia-normal', 'SN-Ia-00cx', 'SN-Ia-03fg', 'SN-Ia-91T', 'SN-Ia-91bg', 'SN-Ia-99aa', 'SN-Ia-CSM', 'SN-Ia-peculiar', 'SN-Iax']
-        self.add_nodes_from(level_4a_nodes)
-        self.add_edges_from([('SN-Ia', level_4a_node) for level_4a_node in level_4a_nodes])
+        # Level 4c nodes for Type 1a normal
+        level_4c_nodes = ['SN-Ib/c-normal','SN-Ib-peculiar', 'SN-Ibn','SN-Ic-BL','SN-Ic-SL','SN-Icn']
+        self.add_nodes_from(level_4c_nodes)
+        self.add_edges_from([('SN-Ib/c', node) for node in level_4c_nodes])
 
-        # Level 4b nodes for SN-CC
-        level_4b_nodes = ['SLSN-I', 'SN-II', 'SN-Ib/c', 'SLSN-II']
-        self.add_nodes_from(level_4b_nodes)
-        self.add_edges_from([('SN-CC', level_4b_node) for level_4b_node in level_4b_nodes])
+        # Level 4d nodes for Type II
+        level_4c_nodes = ['SN-II-normal','SN-II-peculiar','SN-IIb']
+        self.add_nodes_from(level_4c_nodes)
+        self.add_edges_from([('SN-II', node) for node in level_4c_nodes])
 
-        # Level 5b nodes for SN-II
-        level_5b_nodes = ['SN-II-normal', 'SN-II-peculiar', 'SN-IIL', 'SN-IIP', 'SN-IIb', 'SN-IIb-peculiar', 'SN-IIn']
-        self.add_nodes_from(level_5b_nodes)
-        self.add_edges_from([('SN-II', level_5b_node) for level_5b_node in level_5b_nodes])
-
-        # Level 5c nodes for SN-Ib/c
-        level_5c_nodes = ['SN-Ib', 'SN-Ic']
-        self.add_nodes_from(level_5c_nodes)
-        self.add_edges_from([('SN-Ib/c', level_5c_node) for level_5c_node in level_5c_nodes])
-
-        # Level 6a nodes for SN-Ib
-        level_6a_nodes = ['SN-Ib-peculiar', 'SN-Ibn']
-        self.add_nodes_from(level_6a_nodes)
-        self.add_edges_from([('SN-Ib', level_6a_node) for level_6a_node in level_6a_nodes])
-
-        # Level 6b nodes for SN-Ic
-        level_6b_nodes = ['SN-Ic-BL', 'SN-Ic-SL', 'SN-Icn']
-        self.add_nodes_from(level_6b_nodes)
-        self.add_edges_from([('SN-Ic', level_6b_node) for level_6b_node in level_6b_nodes])
 
 class ORACLE_Taxonomy(Taxonomy):
 
@@ -367,6 +373,7 @@ if __name__=='__main__':
 
     all_classes = list(BTS_to_Astrophysical_mappings.values())
     taxonomy.get_hierarchical_one_hot_encoding(all_classes)
+    taxonomy.plot_colored_taxonomy(taxonomy.get_hierarchical_one_hot_encoding(['SN-IIn'])[0])
 
 
     # Create a taxonomy object

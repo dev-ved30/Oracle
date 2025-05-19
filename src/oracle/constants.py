@@ -35,7 +35,7 @@ ELAsTiCC_to_Astrophysical_mappings = {
 
 BTS_to_Astrophysical_mappings = {
 
-    'Ca-rich': 'CART',
+    'Ca-rich': 'CART', 
     'FBOT': 'FBOT',
     'ILRT': 'ILRT',
     'LBV': 'LBV',
@@ -49,38 +49,38 @@ BTS_to_Astrophysical_mappings = {
     'SN II-norm': 'SN-II-normal',
     'SN II-pec': 'SN-II-peculiar',
     'SN II?': 'SN-II-normal',
-    'SN IIL': 'SN-IIL',
-    'SN IIP': 'SN-IIP',
-    'SN IIb': 'SN-IIb',
-    'SN IIb-pec': 'SN-IIb-peculiar',
+    'SN IIL': 'SN-II-normal',
+    'SN IIP': 'SN-II-normal',
+    'SN IIb': 'SN-II-peculiar',
+    'SN IIb-pec': 'SN-IIb',
     'SN IIb?': 'SN-IIb',
     'SN IIn': 'SN-IIn',
     'SN IIn?': 'SN-IIn',
     'SN Ia': 'SN-Ia-normal',
-    'SN Ia-00cx': 'SN-Ia-00cx',
-    'SN Ia-03fg': 'SN-Ia-03fg',
-    'SN Ia-91T': 'SN-Ia-91T',
-    'SN Ia-91bg': 'SN-Ia-91bg',
-    'SN Ia-91bg?': 'SN-Ia-91bg',
-    'SN Ia-99aa': 'SN-Ia-99aa',
-    'SN Ia-CSM': 'SN-Ia-CSM',
-    'SN Ia-CSM?': 'SN-Ia-CSM',
+    'SN Ia-00cx': 'SN-Ia-peculiar',# pec
+    'SN Ia-03fg': 'SN-Ia-peculiar',# pec
+    'SN Ia-91T': 'SN-Ia-normal',
+    'SN Ia-91bg': 'SN-Ia-peculiar',# pec
+    'SN Ia-91bg?': 'SN-Ia-peculiar',# pec
+    'SN Ia-99aa': 'SN-Ia-normal',
+    'SN Ia-CSM': 'SN-Ia-peculiar',# pec
+    'SN Ia-CSM?': 'SN-Ia-peculiar',# pec
     'SN Ia-norm': 'SN-Ia-normal',
-    'SN Ia-pec': 'SN-Ia-peculiar',
+    'SN Ia-pec': 'SN-Ia-peculiar',# pec
     'SN Ia?': 'SN-Ia',
-    'SN Iax': 'SN-Iax',
-    'SN Ib': 'SN-Ib',
+    'SN Iax': 'SN-Ia-peculiar', # pec
+    'SN Ib': 'SN-Ib/c',
     'SN Ib-pec': 'SN-Ib-peculiar',
     'SN Ib/c': 'SN-Ib/c',
     'SN Ib/c?': 'SN-Ib/c',
-    'SN Ib?': 'SN-Ib',
+    'SN Ib?': 'SN-Ib/c',
     'SN Ibn': 'SN-Ibn',
     'SN Ibn?': 'SN-Ibn',
-    'SN Ic': 'SN-Ic',
+    'SN Ic': 'SN-Ib/c-normal',
     'SN Ic-BL': 'SN-Ic-BL',
     'SN Ic-BL?': 'SN-Ic-BL',
     'SN Ic-SL': 'SN-Ic-SL',
-    'SN Ic?': 'SN-Ic',
+    'SN Ic?': 'SN-Ib/c',
     'SN Icn': 'SN-Icn',
     'TDE': 'TDE',
     'afterglow': 'afterglow',

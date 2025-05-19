@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 
 from networkx.drawing.nx_agraph import graphviz_layout
 
+from oracle.constants import BTS_to_Astrophysical_mappings
+
 # NOTE: I am not super worried about the performance of this code since it will not be used to compute the losses while training the model. That code exists in loss.py and is optimized for speed.
 
 # Name of the root node for the self
@@ -34,7 +36,23 @@ class Taxonomy(nx.DiGraph):
 
         # Plot the taxonomy.
         pos = graphviz_layout(self, prog='dot')
-        nx.draw_networkx(self, with_labels=True, font_weight='bold', arrows=True, font_size=8, pos=pos)
+        nx.draw_networkx(self, with_labels=True, font_weight='bold', arrows=True, font_size=8, pos=pos, alpha=0.7)
+        plt.show()
+
+    def plot_colored_taxonomy(self, probabilities):
+        """
+        Plot the taxonomy, colored by values in 
+        """
+
+        level_order_traversal = self.get_level_order_traversal()
+
+        color_map = {node: label for node, label in zip(level_order_traversal, probabilities.tolist())}
+        node_colors = [color_map[node] for node in self.nodes()]
+
+        pos = graphviz_layout(self, prog='dot')
+        nx.draw_networkx(self, with_labels=True, font_weight='bold', arrows=True, node_color=node_colors, font_size = 8, pos=pos, cmap='Wistia')
+        plt.tight_layout()
+
         plt.show()
 
     def get_level_order_traversal(self):
@@ -250,7 +268,7 @@ class Taxonomy(nx.DiGraph):
                 path = nx.shortest_path(self, source=root_label, target=node)
 
                 # Get the indices of the nodes in the path.
-                indices = [list(self.nodes()).index(n) for n in path]
+                indices = [list(self.get_level_order_traversal()).index(n) for n in path]
 
                 # Multiply the conditional probabilities of the nodes in the path to get the class probability.
                 class_probabilities[:,i] = np.prod(conditional_probabilities[:,indices], axis=1)
@@ -264,7 +282,45 @@ class BTS_Taxonomy(Taxonomy):
         super().__init__(**attr)
         self.add_node(root_label)
 
-        # TODO: Decide on a taxonomy for ZTF/BTS
+        level_1_nodes = ['Fast','SN-like','Long']
+        self.add_nodes_from(level_1_nodes)
+        self.add_edges_from([(root_label, node) for node in level_1_nodes])
+
+        # Level 2a nodes for Long Transients
+        level_2a_nodes = ['TDE','SLSN-I','SLSN-II','SN-IIn','ILOT']
+        self.add_nodes_from(level_2a_nodes)
+        self.add_edges_from([('Long', node) for node in level_2a_nodes])
+
+        # Level 2b nodes for SN-like events
+        level_2b_nodes = ['SN-Ia','SN-II','SN-Ib/c','CART']
+        self.add_nodes_from(level_2b_nodes)
+        self.add_edges_from([('SN-like', node) for node in level_2b_nodes])
+
+        # Level 2c nodes for Short Transients
+        level_2c_nodes = ['FBOT','afterglow','nova/nova-like']
+        self.add_nodes_from(level_2c_nodes)
+        self.add_edges_from([('Fast', node) for node in level_2c_nodes])
+
+        # Level 3a nodes for ILOT
+        level_3a_nodes = ['ILRT', 'LBV','LRN']
+        self.add_nodes_from(level_3a_nodes)
+        self.add_edges_from([('ILOT', node) for node in level_3a_nodes])
+
+        # Level 3b nodes for Type 1a
+        level_3b_nodes = ['SN-Ia-normal','SN-Ia-peculiar']
+        self.add_nodes_from(level_3b_nodes)
+        self.add_edges_from([('SN-Ia', node) for node in level_3b_nodes])
+
+        # Level 4c nodes for Type 1a normal
+        level_4c_nodes = ['SN-Ib/c-normal','SN-Ib-peculiar', 'SN-Ibn','SN-Ic-BL','SN-Ic-SL','SN-Icn']
+        self.add_nodes_from(level_4c_nodes)
+        self.add_edges_from([('SN-Ib/c', node) for node in level_4c_nodes])
+
+        # Level 4d nodes for Type II
+        level_4c_nodes = ['SN-II-normal','SN-II-peculiar','SN-IIb']
+        self.add_nodes_from(level_4c_nodes)
+        self.add_edges_from([('SN-II', node) for node in level_4c_nodes])
+
 
 class ORACLE_Taxonomy(Taxonomy):
 
@@ -276,7 +332,7 @@ class ORACLE_Taxonomy(Taxonomy):
         # Level 1
         level_1_nodes = ['Transient', 'Variable']
         self.add_nodes_from(level_1_nodes)
-        self.add_edges_from([('Alert', level_1_node) for level_1_node in level_1_nodes])
+        self.add_edges_from([(root_label, level_1_node) for level_1_node in level_1_nodes])
 
         # Level 2a nodes for Transients
         level_2a_nodes = ['SN', 'Fast', 'Long']
@@ -311,6 +367,14 @@ class ORACLE_Taxonomy(Taxonomy):
 if __name__=='__main__':
 
     #<-- Example usage of the taxonomy class -->
+
+    taxonomy = BTS_Taxonomy()
+    taxonomy.plot_taxonomy()
+
+    all_classes = list(BTS_to_Astrophysical_mappings.values())
+    taxonomy.get_hierarchical_one_hot_encoding(all_classes)
+    taxonomy.plot_colored_taxonomy(taxonomy.get_hierarchical_one_hot_encoding(['SN-IIn'])[0])
+
 
     # Create a taxonomy object
     taxonomy = ORACLE_Taxonomy()

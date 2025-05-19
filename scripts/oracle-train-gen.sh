@@ -20,4 +20,4 @@ source activate oracle2
 
 #pip install -e .
 
-oracle-train --model ORACLE1 --batch_size 1024 --num_epoch 100
+oracle-train --model ORACLE1 --num_epochs 2000 --alpha 0.5 --lr 0.0002

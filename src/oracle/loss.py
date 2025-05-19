@@ -36,15 +36,17 @@ class WHXE_Loss(nn.Module):
         # Lambda term of size (N_nodes), ordered in level order traversal
         self.lambda_term = torch.from_numpy(np.exp(-self.alpha * self.depths)).to(device=device)
 
-    def get_class_weights(self, true, epsilon=1e-10):
+    def get_class_weights(self, true):
         
         # Total number of samples
         N_samples = true.shape[0]
 
         # Count the number of samples for each node in the taxonomy. Should have shape (N_nodes)
-        N_counts = torch.sum(true, dim=0) + epsilon
+        N_counts = torch.sum(true, dim=0)
 
+        # Find the class weights and replace inf with 0
         class_weights = N_samples / (self.N_nodes * N_counts)
+        class_weights[torch.isinf(class_weights)] = 0
 
         return class_weights
 

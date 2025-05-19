@@ -172,6 +172,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
 
             class_df = self.parquet_df.filter(pl.col("class") == c).slice(0, self.max_n_per_class)
             class_dfs.append(class_df)
+            print(f"{c}: {class_df.shape[0]}")
 
         self.parquet_df = pl.concat(class_dfs)
 

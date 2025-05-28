@@ -237,7 +237,29 @@ class Taxonomy(nx.DiGraph):
             logits = softmax + ((1 - mask) * logits)
 
         return logits
-   
+    
+    def get_nodes_by_depth(self):
+        """
+        Get the nodes in the taxonomy grouped by their depth.
+
+        returns:
+            nodes_by_depth: dictionary where keys are depths and values are lists of nodes at that depth.
+        """
+
+        depths = self.get_depths()
+        level_order_traversal = np.array(self.get_level_order_traversal())
+
+        nodes_by_depth = {}
+
+        # Loop through all depths
+        for d in np.unique(depths):
+            
+            # Get the indices of the nodes at this depth in the level order traversal.
+            idx = np.where(depths==d)[0]
+            nodes_by_depth[int(d)] = level_order_traversal[idx]
+
+        return nodes_by_depth
+            
     def get_class_probabilities(self, conditional_probabilities):
         """
         Get the class probabilities from the conditional probabilities.
@@ -282,45 +304,24 @@ class BTS_Taxonomy(Taxonomy):
         super().__init__(**attr)
         self.add_node(root_label)
 
-        level_1_nodes = ['Fast','SN-like','Long']
+        level_1_nodes = ['Other','CC','Thermonuclear']
         self.add_nodes_from(level_1_nodes)
         self.add_edges_from([(root_label, node) for node in level_1_nodes])
 
         # Level 2a nodes for Long Transients
-        level_2a_nodes = ['TDE','SLSN-I','SLSN-II','SN-IIn','ILOT']
+        level_2a_nodes = ['CART','FBOT','ILRT','LBV','LRN','TDE','afterglow','nova/nova-like']
         self.add_nodes_from(level_2a_nodes)
-        self.add_edges_from([('Long', node) for node in level_2a_nodes])
+        self.add_edges_from([('Other', node) for node in level_2a_nodes])
 
         # Level 2b nodes for SN-like events
-        level_2b_nodes = ['SN-Ia','SN-II','SN-Ib/c','CART']
+        level_2b_nodes = ['SLSN-I','SLSN-II','SN-II-normal','SN-II-peculiar','SN-IIb','SN-IIn','SN-Ib/c','SN-Ib-peculiar','SN-Ibn','SN-Ib/c-normal','SN-Ic-BL','SN-Ic-SL','SN-Icn']
         self.add_nodes_from(level_2b_nodes)
-        self.add_edges_from([('SN-like', node) for node in level_2b_nodes])
+        self.add_edges_from([('CC', node) for node in level_2b_nodes])
 
         # Level 2c nodes for Short Transients
-        level_2c_nodes = ['FBOT','afterglow','nova/nova-like']
+        level_2c_nodes = ['SN-Ia-normal','SN-Ia-peculiar','SN-Ia']
         self.add_nodes_from(level_2c_nodes)
-        self.add_edges_from([('Fast', node) for node in level_2c_nodes])
-
-        # Level 3a nodes for ILOT
-        level_3a_nodes = ['ILRT', 'LBV','LRN']
-        self.add_nodes_from(level_3a_nodes)
-        self.add_edges_from([('ILOT', node) for node in level_3a_nodes])
-
-        # Level 3b nodes for Type 1a
-        level_3b_nodes = ['SN-Ia-normal','SN-Ia-peculiar']
-        self.add_nodes_from(level_3b_nodes)
-        self.add_edges_from([('SN-Ia', node) for node in level_3b_nodes])
-
-        # Level 4c nodes for Type 1a normal
-        level_4c_nodes = ['SN-Ib/c-normal','SN-Ib-peculiar', 'SN-Ibn','SN-Ic-BL','SN-Ic-SL','SN-Icn']
-        self.add_nodes_from(level_4c_nodes)
-        self.add_edges_from([('SN-Ib/c', node) for node in level_4c_nodes])
-
-        # Level 4d nodes for Type II
-        level_4c_nodes = ['SN-II-normal','SN-II-peculiar','SN-IIb']
-        self.add_nodes_from(level_4c_nodes)
-        self.add_edges_from([('SN-II', node) for node in level_4c_nodes])
-
+        self.add_edges_from([('Thermonuclear', node) for node in level_2c_nodes])
 
 class ORACLE_Taxonomy(Taxonomy):
 
@@ -374,6 +375,8 @@ if __name__=='__main__':
     all_classes = list(BTS_to_Astrophysical_mappings.values())
     taxonomy.get_hierarchical_one_hot_encoding(all_classes)
     taxonomy.plot_colored_taxonomy(taxonomy.get_hierarchical_one_hot_encoding(['SN-IIn'])[0])
+
+    print(taxonomy.get_nodes_by_depth())
 
 
     # Create a taxonomy object

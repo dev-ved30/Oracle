@@ -8,15 +8,16 @@ from torchvision.models import swin_v2_b
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 from oracle.taxonomies import Taxonomy, ORACLE_Taxonomy
+from oracle.trainer import Trainer
 
 swin_v2_b_output_dim = 1000
 
 # Template for the Hierarchical Classifier
-class Hierarchical_classifier(nn.Module):
+class Hierarchical_classifier(nn.Module, Trainer):
 
     def __init__(self, taxonomy: Taxonomy):
-        super(Hierarchical_classifier, self).__init__()
 
+        nn.Module.__init__(self)
         self.taxonomy = taxonomy
         self.n_nodes = len(taxonomy.get_level_order_traversal())
 

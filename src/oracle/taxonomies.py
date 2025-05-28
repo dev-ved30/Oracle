@@ -248,6 +248,7 @@ class Taxonomy(nx.DiGraph):
 
         depths = self.get_depths()
         level_order_traversal = np.array(self.get_level_order_traversal())
+        leaf_nodes = self.get_leaf_nodes()
 
         nodes_by_depth = {}
 
@@ -257,6 +258,9 @@ class Taxonomy(nx.DiGraph):
             # Get the indices of the nodes at this depth in the level order traversal.
             idx = np.where(depths==d)[0]
             nodes_by_depth[int(d)] = level_order_traversal[idx]
+
+        # Add the leaf nodes to the nodes_by_depth dictionary.
+        nodes_by_depth[-1] = np.array(leaf_nodes)
 
         return nodes_by_depth
             

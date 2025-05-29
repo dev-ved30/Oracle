@@ -308,24 +308,15 @@ class BTS_Taxonomy(Taxonomy):
         super().__init__(**attr)
         self.add_node(root_label)
 
-        level_1_nodes = ['Other','CC','Thermonuclear']
+        level_1_nodes = ['Other','CC','SN-Ia']
         self.add_nodes_from(level_1_nodes)
         self.add_edges_from([(root_label, node) for node in level_1_nodes])
 
-        # Level 2a nodes for Long Transients
-        level_2a_nodes = ['CART','FBOT','ILRT','LBV','LRN','TDE','afterglow','nova/nova-like']
-        self.add_nodes_from(level_2a_nodes)
-        self.add_edges_from([('Other', node) for node in level_2a_nodes])
-
         # Level 2b nodes for SN-like events
-        level_2b_nodes = ['SLSN-I','SLSN-II','SN-II-normal','SN-II-peculiar','SN-IIb','SN-IIn','SN-Ib/c','SN-Ib-peculiar','SN-Ibn','SN-Ib/c-normal','SN-Ic-BL','SN-Ic-SL','SN-Icn']
+        level_2b_nodes = ['SLSN-I','SN-II','SN-IIn','SN-Ib/c']
         self.add_nodes_from(level_2b_nodes)
         self.add_edges_from([('CC', node) for node in level_2b_nodes])
 
-        # Level 2c nodes for Short Transients
-        level_2c_nodes = ['SN-Ia-normal','SN-Ia-peculiar','SN-Ia']
-        self.add_nodes_from(level_2c_nodes)
-        self.add_edges_from([('Thermonuclear', node) for node in level_2c_nodes])
 
 class ORACLE_Taxonomy(Taxonomy):
 

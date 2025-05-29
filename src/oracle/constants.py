@@ -35,58 +35,58 @@ ELAsTiCC_to_Astrophysical_mappings = {
 
 BTS_to_Astrophysical_mappings = {
 
-    'Ca-rich': 'CART', 
-    'FBOT': 'FBOT',
-    'ILRT': 'ILRT',
-    'LBV': 'LBV',
-    'LRN': 'LRN',
+    'Ca-rich': 'Other', 
+    'FBOT': 'Other',
+    'ILRT': 'Other',
+    'LBV': 'Other',
+    'LRN': 'Other',
     'SLSN-I': 'SLSN-I',
     'SLSN-I.5': 'SLSN-I',
     'SLSN-I?': 'SLSN-I',
-    'SLSN-II': 'SLSN-II',
-    'SN II': 'SN-II-normal',
-    'SN II-SL': 'SLSN-II',
-    'SN II-norm': 'SN-II-normal',
-    'SN II-pec': 'SN-II-peculiar',
-    'SN II?': 'SN-II-normal',
-    'SN IIL': 'SN-II-normal',
-    'SN IIP': 'SN-II-normal',
-    'SN IIb': 'SN-II-peculiar',
-    'SN IIb-pec': 'SN-IIb',
-    'SN IIb?': 'SN-IIb',
+    'SLSN-II': 'CC',
+    'SN II': 'SN-II',
+    'SN II-SL': 'CC',
+    'SN II-norm': 'SN-II',
+    'SN II-pec': 'SN-II',
+    'SN II?': 'SN-II',
+    'SN IIL': 'SN-II',
+    'SN IIP': 'SN-II',
+    'SN IIb': 'SN-II',
+    'SN IIb-pec': 'SN-II',
+    'SN IIb?': 'SN-II',
     'SN IIn': 'SN-IIn',
     'SN IIn?': 'SN-IIn',
-    'SN Ia': 'SN-Ia-normal',
-    'SN Ia-00cx': 'SN-Ia-peculiar',# pec
-    'SN Ia-03fg': 'SN-Ia-peculiar',# pec
-    'SN Ia-91T': 'SN-Ia-normal',
-    'SN Ia-91bg': 'SN-Ia-peculiar',# pec
-    'SN Ia-91bg?': 'SN-Ia-peculiar',# pec
-    'SN Ia-99aa': 'SN-Ia-normal',
-    'SN Ia-CSM': 'SN-Ia-peculiar',# pec
-    'SN Ia-CSM?': 'SN-Ia-peculiar',# pec
-    'SN Ia-norm': 'SN-Ia-normal',
-    'SN Ia-pec': 'SN-Ia-peculiar',# pec
+    'SN Ia': 'SN-Ia',
+    'SN Ia-00cx': 'SN-Ia',# pec
+    'SN Ia-03fg': 'SN-Ia',# pec
+    'SN Ia-91T': 'SN-Ia',
+    'SN Ia-91bg': 'SN-Ia',# pec
+    'SN Ia-91bg?': 'SN-Ia',# pec
+    'SN Ia-99aa': 'SN-Ia',
+    'SN Ia-CSM': 'SN-Ia',# pec
+    'SN Ia-CSM?': 'SN-Ia',# pec
+    'SN Ia-norm': 'SN-Ia',
+    'SN Ia-pec': 'SN-Ia',# pec
     'SN Ia?': 'SN-Ia',
-    'SN Iax': 'SN-Ia-peculiar', # pec
+    'SN Iax': 'SN-Ia', # pec
     'SN Ib': 'SN-Ib/c',
-    'SN Ib-pec': 'SN-Ib-peculiar',
+    'SN Ib-pec': 'SN-Ib/c',
     'SN Ib/c': 'SN-Ib/c',
     'SN Ib/c?': 'SN-Ib/c',
     'SN Ib?': 'SN-Ib/c',
-    'SN Ibn': 'SN-Ibn',
-    'SN Ibn?': 'SN-Ibn',
-    'SN Ic': 'SN-Ib/c-normal',
-    'SN Ic-BL': 'SN-Ic-BL',
-    'SN Ic-BL?': 'SN-Ic-BL',
-    'SN Ic-SL': 'SN-Ic-SL',
+    'SN Ibn': 'SN-Ib/c',
+    'SN Ibn?': 'SN-Ib/c',
+    'SN Ic': 'SN-Ib/c',
+    'SN Ic-BL': 'SN-Ib/c',
+    'SN Ic-BL?': 'SN-Ib/c',
+    'SN Ic-SL': 'SN-Ib/c',
     'SN Ic?': 'SN-Ib/c',
-    'SN Icn': 'SN-Icn',
-    'TDE': 'TDE',
-    'afterglow': 'afterglow',
-    'nova': 'nova/nova-like',
-    'nova-like': 'nova/nova-like',
-    'nova?': 'nova/nova-like',
+    'SN Icn': 'SN-Ib/c',
+    'TDE': 'Other',
+    'afterglow': 'Other',
+    'nova': 'Other',
+    'nova-like': 'Other',
+    'nova?': 'Other',
 
 }
 

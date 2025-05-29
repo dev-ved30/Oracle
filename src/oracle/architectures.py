@@ -9,11 +9,12 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 from oracle.taxonomies import Taxonomy, ORACLE_Taxonomy
 from oracle.trainer import Trainer
+from oracle.tester import Tester
 
 swin_v2_b_output_dim = 1000
 
 # Template for the Hierarchical Classifier
-class Hierarchical_classifier(nn.Module, Trainer):
+class Hierarchical_classifier(nn.Module, Trainer, Tester):
 
     def __init__(self, taxonomy: Taxonomy):
 

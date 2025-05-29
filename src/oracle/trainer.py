@@ -4,6 +4,7 @@ import torch
 import numpy as np
 import torch.optim as optim
 
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from tqdm import tqdm
 
 from oracle.loss import WHXE_Loss
@@ -16,7 +17,7 @@ class Trainer:
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.model_dir = model_dir
         self.device = device
-        self.scheduler = None # TODO: Add scheduler for the learning rate
+        self.scheduler = ReduceLROnPlateau(self.optimizer)
 
     def train_one_epoch(self, train_loader):
 
@@ -102,6 +103,8 @@ class Trainer:
             if len(train_loss_history) == 1 or val_loss == min(val_loss_history):
                 print("Saving model...")
                 torch.save(self.state_dict(), f'{self.model_dir}/best_model.pth')
+
+            self.scheduler.step(val_loss)
 
         # Dump the train and val loss history
         np.save(f"{self.model_dir}/train_loss_history.npy")

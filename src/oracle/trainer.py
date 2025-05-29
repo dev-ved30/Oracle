@@ -2,24 +2,23 @@ import time
 import torch
 
 import numpy as np
-import torch.nn as nn
 import torch.optim as optim
 
 from tqdm import tqdm
 
 from oracle.loss import WHXE_Loss
-from oracle.taxonomies import Taxonomy
 
 class Trainer:
     
-    def setup_training(self, alpha, lr, model_dir):
+    def setup_training(self, alpha, lr, model_dir, device):
         
         self.criterion = WHXE_Loss(self.taxonomy, alpha)
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.model_dir = model_dir
+        self.device = device
         self.scheduler = None # TODO: Add scheduler for the learning rate
 
-    def train_one_epoch(self, train_loader, device):
+    def train_one_epoch(self, train_loader):
 
         self.train()
         train_loss_values = []
@@ -28,10 +27,10 @@ class Trainer:
         for i, batch in enumerate(tqdm(train_loader, desc='Training')):
 
             # Move everything to the device
-            batch = {k: v.to(device) if torch.is_tensor(v) else v for k, v in batch.items()}
+            batch = {k: v.to(self.device) if torch.is_tensor(v) else v for k, v in batch.items()}
 
             # Get the label encodings
-            label_encodings = torch.from_numpy(self.taxonomy.get_hierarchical_one_hot_encoding(batch['label'])).to(device=device)           
+            label_encodings = torch.from_numpy(self.taxonomy.get_hierarchical_one_hot_encoding(batch['label'])).to(device=self.device)           
 
             # Forward pass
             logits = self(batch)
@@ -47,7 +46,7 @@ class Trainer:
 
         return np.mean(train_loss_values)
 
-    def validate(self, val_loader, device):
+    def validate(self, val_loader):
 
         self.eval()
         val_loss_values = []
@@ -56,10 +55,10 @@ class Trainer:
             for i, batch in enumerate(tqdm(val_loader, desc='Validation')):
 
                 # Move everything to the device
-                batch = {k: v.to(device) if torch.is_tensor(v) else v for k, v in batch.items()}
+                batch = {k: v.to(self.device) if torch.is_tensor(v) else v for k, v in batch.items()}
 
                 # Get the label encodings
-                label_encodings = torch.from_numpy(self.taxonomy.get_hierarchical_one_hot_encoding(batch['label'])).to(device=device)           
+                label_encodings = torch.from_numpy(self.taxonomy.get_hierarchical_one_hot_encoding(batch['label'])).to(device=self.device)           
 
                 # Forward pass
                 logits = self(batch)
@@ -69,9 +68,9 @@ class Trainer:
 
         return np.mean(val_loss_values)
 
-    def fit(self, train_loader, val_loader, device, num_epochs=5):
+    def fit(self, train_loader, val_loader, num_epochs=5):
 
-        self.to(device)
+        self.to(self.device)
 
         train_loss_history = []
         val_loss_history = []
@@ -84,8 +83,8 @@ class Trainer:
 
             start_time = time.time()
 
-            train_loss = self.train_one_epoch(train_loader, device)
-            val_loss = self.validate(val_loader, device)
+            train_loss = self.train_one_epoch(train_loader)
+            val_loss = self.validate(val_loader)
 
             train_loss_history.append(train_loss)
             val_loss_history.append(val_loss)

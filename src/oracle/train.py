@@ -85,7 +85,7 @@ def run_training_loop(args):
         train_dataset = ELAsTiCC_LC_Dataset('data/ELAsTiCC/train.parquet', include_lc_plots=False, transform=truncate_ELAsTiCC_light_curve_fractionally, max_n_per_class=max_n_per_class)
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_ELAsTiCC, generator=generator)
 
-
+        val_dataloader = train_dataloader
 
 
     elif model_choice == "ORACLE1-lite_ELAsTiCC":
@@ -111,8 +111,8 @@ def run_training_loop(args):
 
     # Fit the model
     model = model.to(device)
-    model.setup_training(alpha, lr, model_dir)
-    model.fit(train_dataloader, val_dataloader, device, num_epochs)
+    model.setup_training(alpha, lr, model_dir, device)
+    model.fit(train_dataloader, val_dataloader, num_epochs)
 
 def main():
     args = parse_args()

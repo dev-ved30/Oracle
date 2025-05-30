@@ -54,6 +54,8 @@ def plot_confusion_matrix(y_true, y_pred, labels, title=None, img_file=None):
     if img_file:
         plt.savefig(img_file)
 
+    plt.close()
+
 def plot_roc_curves(probs_true, probs_pred, labels, title=None, img_file=None):
 
     # Only keep source where a true label exists
@@ -102,3 +104,5 @@ def plot_roc_curves(probs_true, probs_pred, labels, title=None, img_file=None):
 
     if img_file:
         plt.savefig(img_file)
+
+    plt.close()

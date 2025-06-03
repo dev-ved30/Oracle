@@ -1,6 +1,7 @@
 #!/bin/bash
 #SBATCH --account=b1094
-#SBATCH --partition=ciera-std
+#SBATCH --partition=ciera-gpu
+#SBATCH --gres=gpu:a100:1
 #SBATCH --time=5:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=52

@@ -90,12 +90,12 @@ class Trainer:
             train_loss_history.append(train_loss)
             val_loss_history.append(val_loss)
 
-            if np.isnan(val_loss) == True:
+            if np.isnan(train_loss) == True:
                 print("Training loss was nan. Exiting the loop.")
                 break
 
-            print(f"Train Loss: {train_loss:.4f}\n"
-                  f"Val Loss: {val_loss:.4f}")
+            print(f"Train Loss: {train_loss:.4f} (Best: {min(train_loss_history):.4f})\n"
+                  f"Val Loss: {val_loss:.4f} (Best: {min(val_loss_history):.4f})")
 
             print(f"Time taken: {time.time() - start_time:.2f}s")
 

@@ -20,4 +20,4 @@ source activate oracle2
 
 pip install -e .
 
-oracle-train --model ORACLE1-lite_BTS --lr 1e-4 --alpha 0.5 --batch_size 1024 --num_epochs 2000 --max_n_per_class 1200
+oracle-train --model ORACLE1-lite_BTS --lr 1e-2 --alpha 0.5 --batch_size 1024 --num_epochs 2000 --max_n_per_class 1200

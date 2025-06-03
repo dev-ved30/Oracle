@@ -52,60 +52,64 @@ def main(argv=None):
             # Get the label from the other data frame
             bts_class = labels_df[labels_df['ZTFID']==id]['type'].to_numpy()[0]
 
-            # Get the time series data
-            source_df = data_df[data_df['objectId'] == id].sort_values(by='jd').drop('objectId', axis=1)
+            if bts_class not in ['-','bogus','duplicate']:
 
-            # Next, we find the images corresponding to this source. The number of images should be equal to the length of the time series * 3
-            # Since we only care about the reference images, we pick the first one from each of the filters
-            img_dictionary = {}
+                # Get the time series data
+                source_df = data_df[data_df['objectId'] == id].sort_values(by='jd').drop('objectId', axis=1)
 
-            for f in ztf_filters:
+                # Next, we find the images corresponding to this source. The number of images should be equal to the length of the time series * 3
+                # Since we only care about the reference images, we pick the first one from each of the filters
+                img_dictionary = {}
+
+                for f in ztf_filters:
+                    
+                    # Find all observations in this pass band
+                    source_df_in_filter = source_df[source_df['fid']==ztf_filter_to_fid[f]]
+
+                    # Make sure there is at least one alert in the pass band
+                    if source_df_in_filter.to_numpy().shape[0] > 0:
+
+                        img_index = source_df_in_filter.index[0]
+
+                        # Grab the set of ref, science, and diff images from the first alert
+                        for j, img_type in enumerate(ztf_alert_image_order):
+
+                            # Grab the image data and then flatten it
+                            img = images[img_index, :, :, j] # shape: (N, 63, 63, 3)
+                            flattened_img = img.flatten()
+
+                            img_dictionary[f"{f}_{img_type}"] = flattened_img
+
+                    else: 
+
+                        # Grab the set of ref, science, and diff images from the first alert
+                        for j, img_type in enumerate(ztf_alert_image_order):
+                            img_dictionary[f"{f}_{img_type}"] = None
+
+                    
+                # Start assembling new row in parquet file
+                new_row ={}
+                new_row['ZTFID'] = id
+                new_row['bts_class'] = bts_class
                 
-                # Find all observations in this pass band
-                source_df_in_filter = source_df[source_df['fid']==ztf_filter_to_fid[f]]
-
-                # Make sure there is at least one alert in the pass band
-                if source_df_in_filter.to_numpy().shape[0] > 0:
-
-                    img_index = source_df_in_filter.index[0]
-
-                    # Grab the set of ref, science, and diff images from the first alert
-                    for j, img_type in enumerate(ztf_alert_image_order):
-
-                        # Grab the image data and then flatten it
-                        img = images[img_index, :, :, j] # shape: (N, 63, 63, 3)
-                        flattened_img = img.flatten()
-
-                        img_dictionary[f"{f}_{img_type}"] = flattened_img
-
-                else: 
-
-                    # Grab the set of ref, science, and diff images from the first alert
-                    for j, img_type in enumerate(ztf_alert_image_order):
-                        img_dictionary[f"{f}_{img_type}"] = None
-
+                # Add all the images
+                for k in img_dictionary.keys():
+                    new_row[k] = [img_dictionary[k]]
                 
-            
-            # Start assembling new row in parquet file
-            new_row ={}
-            new_row['ZTFID'] = id
-            new_row['bts_class'] = bts_class
-            
-            # Add all the images
-            for k in img_dictionary.keys():
-                new_row[k] = [img_dictionary[k]]
-            
-            # Add all the time series data
-            for c in source_df.columns:
-                new_row[c] = [source_df[c].to_numpy()]
+                # Add all the time series data
+                for c in source_df.columns:
+                    new_row[c] = [source_df[c].to_numpy()]
 
-            new_row = pl.DataFrame(new_row)
-            all_rows.append(new_row)
+                new_row = pl.DataFrame(new_row)
+                all_rows.append(new_row)
 
     final_parquet = pl.concat(all_rows, how='diagonal')
     final_parquet = pl.from_dataframe(final_parquet)
     final_parquet.write_parquet(output_path)
 
+    print([c for c in zip(np.unique(final_parquet['bts_class'], return_counts=True))])
+    print(f"Labels found for {len(final_parquet)} out of {len(unique_data_id)} sources.")
+    #print(np.unique([x[0] for x in final_parquet['source_set']],return_counts=True))
     print(final_parquet)
 
 if __name__ == '__main__':

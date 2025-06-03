@@ -106,3 +106,40 @@ def plot_roc_curves(probs_true, probs_pred, labels, title=None, img_file=None):
         plt.savefig(img_file)
 
     plt.close()
+
+
+def plot_train_val_history(train_loss_history, val_loss_history, file_name):
+
+    window_size = 10
+
+    rolling_train = []
+    rolling_val = []
+    s = []
+
+    for i in range(len(train_loss_history) - window_size):
+
+        rolling_train.append(np.mean(train_loss_history[i:i+window_size]))
+        rolling_val.append(np.mean(val_loss_history[i:i+window_size]))
+        s.append(i) #s.append(i + window_size)
+
+    fig, axs = plt.subplots(ncols=1, nrows=2, figsize=(5, 7), layout="constrained")
+
+    axs[0].plot(list(range(len(train_loss_history))), np.log(train_loss_history), label='Train Loss', color='C0', alpha=0.5)
+    axs[0].plot(s, np.log(rolling_train), label='Rolling Avg Train Loss', color='C1')
+
+    # axs[0].set_ylabel("Mean log loss", fontsize='x-large')
+    # axs[0].legend()
+    axs[0].set_xticks([])
+
+    axs[1].plot(list(range(len(val_loss_history))), np.log(val_loss_history), label='Validation Loss', color='C0', alpha=0.5)
+    axs[1].plot(s, np.log(rolling_val), label='Rolling Avg Validation Loss', color='C1')
+
+    # axs[1].set_xlabel("Epoch", fontsize='x-large')
+    # axs[1].set_ylabel("Mean log loss", fontsize='x-large')
+    # axs[1].legend()
+
+    # axs[0].set_ylim(-3.4, -1)
+    # axs[1].set_ylim(-3.4, -1)
+
+    plt.savefig(file_name)
+    plt.close()

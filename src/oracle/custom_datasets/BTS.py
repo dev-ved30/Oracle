@@ -68,7 +68,7 @@ n_book_keeping_features = len(book_keeping_feature_list)
 
 class BTS_LC_Dataset(torch.utils.data.Dataset):
 
-    def __init__(self, parquet_file_path,  max_n_per_class=None, include_postage_stamps=False, include_lc_plots=False, transform=None):
+    def __init__(self, parquet_file_path,  max_n_per_class=None, include_postage_stamps=False, include_lc_plots=False, transform=None, over_sample=False):
         super(BTS_LC_Dataset, self).__init__()
 
         # Columns to be read from the parquet file
@@ -77,6 +77,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         self.include_lc_plots = include_lc_plots
         self.include_postage_stamps = include_postage_stamps
         self.max_n_per_class = max_n_per_class
+        self.over_sample = over_sample
 
         print(f'Loading dataset from {self.parquet_file_path}\n')
         self.columns = time_dependent_feature_list + images_list + book_keeping_feature_list
@@ -87,6 +88,10 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
 
         if self.max_n_per_class != None:
             self.limit_max_samples_per_class()
+
+        if self.over_sample:
+            self.over_sample_minority_classes()
+
                
     def __len__(self):
 
@@ -138,6 +143,22 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         
         return dictionary
     
+    def over_sample_minority_classes(self):
+        
+        print("Oversampling minority classes...")
+        unique_classes, unique_counts = np.unique(self.parquet_df['class'], return_counts=True)
+        max_count = max(unique_counts)
+        class_dfs = []
+
+        for i, c in enumerate(unique_classes):
+
+            if unique_counts[i] < max_count:
+                class_df = self.parquet_df.filter(pl.col("class") == c).sample(n=max_count, with_replacement=True)
+                class_dfs.append(class_df)
+                print(f"{c}: {class_df.shape[0]}")
+
+        self.parquet_df = pl.concat(class_dfs)
+
     def clean_up_dataset(self):
 
         print("Starting Dataset Transformations:")

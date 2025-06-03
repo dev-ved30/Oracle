@@ -16,4 +16,4 @@ source activate oracle2
 
 pip install -e .
 
-oracle-train --model ORACLE2-lite_swin_LSST
+oracle-train --model ORACLE1-lite_BTS --lr 1e-3 --alpha 0.5 --batch_size 256 --num_epochs 1000 --max_n_per_class 1000

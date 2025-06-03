@@ -18,6 +18,6 @@ conda init bash
 conda deactivate
 source activate oracle2
 
-#pip install -e .
+pip install -e .
 
-oracle-train --model ORACLE1 --num_epochs 2000 --alpha 0.5 --lr 0.0002
+oracle-train --model ORACLE1-lite_BTS --lr 1e-3 --alpha 0.5 --batch_size 256 --num_epochs 1000 --max_n_per_class 1000

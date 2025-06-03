@@ -3,9 +3,10 @@ import torch
 import numpy as np
 import pandas as pd
 
+from sklearn.metrics import classification_report
 from tqdm import tqdm
 
-from oracle.visualization import plot_confusion_matrix, plot_roc_curves
+from oracle.visualization import plot_confusion_matrix, plot_roc_curves, plot_train_val_history
 
 class Tester:
     
@@ -14,9 +15,30 @@ class Tester:
         self.model_dir = model_dir
         self.device = device
 
-    # def save_classification_report():
+    def create_loss_history_plot(self):
 
-    #     classification_report(y_true, y_pred)
+        # Load the train and validation loss history
+        train_loss_history = np.load(f"{self.model_dir}/train_loss_history.npy")
+        val_loss_history = np.load(f"{self.model_dir}/val_loss_history.npy")
+        
+        # Save the plot
+        file_name = f"{self.model_dir}/loss.pdf"
+        plot_train_val_history(train_loss_history, val_loss_history, file_name)
+
+
+    def create_classification_report(self, y_true, y_pred, file_name=None):
+        
+        # Only keep source where a true label exists
+        idx = np.where(y_true!=None)[0]
+        y_true = y_true[idx]
+        y_pred = y_pred[idx]
+
+        report = classification_report(y_true, y_pred)
+
+        if file_name:
+            report_dict = classification_report(y_true, y_pred, output_dict=True)
+            pd.DataFrame(report_dict).transpose().to_csv(file_name)
+        return report 
 
     def run_all_analysis(self, test_loader, d):
 
@@ -26,6 +48,8 @@ class Tester:
         true_classes = []
         combined_pred_df = []
         combined_true_df = []
+
+        print(f'==========\nStarting Analysis for Trigger + {d} days...')
 
         # Run inference on the test set and combine the output dataframes
         for batch in tqdm(test_loader, desc='Testing'):
@@ -53,6 +77,8 @@ class Tester:
             
             # Skip the root node since it will always have a probability of 1
             if depth != 0:
+
+                print(f'----------\nDEPTH: {depth}')
 
                 # Get all the nodes at depth 
                 nodes = nodes_by_depth[depth]
@@ -85,8 +111,10 @@ class Tester:
                 roc_img_file = f"{self.model_dir}/plots/roc_d{depth}_trigger+{d}.pdf"
                 plot_roc_curves(level_true_df.to_numpy(), level_pred_df.to_numpy(), nodes, title=roc_title, img_file=roc_img_file)
 
-
-
+                # Make classification report
+                report_file = f"{self.model_dir}/reports/report_d{depth}_trigger+{d}.csv"
+                report = self.create_classification_report(np.array(level_true_classes), np.array(level_pred_classes), report_file)
+                print(report)
 
 
 

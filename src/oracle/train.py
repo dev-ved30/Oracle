@@ -1,13 +1,9 @@
-import os
-import time
 import torch
 import argparse
 
-from tqdm import tqdm
 from pathlib import Path    
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, ConcatDataset
 
-from oracle.loss import WHXE_Loss
 from oracle.taxonomies import ORACLE_Taxonomy, BTS_Taxonomy
 from oracle.architectures import *
 from oracle.custom_datasets.ELAsTiCC import *
@@ -30,6 +26,8 @@ default_model_type = "ORACLE1_ELAsTiCC"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")
 torch.set_default_device(device)
+
+val_truncation_fractions = [0.3, 0.5, 0.7, 0.9]
 
 def parse_args():
     '''
@@ -82,18 +80,34 @@ def run_training_loop(args):
         model = ORACLE1(taxonomy)
 
         # Load the training set
-        train_dataset = ELAsTiCC_LC_Dataset('data/ELAsTiCC/train.parquet', include_lc_plots=False, transform=truncate_ELAsTiCC_light_curve_fractionally, max_n_per_class=max_n_per_class)
+        train_dataset = ELAsTiCC_LC_Dataset(ELAsTiCC_train_parquet_path, include_lc_plots=False, transform=truncate_ELAsTiCC_light_curve_fractionally, max_n_per_class=max_n_per_class)
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_ELAsTiCC, generator=generator)
-
-        val_dataloader = train_dataloader
-
+        
+        # Load the validation set
+        val_dataset = []
+        for f in val_truncation_fractions:
+            transform = partial(truncate_ELAsTiCC_light_curve_fractionally, f=f)
+            val_dataset.append(ELAsTiCC_LC_Dataset(ELAsTiCC_val_parquet_path, transform=transform))
+        val_dataset = ConcatDataset(val_dataset)
+        val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_ELAsTiCC, generator=generator)
 
     elif model_choice == "ORACLE1-lite_ELAsTiCC":
 
+        # Define the model taxonomy and architecture
         taxonomy = ORACLE_Taxonomy()
         model = ORACLE1_lite(taxonomy)
-        dataset = ELAsTiCC_LC_Dataset('data/ELAsTiCC/train.parquet', include_lc_plots=False, transform=truncate_ELAsTiCC_light_curve_fractionally, max_n_per_class=max_n_per_class)
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_ELAsTiCC, generator=generator)
+
+        # Load the training set
+        train_dataset = ELAsTiCC_LC_Dataset(ELAsTiCC_train_parquet_path, include_lc_plots=False, transform=truncate_ELAsTiCC_light_curve_fractionally, max_n_per_class=max_n_per_class)
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_ELAsTiCC, generator=generator)
+        
+        # Load the validation set
+        val_dataset = []
+        for f in val_truncation_fractions:
+            transform = partial(truncate_ELAsTiCC_light_curve_fractionally, f=f)
+            val_dataset.append(ELAsTiCC_LC_Dataset(ELAsTiCC_val_parquet_path, transform=transform))
+        val_dataset = ConcatDataset(val_dataset)
+        val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_ELAsTiCC, generator=generator)
 
     elif model_choice == "ORACLE1-lite_BTS":
 
@@ -102,11 +116,15 @@ def run_training_loop(args):
         model = ORACLE1_lite(taxonomy, ts_feature_dim=4)
 
         # Load the training set
-        train_dataset = BTS_LC_Dataset(BTS_train_parquet_path, transform=truncate_BTS_light_curve_fractionally, max_n_per_class=max_n_per_class)
+        train_dataset = BTS_LC_Dataset(BTS_train_parquet_path, max_n_per_class=max_n_per_class, transform=truncate_BTS_light_curve_fractionally)
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_BTS, generator=generator)
 
         # Load the validation set
-        val_dataset = BTS_LC_Dataset(BTS_val_parquet_path)
+        val_dataset = []
+        for f in val_truncation_fractions:
+            transform = partial(truncate_ELAsTiCC_light_curve_fractionally, f=f)
+            val_dataset.append(BTS_LC_Dataset(BTS_val_parquet_path, transform=transform))
+        val_dataset = ConcatDataset(val_dataset)
         val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_BTS, generator=generator)
 
     # Fit the model

@@ -34,7 +34,27 @@ ELAsTiCC_to_Astrophysical_mappings = {
 }
 
 BTS_to_Astrophysical_mappings = {
-
+    'AGN': 'Other',
+    'AGN?': 'Other',
+    'CLAGN': 'Other',
+    'bogus?': 'Other',
+    'rock': 'Other',
+    'CV': 'Other',
+    'CV?': 'Other',
+    'AM CVn': 'Other',
+    'varstar': 'Other',
+    'QSO': 'Other',
+    'QSO?': 'Other',
+    'NLS1': 'Other',
+    'NLSy1?': 'Other',
+    'Blazar': 'Other',
+    'BL Lac': 'Other',
+    'blazar': 'Other',
+    'blazar?': 'Other',
+    'Seyfert': 'Other',
+    'star': 'Other',
+    'Ien': 'Other',
+    'LINER': 'Other',
     'Ca-rich': 'Other', 
     'FBOT': 'Other',
     'ILRT': 'Other',

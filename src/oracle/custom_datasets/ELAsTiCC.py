@@ -20,7 +20,7 @@ here = Path(__file__).resolve().parent
 # Go up to the root, then into data/ and then get the parquet file
 ELAsTiCC_train_parquet_path = str(here.parent.parent.parent / "data" / 'ELAsTiCC' / 'train.parquet')
 ELAsTiCC_test_parquet_path = str(here.parent.parent.parent / "data" / 'ELAsTiCC' / 'test.parquet')
-#ELAsTiCC_val_parquet_path = str(here.parent.parent.parent / "data" / 'ELAsTiCC' / 'val.parquet')
+ELAsTiCC_val_parquet_path = str(here.parent.parent.parent / "data" / 'ELAsTiCC' / 'val.parquet')
 
 # <----- constant for the dataset ----->
 

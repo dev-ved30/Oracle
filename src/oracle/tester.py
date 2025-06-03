@@ -5,6 +5,7 @@ import pandas as pd
 
 from sklearn.metrics import classification_report
 from tqdm import tqdm
+from pathlib import Path    
 
 from oracle.visualization import plot_confusion_matrix, plot_roc_curves, plot_train_val_history
 
@@ -80,6 +81,10 @@ class Tester:
 
                 print(f'----------\nDEPTH: {depth}')
 
+                # Make dirs for plots and reports
+                Path(f"{self.model_dir}/plots/depth{depth}").mkdir(parents=True, exist_ok=True)
+                Path(f"{self.model_dir}/reports/depth{depth}").mkdir(parents=True, exist_ok=True)
+
                 # Get all the nodes at depth 
                 nodes = nodes_by_depth[depth]
 
@@ -103,16 +108,16 @@ class Tester:
                 
                 # Make the confusion matrix plot
                 cf_title = f"Trigger+{d} days"
-                cf_img_file = f"{self.model_dir}/plots/cf_d{depth}_trigger+{d}.pdf"
+                cf_img_file = f"{self.model_dir}/plots/depth{depth}/cf_trigger+{d}.pdf"
                 plot_confusion_matrix(np.array(level_true_classes), np.array(level_pred_classes), nodes, title=cf_title, img_file=cf_img_file)
 
                 # Make the ROC plot
                 roc_title = f"Trigger+{d} days"
-                roc_img_file = f"{self.model_dir}/plots/roc_d{depth}_trigger+{d}.pdf"
+                roc_img_file = f"{self.model_dir}/plots/depth{depth}/roc_trigger+{d}.pdf"
                 plot_roc_curves(level_true_df.to_numpy(), level_pred_df.to_numpy(), nodes, title=roc_title, img_file=roc_img_file)
 
                 # Make classification report
-                report_file = f"{self.model_dir}/reports/report_d{depth}_trigger+{d}.csv"
+                report_file = f"{self.model_dir}/reports/depth{depth}/report_trigger+{d}.csv"
                 report = self.create_classification_report(np.array(level_true_classes), np.array(level_pred_classes), report_file)
                 print(report)
 

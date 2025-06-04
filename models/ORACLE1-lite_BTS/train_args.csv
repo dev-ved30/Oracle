@@ -1,0 +1,2 @@
+model,num_epochs,batch_size,lr,max_n_per_class,alpha,dir
+ORACLE1-lite_BTS,2000,1024,0.01,1200,0.5,

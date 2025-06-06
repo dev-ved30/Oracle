@@ -280,7 +280,7 @@ class Taxonomy(nx.DiGraph):
         # TODO: This could probably be sped up. I am implementing the dumb version for now but we might want to optimize this, especially if we want to deploy since this will be used during inference.
 
         # Conditional probabilities are the output of the model. We use those to compute the class probabilities.
-        class_probabilities = np.ones(conditional_probabilities.shape)
+        class_probabilities = torch.ones(conditional_probabilities.shape)
 
         # Get the leaf nodes for the taxonomy.
         level_order_nodes = self.get_level_order_traversal()
@@ -297,7 +297,7 @@ class Taxonomy(nx.DiGraph):
                 indices = [list(self.get_level_order_traversal()).index(n) for n in path]
 
                 # Multiply the conditional probabilities of the nodes in the path to get the class probability.
-                class_probabilities[:,i] = np.prod(conditional_probabilities[:,indices], axis=1)
+                class_probabilities[:,i] = torch.prod(conditional_probabilities[:,indices], dim=1)
 
         return class_probabilities
 

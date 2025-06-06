@@ -25,7 +25,7 @@ class Hierarchical_classifier(nn.Module, Trainer, Tester):
     def predict_conditional_probabilities(self, batch):
         
         logits = self.forward(batch)
-        conditional_probabilities = self.taxonomy.get_conditional_probabilities(logits).detach().numpy()
+        conditional_probabilities = self.taxonomy.get_conditional_probabilities(logits).detach()
         return conditional_probabilities
 
     def predict_class_probabilities(self, batch):

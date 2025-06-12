@@ -313,7 +313,7 @@ class BTS_Taxonomy(Taxonomy):
         self.add_edges_from([(root_label, node) for node in level_1_nodes])
 
         # Level 2b nodes for SN-like events
-        level_2b_nodes = ['SLSN-I','SN-II','SN-IIn','SN-Ib/c']
+        level_2b_nodes = ['SLSN-I','SN-II','SN-Ib/c']
         self.add_nodes_from(level_2b_nodes)
         self.add_edges_from([('CC', node) for node in level_2b_nodes])
 

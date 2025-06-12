@@ -110,6 +110,32 @@ BTS_to_Astrophysical_mappings = {
 
 }
 
+ZTF_sims_to_Astrophysical_mappings = {
+    'SNIa-normal': 'SN-Ia',  
+    'SNCC-II': 'SN-II',  
+    'SNCC-Ibc': 'SN-Ib/c',   
+    'SNCC-II': 'SN-II',    
+    'SNCC-Ibc': 'SN-Ib/c',    
+    'SNCC-II': 'SN-II',  
+    'SNIa-91bg': 'SN-Ia',   
+    'SNIa-x ': 'SN-Ia',  
+    'KN': 'Other',  
+    'SLSN-I': 'SLSN-I',   
+    'PISN': 'Other',   
+    'ILOT': 'Other',    
+    'CART': 'Other',    
+    'TDE': 'Other',    
+    'AGN': 'Other',    
+    'RRlyrae': 'Other',   
+    'Mdwarf': 'Other',    
+    'EBE': 'Other',    
+    'MIRA': 'Other',    
+    'uLens-Binary': 'Other',    
+    'uLens-Point': 'Other',    
+    'uLens-STRING': 'Other',    
+    'uLens-Point': 'Other',    
+}
+
 ztf_fid_to_filter = {
     1: 'g',
     2: 'r', 

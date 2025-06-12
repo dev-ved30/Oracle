@@ -106,6 +106,6 @@ class Trainer:
 
             self.scheduler.step(val_loss)
 
-        # Dump the train and val loss history
-        np.save(f"{self.model_dir}/train_loss_history.npy", np.array(train_loss_history))
-        np.save(f"{self.model_dir}/val_loss_history.npy", np.array(val_loss_history))
+            # Dump the train and val loss history
+            np.save(f"{self.model_dir}/train_loss_history.npy", np.array(train_loss_history))
+            np.save(f"{self.model_dir}/val_loss_history.npy", np.array(val_loss_history))

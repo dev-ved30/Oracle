@@ -8,6 +8,7 @@ from oracle.taxonomies import ORACLE_Taxonomy, BTS_Taxonomy
 from oracle.architectures import *
 from oracle.custom_datasets.ELAsTiCC import *
 from oracle.custom_datasets.BTS import *
+from oracle.custom_datasets.ZTF_sims import *
 
 # <----- Defaults for training the models ----->
 default_num_epochs = 100
@@ -18,7 +19,7 @@ default_max_n_per_class = int(1e7)
 default_model_dir = None
 
 # <----- Config for the model ----->
-model_choices = ["ORACLE1_ELAsTiCC", "ORACLE1-lite_ELAsTiCC", "ORACLE1-lite_BTS", "ORACLE2_swin_ELAsTiCC", "ORACLE2-lite_swin_ELAsTiCC", "ORACLE2_swin_BTS", "ORACLE2-lite_swin_BTS", "ORACLE2-pro_swin_BTS"]
+model_choices = ["ORACLE1_ELAsTiCC", "ORACLE1-lite_ELAsTiCC", "ORACLE1-lite_BTS", "ORACLE1-lite_ZTFSims", "ORACLE2_swin_ELAsTiCC", "ORACLE2-lite_swin_ELAsTiCC", "ORACLE2_swin_BTS", "ORACLE2-lite_swin_BTS", "ORACLE2-pro_swin_BTS"]
 default_model_type = "ORACLE1_ELAsTiCC"
 
 # Switch device to GPU if available
@@ -41,6 +42,7 @@ def parse_args():
     parser.add_argument('--max_n_per_class', type=int, default=default_max_n_per_class, help='Maximum number of samples for any class. This allows for balancing of datasets. ')
     parser.add_argument('--alpha', type=float, default=default_alpha, help='Alpha value used for the loss function. See Villar et al. (2024) for more information. [https://arxiv.org/abs/2312.02266]')
     parser.add_argument('--dir', type=Path, default=default_model_dir, help='Directory for saving the models and best model during training.')
+    parser.add_argument('--load_weights', type=Path, default=None, help='Path to model which should be loaded before training stars.')
 
     args = parser.parse_args()
     return args
@@ -60,6 +62,7 @@ def run_training_loop(args):
     alpha = args.alpha
     model_dir = args.dir
     model_choice = args.model
+    pretrained_model_path = args.load_weights
 
     if model_dir==None:
         model_dir = Path(f'./models/{model_choice}')
@@ -113,7 +116,7 @@ def run_training_loop(args):
 
         # Define the model taxonomy and architecture
         taxonomy = BTS_Taxonomy()
-        model = ORACLE1_lite(taxonomy, ts_feature_dim=4)
+        model = ORACLE1_lite(taxonomy)
 
         # Load the training set
         train_dataset = BTS_LC_Dataset(BTS_train_parquet_path, max_n_per_class=max_n_per_class, transform=truncate_BTS_light_curve_fractionally)
@@ -126,6 +129,29 @@ def run_training_loop(args):
             val_dataset.append(BTS_LC_Dataset(BTS_val_parquet_path, transform=transform))
         val_dataset = ConcatDataset(val_dataset)
         val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_BTS, generator=generator)
+
+    elif model_choice == "ORACLE1-lite_ZTFSims":
+
+        # Define the model taxonomy and architecture
+        taxonomy = BTS_Taxonomy()
+        model = ORACLE1_lite(taxonomy)
+
+        # Load the training set
+        train_dataset = ZTF_SIM_LC_Dataset(ZTF_sim_train_parquet_path, include_lc_plots=False, transform=truncate_ZTF_SIM_light_curve_fractionally, max_n_per_class=max_n_per_class)
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_ZTF_SIM, generator=generator)
+        
+        # Load the validation set
+        val_dataset = []
+        for f in val_truncation_fractions:
+            transform = partial(truncate_ZTF_SIM_light_curve_fractionally, f=f)
+            val_dataset.append(ZTF_SIM_LC_Dataset(ZTF_sim_val_parquet_path, transform=transform))
+        val_dataset = ConcatDataset(val_dataset)
+        val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_ZTF_SIM, generator=generator)
+
+    # Load pretrained model
+    if pretrained_model_path != None:
+        print(f"Loading pre-trained weights from {pretrained_model_path}")
+        model.load_state_dict(torch.load(pretrained_model_path, map_location=device))
 
     # Fit the model
     model = model.to(device)

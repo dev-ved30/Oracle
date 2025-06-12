@@ -35,7 +35,7 @@ def main(argv=None):
 
     # Fix band srtings - trim extra space
     for lc in lcs:
-        lc['BAND'] = lc['BAND'].astype('U1')
+        lc['FLT'] = lc['FLT'].astype('U1')
 
     head_columns = list(lc.meta)
     phot_columns = list(lc.columns)
@@ -43,7 +43,7 @@ def main(argv=None):
     df = pl.from_records(
         [
             lc.meta
-            | {column: pl.Series(lc[column].newbyteorder().byteswap()) for column in lc.columns}
+            | {column: pl.Series(lc[column].view(lc[column].dtype.newbyteorder()).byteswap()) for column in lc.columns}
             for lc in lcs
         ],
     )
@@ -57,6 +57,8 @@ def main(argv=None):
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     df.write_parquet(args.output)
+
+    print(np.unique(df['SNTYPE']))
 
     return df, head_columns, phot_columns
 

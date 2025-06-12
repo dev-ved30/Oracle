@@ -106,7 +106,8 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
 
         lc_length = len(row['jd'])
 
-        time_series_data = np.zeros((lc_length, n_ts_features), dtype=np.float32)
+        # Adding extra row for photflag to maintain compatibility. This is always one if we are just dealing with detections
+        time_series_data = np.ones((lc_length, n_ts_features+1), dtype=np.float32)
         for i, feature in enumerate(time_dependent_feature_list):
             time_series_data[:,i] = np.array(row[feature], dtype=np.float32)
         time_series_data = torch.from_numpy(time_series_data)

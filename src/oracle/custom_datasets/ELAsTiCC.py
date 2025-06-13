@@ -260,6 +260,10 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
 
         return img_arr
     
+    def get_all_labels(self):
+
+        return self.parquet_df['class'].to_list()
+    
 def truncate_ELAsTiCC_light_curve_by_days_since_trigger(x_ts, d):
 
     # Get the first detection index

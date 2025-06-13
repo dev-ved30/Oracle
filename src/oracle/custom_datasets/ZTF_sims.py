@@ -240,6 +240,10 @@ class ZTF_SIM_LC_Dataset(torch.utils.data.Dataset):
         buf.close()
 
         return img_arr
+
+    def get_all_labels(self):
+
+        return self.parquet_df['class'].to_list()
     
 def truncate_ZTF_SIM_light_curve_by_days_since_trigger(x_ts, d):
 
@@ -357,7 +361,7 @@ if __name__=='__main__':
 
     for batch in tqdm(dataloader):
 
-        pass
+        break
 
         print(batch['label'])
 

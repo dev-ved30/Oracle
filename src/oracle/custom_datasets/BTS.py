@@ -144,6 +144,10 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         
         return dictionary
     
+    def get_all_labels(self):
+
+        return self.parquet_df['class'].to_list()
+    
     def over_sample_minority_classes(self):
         
         print("Oversampling minority classes...")

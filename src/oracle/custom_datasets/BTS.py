@@ -350,7 +350,7 @@ def truncate_BTS_light_curve_fractionally(x_ts, f=None):
 
     if f == None:
         # Get a random fraction between 0.1 and 1
-        f = np.random.uniform(0.1, 1.0)
+        f = np.random.uniform(0.01, 1.0)
     
     original_obs_count = x_ts.shape[0]
 

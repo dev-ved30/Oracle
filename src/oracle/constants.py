@@ -43,15 +43,15 @@ BTS_to_Astrophysical_mappings = {
     'CV?': 'CV',
     'AM CVn': 'CV',
     'varstar': 'Persistent-Other',
-    'QSO': 'Persistent-Other', # AGN?
+    'QSO': 'AGN', # AGN?
     'QSO?': 'Persistent-Other', # AGN?
-    'NLS1': 'Persistent-Other', # AGN?
+    'NLS1': 'AGN', # AGN?
     'NLSy1?': 'Persistent-Other', # AGN?
-    'Blazar': 'Persistent-Other', # AGN?
+    'Blazar': 'AGN', # AGN?
     'BL Lac': 'Persistent-Other', # AGN?
-    'blazar': 'Persistent-Other', # AGN?
-    'blazar?': 'Persistent-Other', # AGN?
-    'Seyfert': 'Persistent-Other', # AGN?
+    'blazar': 'AGN', # AGN?
+    'blazar?': 'AGN', # AGN?
+    'Seyfert': 'AGN', # AGN?
     'star': 'Persistent-Other',
     'Ien': 'Persistent-Other',
     'LINER': 'Persistent-Other',

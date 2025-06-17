@@ -308,14 +308,18 @@ class BTS_Taxonomy(Taxonomy):
         super().__init__(**attr)
         self.add_node(root_label)
 
-        level_1_nodes = ['Other','CC','SN-Ia']
+        level_1_nodes = ['Persistent','Transient']
         self.add_nodes_from(level_1_nodes)
         self.add_edges_from([(root_label, node) for node in level_1_nodes])
 
+        level_2a_nodes = ['AGN','CV','Persistent-Other']
+        self.add_nodes_from(level_2a_nodes)
+        self.add_edges_from([('Persistent', node) for node in level_2a_nodes])
+
         # Level 2b nodes for SN-like events
-        level_2b_nodes = ['SLSN-I','SN-II','SN-Ib/c']
+        level_2b_nodes = ['SN-Ia','SN-II','SN-Ib/c','SLSN','Transient-Other']
         self.add_nodes_from(level_2b_nodes)
-        self.add_edges_from([('CC', node) for node in level_2b_nodes])
+        self.add_edges_from([('Transient', node) for node in level_2b_nodes])
 
 
 class ORACLE_Taxonomy(Taxonomy):
@@ -369,7 +373,7 @@ if __name__=='__main__':
 
     all_classes = list(BTS_to_Astrophysical_mappings.values())
     taxonomy.get_hierarchical_one_hot_encoding(all_classes)
-    taxonomy.plot_colored_taxonomy(taxonomy.get_hierarchical_one_hot_encoding(['SN-IIn'])[0])
+    taxonomy.plot_colored_taxonomy(taxonomy.get_hierarchical_one_hot_encoding(['SN-II'])[0])
 
     print(taxonomy.get_nodes_by_depth())
 

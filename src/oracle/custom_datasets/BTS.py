@@ -59,8 +59,9 @@ ZTF_wavelength_to_color = {
 flag_value = -9
 
 images_list = ['g_reference', 'g_science', 'g_difference', 'r_reference', 'r_science', 'r_difference', 'i_reference', 'i_science', 'i_difference']
-time_dependent_feature_list = ['jd', 'magpsf', 'sigmapsf', 'fid']
+time_dependent_feature_list = ['jd', 'flux', 'flux_err', 'fid']
 book_keeping_feature_list = ['ZTFID', 'bts_class']
+features_to_transform = ['magpsf', 'sigmapsf']
 
 n_images = len(images_list)
 n_ts_features = len(time_dependent_feature_list)
@@ -68,7 +69,7 @@ n_book_keeping_features = len(book_keeping_feature_list)
 
 class BTS_LC_Dataset(torch.utils.data.Dataset):
 
-    def __init__(self, parquet_file_path,  max_n_per_class=None, include_postage_stamps=False, include_lc_plots=False, transform=None):
+    def __init__(self, parquet_file_path,  max_n_per_class=None, include_postage_stamps=False, include_lc_plots=False, transform=None, over_sample=False):
         super(BTS_LC_Dataset, self).__init__()
 
         # Columns to be read from the parquet file
@@ -77,16 +78,21 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         self.include_lc_plots = include_lc_plots
         self.include_postage_stamps = include_postage_stamps
         self.max_n_per_class = max_n_per_class
+        self.over_sample = over_sample
 
         print(f'Loading dataset from {self.parquet_file_path}\n')
-        self.columns = time_dependent_feature_list + images_list + book_keeping_feature_list
-        self.parquet_df = pl.read_parquet(self.parquet_file_path, columns=self.columns)
+        self.parquet_df = pl.read_parquet(self.parquet_file_path)
         self.columns_dtypes = self.parquet_df.schema
 
+        self.convert_mags_to_flux()
         self.clean_up_dataset()
 
         if self.max_n_per_class != None:
             self.limit_max_samples_per_class()
+
+        if self.over_sample:
+            self.over_sample_minority_classes()
+
                
     def __len__(self):
 
@@ -101,7 +107,8 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
 
         lc_length = len(row['jd'])
 
-        time_series_data = np.zeros((lc_length, n_ts_features), dtype=np.float32)
+        # Adding extra row for photflag to maintain compatibility. This is always one if we are just dealing with detections
+        time_series_data = np.ones((lc_length, n_ts_features+1), dtype=np.float32)
         for i, feature in enumerate(time_dependent_feature_list):
             time_series_data[:,i] = np.array(row[feature], dtype=np.float32)
         time_series_data = torch.from_numpy(time_series_data)
@@ -138,6 +145,55 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         
         return dictionary
     
+    def convert_mags_to_flux(self):
+
+        F0_uJy = 3631.0 * 1e6
+        factor  = 0.4 * np.log(10)
+
+        self.parquet_df = self.parquet_df.with_columns([
+            # flux only needs magpsf
+            pl.col("magpsf")
+            .map_elements(
+                lambda mags: (F0_uJy * 10 ** (-0.4 * np.array(mags))).tolist(),
+                return_dtype=pl.List(pl.Float64),
+            )
+            .alias("flux"),
+
+            # flux_err needs both magpsf and sigmapsf
+            pl.struct(["magpsf", "sigmapsf"])
+            .map_elements(
+                lambda row: (
+                factor
+                * F0_uJy
+                * 10 ** (-0.4 * np.array(row["magpsf"]))
+                * np.array(row["sigmapsf"])
+                ).tolist(),
+                return_dtype=pl.List(pl.Float64),
+            )
+            .alias("flux_err"),
+        ])
+
+    
+    def get_all_labels(self):
+
+        return self.parquet_df['class'].to_list()
+    
+    def over_sample_minority_classes(self):
+        
+        print("Oversampling minority classes...")
+        unique_classes, unique_counts = np.unique(self.parquet_df['class'], return_counts=True)
+        max_count = max(unique_counts)
+        class_dfs = []
+
+        for i, c in enumerate(unique_classes):
+
+            if unique_counts[i] < max_count:
+                class_df = self.parquet_df.filter(pl.col("class") == c).sample(n=max_count, with_replacement=True)
+                class_dfs.append(class_df)
+                print(f"{c}: {class_df.shape[0]}")
+
+        self.parquet_df = pl.concat(class_dfs)
+
     def clean_up_dataset(self):
 
         print("Starting Dataset Transformations:")
@@ -180,8 +236,8 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
 
         # Get the light curve data
         jd = x_ts[:,time_dependent_feature_list.index('jd')]
-        flux = x_ts[:,time_dependent_feature_list.index('magpsf')]
-        flux_err = x_ts[:,time_dependent_feature_list.index('sigmapsf')]
+        flux = x_ts[:,time_dependent_feature_list.index('flux')]
+        flux_err = x_ts[:,time_dependent_feature_list.index('flux_err')]
         filters = x_ts[:,time_dependent_feature_list.index('fid')]
 
         # Create a figure and axes
@@ -209,7 +265,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         ax.set_yticks([])
 
         plt.tight_layout()
-        plt.gca().invert_yaxis()
+        #plt.gca().invert_yaxis()
 
         # Write the plot data to a buffer
         buf = io.BytesIO()
@@ -391,7 +447,7 @@ if __name__=='__main__':
     # <--- Example usage of the dataset --->
 
     dataset = BTS_LC_Dataset(BTS_test_parquet_path, include_postage_stamps=True, include_lc_plots=True, transform=truncate_BTS_light_curve_fractionally, max_n_per_class=1000)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, collate_fn=custom_collate_BTS)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, collate_fn=custom_collate_BTS, shuffle=True)
 
     for batch in tqdm(dataloader):
 

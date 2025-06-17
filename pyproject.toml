@@ -32,3 +32,4 @@ where = ["src"]
 
 [project.scripts]
 oracle-train = "oracle.train:main"
+oracle-test = "oracle.test:main"

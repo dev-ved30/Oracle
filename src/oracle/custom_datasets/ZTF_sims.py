@@ -12,15 +12,16 @@ from PIL import Image
 from tqdm import tqdm
 from torch.nn.utils.rnn import pad_sequence
 
-from oracle.constants import ELAsTiCC_to_Astrophysical_mappings
+from oracle.constants import ZTF_sims_to_Astrophysical_mappings
+from oracle.custom_datasets.BTS import ZTF_passband_to_wavelengths, ZTF_wavelength_to_color
 
 # Path to this file's directory
 here = Path(__file__).resolve().parent
 
 # Go up to the root, then into data/ and then get the parquet file
-ELAsTiCC_train_parquet_path = str(here.parent.parent.parent / "data" / 'ELAsTiCC' / 'train.parquet')
-ELAsTiCC_test_parquet_path = str(here.parent.parent.parent / "data" / 'ELAsTiCC' / 'test.parquet')
-ELAsTiCC_val_parquet_path = str(here.parent.parent.parent / "data" / 'ELAsTiCC' / 'val.parquet')
+ZTF_sim_train_parquet_path = str(here.parent.parent.parent / "data" / 'ZTF_sims' / 'train.parquet')
+ZTF_sim_test_parquet_path = str(here.parent.parent.parent / "data" / 'ZTF_sims' / 'test.parquet')
+ZTF_sim_val_parquet_path = str(here.parent.parent.parent / "data" / 'ZTF_sims' / 'val.parquet')
 
 # <----- constant for the dataset ----->
 
@@ -34,44 +35,24 @@ marker_style_non_detection = '*'
 marker_size = 50
 linewidth = 0.75
 
-# Mean wavelengths for the LSST pass bands in micrometers
-LSST_passband_to_wavelengths = {
-    'u': (320 + 400) / (2 * 1000),
-    'g': (400 + 552) / (2 * 1000),
-    'r': (552 + 691) / (2 * 1000),
-    'i': (691 + 818) / (2 * 1000),
-    'z': (818 + 922) / (2 * 1000),
-    'Y': (950 + 1080) / (2 * 1000),
-}
-
-# Mean wavelength to colors for plotting
-LSST_passband_wavelengths_to_color = {
-    LSST_passband_to_wavelengths['u']: np.array((0, 127, 255))/255,
-    LSST_passband_to_wavelengths['g']: np.array((127, 0, 255))/255,
-    LSST_passband_to_wavelengths['r']: np.array((0, 255, 127))/255,
-    LSST_passband_to_wavelengths['i']: np.array((127, 255, 0))/255,
-    LSST_passband_to_wavelengths['z']: np.array((255, 127, 0))/255,
-    LSST_passband_to_wavelengths['Y']: np.array((255, 0, 127))/255,
-}
-
 flag_value = -9
 
-# Flag values for missing data of static feature according to elasticc
+# Flag values for missing data of static feature according to SNANA
 missing_data_flags = [-9, -99, -999, -9999, 999]
 
-time_independent_feature_list = ['MWEBV', 'MWEBV_ERR', 'REDSHIFT_HELIO', 'REDSHIFT_HELIO_ERR', 'HOSTGAL_PHOTOZ', 'HOSTGAL_PHOTOZ_ERR', 'HOSTGAL_SPECZ', 'HOSTGAL_SPECZ_ERR', 'HOSTGAL_RA', 'HOSTGAL_DEC', 'HOSTGAL_SNSEP', 'HOSTGAL_ELLIPTICITY', 'HOSTGAL_MAG_u', 'HOSTGAL_MAG_g', 'HOSTGAL_MAG_r', 'HOSTGAL_MAG_i', 'HOSTGAL_MAG_z', 'HOSTGAL_MAG_Y']
-time_dependent_feature_list = ['MJD', 'FLUXCAL', 'FLUXCALERR', 'BAND', 'PHOTFLAG']
-book_keeping_feature_list = ['SNID', 'ELASTICC_class']
+time_independent_feature_list = ['MWEBV', 'MWEBV_ERR', 'REDSHIFT_HELIO', 'REDSHIFT_HELIO_ERR']
+time_dependent_feature_list = ['MJD', 'FLUXCAL', 'FLUXCALERR', 'FLT', 'PHOTFLAG']
+book_keeping_feature_list = ['SNID', 'ZTF_class']
 
 n_static_features = len(time_independent_feature_list)
 n_ts_features = len(time_dependent_feature_list)
 n_book_keeping_features = len(book_keeping_feature_list)
 
 
-class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
+class ZTF_SIM_LC_Dataset(torch.utils.data.Dataset):
 
     def __init__(self, parquet_file_path, max_n_per_class=None, include_lc_plots=False, transform=None):
-        super(ELAsTiCC_LC_Dataset, self).__init__()
+        super(ZTF_SIM_LC_Dataset, self).__init__()
 
         # Columns to be read from the parquet file
         self.columns = time_dependent_feature_list + time_independent_feature_list + book_keeping_feature_list
@@ -149,7 +130,7 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
 
         print("Replacing band labels with mean wavelengths...")
         self.parquet_df = self.parquet_df.with_columns(
-            pl.col("BAND").map_elements(lambda x: [LSST_passband_to_wavelengths[band] for band in x], return_dtype=pl.List(pl.Float64)).alias("BAND")
+            pl.col("FLT").map_elements(lambda x: [ZTF_passband_to_wavelengths[band] for band in x], return_dtype=pl.List(pl.Float64)).alias("FLT")
         )
 
         # Remove the saturations form the time series data. PHOTFLAG is handled later
@@ -176,9 +157,9 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
             pl.col("MJD_clean").map_elements(lambda x: (np.array(x) - min(x)).tolist(), return_dtype=pl.List(pl.Float64)).alias("MJD_clean")
         )
 
-        print("Mapping ELAsTiCC classes to astrophysical classes...")
+        print("Mapping ZTF sim classes to astrophysical classes...")
         self.parquet_df = self.parquet_df.with_columns(
-            pl.col("ELASTICC_class").replace(ELAsTiCC_to_Astrophysical_mappings, return_dtype=pl.String).alias("class")
+            pl.col("ZTF_class").replace(ZTF_sims_to_Astrophysical_mappings, return_dtype=pl.String).alias("class")
         )
 
         for feature in time_independent_feature_list:
@@ -209,7 +190,7 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         jd = x_ts[:,time_dependent_feature_list.index('MJD')] 
         flux = x_ts[:,time_dependent_feature_list.index('FLUXCAL')]
         flux_err =  x_ts[:,time_dependent_feature_list.index('FLUXCALERR')]
-        filters =  x_ts[:,time_dependent_feature_list.index('BAND')]
+        filters =  x_ts[:,time_dependent_feature_list.index('FLT')]
         phot_flag = x_ts[:,time_dependent_feature_list.index('PHOTFLAG')] # NOTE: might want to use a different marker for ND
 
         # Create a figure and axes
@@ -225,15 +206,15 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         for spine in ax.spines.values():
             spine.set_visible(False)
 
-        for wavelength in LSST_passband_wavelengths_to_color.keys():
+        for wavelength in ZTF_wavelength_to_color.keys():
             
             idx = np.where(filters == wavelength)[0]
             detection_idx = np.where((filters == wavelength) & (phot_flag==1))[0]
             non_detection_idx = np.where((filters == wavelength) & (phot_flag==0))[0]
 
-            ax.errorbar(jd[detection_idx], flux[detection_idx], yerr=flux_err[detection_idx], fmt=marker_style_detection, color=LSST_passband_wavelengths_to_color[wavelength])
-            ax.errorbar(jd[non_detection_idx], flux[non_detection_idx], yerr=flux_err[non_detection_idx], fmt=marker_style_non_detection, color=LSST_passband_wavelengths_to_color[wavelength])
-            ax.plot(jd[idx], flux[idx], linewidth=linewidth, color=LSST_passband_wavelengths_to_color[wavelength])
+            ax.errorbar(jd[detection_idx], flux[detection_idx], yerr=flux_err[detection_idx], fmt=marker_style_detection, color=ZTF_wavelength_to_color[wavelength])
+            ax.errorbar(jd[non_detection_idx], flux[non_detection_idx], yerr=flux_err[non_detection_idx], fmt=marker_style_non_detection, color=ZTF_wavelength_to_color[wavelength])
+            ax.plot(jd[idx], flux[idx], linewidth=linewidth, color=ZTF_wavelength_to_color[wavelength])
 
         # Save the figure as PNG with the desired DPI
         dpi = 100  # Dots per inch (adjust as needed)
@@ -259,12 +240,12 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         buf.close()
 
         return img_arr
-    
+
     def get_all_labels(self):
 
         return self.parquet_df['class'].to_list()
     
-def truncate_ELAsTiCC_light_curve_by_days_since_trigger(x_ts, d):
+def truncate_ZTF_SIM_light_curve_by_days_since_trigger(x_ts, d):
 
     # Get the first detection index
     photflags = x_ts[:,time_dependent_feature_list.index('PHOTFLAG')]
@@ -285,7 +266,7 @@ def truncate_ELAsTiCC_light_curve_by_days_since_trigger(x_ts, d):
 
     return x_ts
 
-def truncate_ELAsTiCC_light_curve_fractionally(x_ts, f=None):
+def truncate_ZTF_SIM_light_curve_fractionally(x_ts, f=None):
 
     if f == None:
         # Get a random fraction between 0.1 and 1
@@ -303,7 +284,7 @@ def truncate_ELAsTiCC_light_curve_fractionally(x_ts, f=None):
 
     return x_ts
 
-def custom_collate_ELAsTiCC(batch):
+def custom_collate_ZTF_SIM(batch):
 
     batch_size = len(batch)
 
@@ -375,36 +356,36 @@ if __name__=='__main__':
 
     # <--- Example usage of the dataset --->
 
-    dataset = ELAsTiCC_LC_Dataset(ELAsTiCC_test_parquet_path, include_lc_plots=False, transform=truncate_ELAsTiCC_light_curve_fractionally, max_n_per_class=20000)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True, collate_fn=custom_collate_ELAsTiCC)
+    dataset = ZTF_SIM_LC_Dataset(ZTF_sim_train_parquet_path, include_lc_plots=False, transform=truncate_ZTF_SIM_light_curve_fractionally, max_n_per_class=20000)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True, collate_fn=custom_collate_ZTF_SIM)
 
     for batch in tqdm(dataloader):
 
-        pass
+        break
 
-        # print(batch['label'])
+        print(batch['label'])
 
-        # for k in (batch.keys()):
-        #     print(f"{k}: \t{batch[k].shape}")
+        for k in (batch.keys()):
+            print(f"{k}: \t{batch[k].shape}")
         
-        # if 'lc_plot' in batch.keys():
-        #     show_batch(batch['lc_plot'], batch['label'])
+        if 'lc_plot' in batch.keys():
+            show_batch(batch['lc_plot'], batch['label'])
     
-    # imgs = []
-    # lc_d = []
-    # days = np.linspace(10,100,16)
-    # for d in days:
+    imgs = []
+    lc_d = []
+    days = np.linspace(10,100,16)
+    for d in days:
 
-    #     k = 4
+        k = 4
         
-    #     transform = partial(truncate_ELAsTiCC_light_curve_by_days_since_trigger, d=d)
-    #     dataset = ELAsTiCC_LC_Dataset(ELAsTiCC_train_parquet_path, include_lc_plots=True, transform=transform)
-    #     dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, collate_fn=custom_collate_ELAsTiCC)
-    #     for batch in tqdm(dataloader):
-    #         imgs.append(batch['lc_plot'][k,:,:,:])
-    #         lc_d.append(max(batch['ts'][k,:,0]))
-    #         break
+        transform = partial(truncate_ZTF_SIM_light_curve_by_days_since_trigger, d=d)
+        dataset = ZTF_SIM_LC_Dataset(ZTF_sim_test_parquet_path, include_lc_plots=True, transform=transform)
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, collate_fn=custom_collate_ZTF_SIM)
+        for batch in tqdm(dataloader):
+            imgs.append(batch['lc_plot'][k,:,:,:])
+            lc_d.append(max(batch['ts'][k,:,0]))
+            break
     
-    # plt.scatter(days, lc_d)
-    # plt.show()
-    # show_batch(imgs, batch['label'])
+    plt.scatter(days, lc_d)
+    plt.show()
+    show_batch(imgs, batch['label'])

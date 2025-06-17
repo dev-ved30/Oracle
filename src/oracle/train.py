@@ -1,17 +1,14 @@
-import os
-import time
 import torch
 import argparse
 
-from tqdm import tqdm
 from pathlib import Path    
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, ConcatDataset
 
-from oracle.loss import WHXE_Loss
 from oracle.taxonomies import ORACLE_Taxonomy, BTS_Taxonomy
 from oracle.architectures import *
 from oracle.custom_datasets.ELAsTiCC import *
 from oracle.custom_datasets.BTS import *
+from oracle.custom_datasets.ZTF_sims import *
 
 # <----- Defaults for training the models ----->
 default_num_epochs = 100
@@ -19,10 +16,10 @@ default_batch_size = 1024
 default_learning_rate = 1e-5
 default_alpha = 0.0
 default_max_n_per_class = int(1e7)
-default_model_dir = Path('./models/test_model')
+default_model_dir = None
 
 # <----- Config for the model ----->
-model_choices = ["ORACLE1_ELAsTiCC", "ORACLE1-lite_ELAsTiCC", "ORACLE1-lite_BTS", "ORACLE2_swin_ELAsTiCC", "ORACLE2-lite_swin_ELAsTiCC", "ORACLE2_swin_BTS", "ORACLE2-lite_swin_BTS", "ORACLE2-pro_swin_BTS"]
+model_choices = ["ORACLE1_ELAsTiCC", "ORACLE1-lite_ELAsTiCC", "ORACLE1-lite_BTS", "ORACLE1-lite_ZTFSims", "ORACLE2_swin_ELAsTiCC", "ORACLE2-lite_swin_ELAsTiCC", "ORACLE2_swin_BTS", "ORACLE2-lite_swin_BTS", "ORACLE2-pro_swin_BTS"]
 default_model_type = "ORACLE1_ELAsTiCC"
 
 # Switch device to GPU if available
@@ -30,6 +27,8 @@ default_model_type = "ORACLE1_ELAsTiCC"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")
 torch.set_default_device(device)
+
+val_truncation_fractions = [0.3, 0.5, 0.7, 0.9]
 
 def parse_args():
     '''
@@ -43,6 +42,7 @@ def parse_args():
     parser.add_argument('--max_n_per_class', type=int, default=default_max_n_per_class, help='Maximum number of samples for any class. This allows for balancing of datasets. ')
     parser.add_argument('--alpha', type=float, default=default_alpha, help='Alpha value used for the loss function. See Villar et al. (2024) for more information. [https://arxiv.org/abs/2312.02266]')
     parser.add_argument('--dir', type=Path, default=default_model_dir, help='Directory for saving the models and best model during training.')
+    parser.add_argument('--load_weights', type=Path, default=None, help='Path to model which should be loaded before training stars.')
 
     args = parser.parse_args()
     return args
@@ -62,6 +62,11 @@ def run_training_loop(args):
     alpha = args.alpha
     model_dir = args.dir
     model_choice = args.model
+    pretrained_model_path = args.load_weights
+
+    if model_dir==None:
+        model_dir = Path(f'./models/{model_choice}')
+
 
     # Create the model directory if it does not exist   
     model_dir.mkdir(parents=True, exist_ok=True)
@@ -72,89 +77,86 @@ def run_training_loop(args):
 
     # Assign the taxonomy based on the choice
     if model_choice == "ORACLE1_ELAsTiCC":
-
+        
+        # Define the model taxonomy and architecture
         taxonomy = ORACLE_Taxonomy()
         model = ORACLE1(taxonomy)
-        dataset = ELAsTiCC_LC_Dataset('data/ELAsTiCC/train.parquet', include_lc_plots=False, transform=truncate_ELAsTiCC_light_curve_fractionally, max_n_per_class=max_n_per_class)
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_ELAsTiCC, generator=generator)
+
+        # Load the training set
+        train_dataset = ELAsTiCC_LC_Dataset(ELAsTiCC_train_parquet_path, include_lc_plots=False, transform=truncate_ELAsTiCC_light_curve_fractionally, max_n_per_class=max_n_per_class)
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_ELAsTiCC, generator=generator)
+        
+        # Load the validation set
+        val_dataset = []
+        for f in val_truncation_fractions:
+            transform = partial(truncate_ELAsTiCC_light_curve_fractionally, f=f)
+            val_dataset.append(ELAsTiCC_LC_Dataset(ELAsTiCC_val_parquet_path, transform=transform))
+        val_dataset = ConcatDataset(val_dataset)
+        val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_ELAsTiCC, generator=generator)
 
     elif model_choice == "ORACLE1-lite_ELAsTiCC":
 
+        # Define the model taxonomy and architecture
         taxonomy = ORACLE_Taxonomy()
         model = ORACLE1_lite(taxonomy)
-        dataset = ELAsTiCC_LC_Dataset('data/ELAsTiCC/train.parquet', include_lc_plots=False, transform=truncate_ELAsTiCC_light_curve_fractionally, max_n_per_class=max_n_per_class)
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_ELAsTiCC, generator=generator)
+
+        # Load the training set
+        train_dataset = ELAsTiCC_LC_Dataset(ELAsTiCC_train_parquet_path, include_lc_plots=False, transform=truncate_ELAsTiCC_light_curve_fractionally, max_n_per_class=max_n_per_class)
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_ELAsTiCC, generator=generator)
+        
+        # Load the validation set
+        val_dataset = []
+        for f in val_truncation_fractions:
+            transform = partial(truncate_ELAsTiCC_light_curve_fractionally, f=f)
+            val_dataset.append(ELAsTiCC_LC_Dataset(ELAsTiCC_val_parquet_path, transform=transform))
+        val_dataset = ConcatDataset(val_dataset)
+        val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_ELAsTiCC, generator=generator)
 
     elif model_choice == "ORACLE1-lite_BTS":
 
+        # Define the model taxonomy and architecture
         taxonomy = BTS_Taxonomy()
-        model = ORACLE1_lite(taxonomy, ts_feature_dim=4)
-        dataset = BTS_LC_Dataset(BTS_train_parquet_path, transform=truncate_BTS_light_curve_fractionally, max_n_per_class=max_n_per_class)
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_BTS, generator=generator)
+        model = ORACLE1_lite(taxonomy)
 
-    elif model_choice == "ORACLE2-lite_swin_LSST":
+        # Load the training set
+        train_dataset = BTS_LC_Dataset(BTS_train_parquet_path, max_n_per_class=max_n_per_class, transform=truncate_BTS_light_curve_fractionally)
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_BTS, generator=generator)
 
-        taxonomy = ORACLE_Taxonomy()
-        model = ORACLE2_lite_swin(taxonomy)
-        dataset = ELAsTiCC_LC_Dataset('data/ELAsTiCC/train.parquet', include_lc_plots=True, transform=truncate_ELAsTiCC_light_curve_fractionally, max_n_per_class=max_n_per_class)
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_ELAsTiCC, generator=generator)
+        # Load the validation set
+        val_dataset = []
+        for f in val_truncation_fractions:
+            transform = partial(truncate_ELAsTiCC_light_curve_fractionally, f=f)
+            val_dataset.append(BTS_LC_Dataset(BTS_val_parquet_path, transform=transform))
+        val_dataset = ConcatDataset(val_dataset)
+        val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_BTS, generator=generator)
 
-    elif model_choice == "ORACLE2-pro_swin_BTS":
+    elif model_choice == "ORACLE1-lite_ZTFSims":
 
+        # Define the model taxonomy and architecture
         taxonomy = BTS_Taxonomy()
-        model = ORACLE2_pro_swin(taxonomy)
-        dataset = BTS_LC_Dataset(BTS_train_parquet_path, include_lc_plots=True, include_postage_stamps=True, transform=truncate_BTS_light_curve_fractionally, max_n_per_class=max_n_per_class)
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_BTS, generator=generator)
+        model = ORACLE1_lite(taxonomy)
 
+        # Load the training set
+        train_dataset = ZTF_SIM_LC_Dataset(ZTF_sim_train_parquet_path, include_lc_plots=False, transform=truncate_ZTF_SIM_light_curve_fractionally, max_n_per_class=max_n_per_class)
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_ZTF_SIM, generator=generator)
+        
+        # Load the validation set
+        val_dataset = []
+        for f in val_truncation_fractions:
+            transform = partial(truncate_ZTF_SIM_light_curve_fractionally, f=f)
+            val_dataset.append(ZTF_SIM_LC_Dataset(ZTF_sim_val_parquet_path, transform=transform))
+        val_dataset = ConcatDataset(val_dataset)
+        val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_ZTF_SIM, generator=generator)
+
+    # Load pretrained model
+    if pretrained_model_path != None:
+        print(f"Loading pre-trained weights from {pretrained_model_path}")
+        model.load_state_dict(torch.load(pretrained_model_path, map_location=device))
+
+    # Fit the model
     model = model.to(device)
-    model.train()
-
-    # Assign the loss function and optimizer
-    loss_fn = WHXE_Loss(taxonomy, alpha)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-
-    avg_train_losses = []
-
-    # Training loop
-    for epoch in range(num_epochs):
-
-        print(f"Epoch {epoch+1}/{num_epochs} started")
-        start_time = time.time()
-
-        train_loss_values = []
-
-        # Loop over all the batches in the data set
-        for i, batch in enumerate(tqdm(dataloader, desc='Training Epoch')):
-
-            # Move everything to the device
-            batch = {k: v.to(device) if torch.is_tensor(v) else v for k, v in batch.items()}
-
-            # Get the label encodings
-            label_encodings = torch.from_numpy(taxonomy.get_hierarchical_one_hot_encoding(batch['label'])).to(device=device)           
-
-            # Forward pass
-            logits = model(batch)
-            loss = loss_fn(logits, label_encodings)
-
-            train_loss_values.append(loss.item())
-
-            # Backward pass
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-        # TODO: Add validation loop here and log the value of the loss
-        avg_train_loss = np.mean(train_loss_values)
-        avg_train_losses.append(avg_train_loss)
-        print(f"Avg training loss: {float(avg_train_loss):.4f}")
-
-        if np.isnan(avg_train_loss) == True:
-            print("Training loss was nan. Exiting the loop.")
-            break
-
-        # TODO: Save the model. We can load the best model based on the validation loss for inference.
-        torch.save(model.state_dict(), f'{model_dir}/model_epoch{epoch+1}.pth')
-        print(f"Time taken: {time.time() - start_time:.2f}s\n=======\n")
+    model.setup_training(alpha, lr, model_dir, device)
+    model.fit(train_dataloader, val_dataloader, num_epochs)
 
 def main():
     args = parse_args()

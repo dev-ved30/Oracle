@@ -8,22 +8,24 @@ from torchvision.models import swin_v2_b
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 from oracle.taxonomies import Taxonomy, ORACLE_Taxonomy
+from oracle.trainer import Trainer
+from oracle.tester import Tester
 
 swin_v2_b_output_dim = 1000
 
 # Template for the Hierarchical Classifier
-class Hierarchical_classifier(nn.Module):
+class Hierarchical_classifier(nn.Module, Trainer, Tester):
 
     def __init__(self, taxonomy: Taxonomy):
-        super(Hierarchical_classifier, self).__init__()
 
+        nn.Module.__init__(self)
         self.taxonomy = taxonomy
         self.n_nodes = len(taxonomy.get_level_order_traversal())
 
     def predict_conditional_probabilities(self, batch):
         
         logits = self.forward(batch)
-        conditional_probabilities = self.taxonomy.get_conditional_probabilities(logits).detach().numpy()
+        conditional_probabilities = self.taxonomy.get_conditional_probabilities(logits).detach()
         return conditional_probabilities
 
     def predict_class_probabilities(self, batch):

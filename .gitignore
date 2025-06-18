@@ -3,7 +3,9 @@ temp.py
 __pycache__
 
 src/oracle.egg-info
-src/oracle/__pycache__/
 
-src/oracle/custom_datasets/__pycache__/
-src/oracle/utils/__pycache__/
+src/oracle/__pycache__/
+src/oracle/*/__pycache__/
+
+models/*/plots
+models/*/reports

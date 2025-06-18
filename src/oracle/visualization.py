@@ -27,7 +27,7 @@ def plot_confusion_matrix(y_true, y_pred, labels, title=None, img_file=None):
     disp.im_.colorbar.remove()
     
     fig = disp.figure_
-    if n_class > 10:
+    if n_class > 7:
         plt.xticks(rotation=90)
         plt.yticks(rotation=45)
     
@@ -35,9 +35,9 @@ def plot_confusion_matrix(y_true, y_pred, labels, title=None, img_file=None):
     fig.set_figheight(18)
     
     for label in disp.text_.ravel():
-        if n_class > 10:
+        if n_class > 7:
             label.set_fontsize(12)
-        elif n_class <= 10 and n_class > 3:
+        elif n_class <= 7 and n_class > 3:
             disp.ax_.tick_params(axis='both', labelsize=40)
             label.set_fontsize('xx-large')
         else:

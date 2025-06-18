@@ -66,6 +66,8 @@ class ZTF_SIM_LC_Dataset(torch.utils.data.Dataset):
         self.parquet_df = pl.read_parquet(self.parquet_file_path, columns=self.columns)
         self.columns_dtypes = self.parquet_df.schema
 
+        self.print_dataset_composition()
+
         self.clean_up_dataset()
 
         if self.max_n_per_class != None:
@@ -109,6 +111,16 @@ class ZTF_SIM_LC_Dataset(torch.utils.data.Dataset):
             dictionary['lc_plot'] = light_curve_plot
         
         return dictionary
+    
+    def print_dataset_composition(self):
+        
+        print("Before transforms and mappings, the dataset contains...")
+        classes, count = np.unique(self.parquet_df['ZTF_class'], return_counts=True)
+        d = {
+            'Class': classes,
+            'Counts': count
+        }
+        print(pd.DataFrame(d).to_string(index=False))
     
     def clean_up_dataset(self):
 

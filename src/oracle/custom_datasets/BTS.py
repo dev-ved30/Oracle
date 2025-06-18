@@ -84,6 +84,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         self.parquet_df = pl.read_parquet(self.parquet_file_path)
         self.columns_dtypes = self.parquet_df.schema
 
+        self.print_dataset_composition()
         self.convert_mags_to_flux()
         self.clean_up_dataset()
 
@@ -145,6 +146,16 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         
         return dictionary
     
+    def print_dataset_composition(self):
+        
+        print("Before transforms and mappings, the dataset contains...")
+        classes, count = np.unique(self.parquet_df['bts_class'], return_counts=True)
+        d = {
+            'Class': classes,
+            'Counts': count
+        }
+        print(pd.DataFrame(d).to_string())
+
     def convert_mags_to_flux(self):
 
         F0_uJy = 3631.0 * 1e6
@@ -339,7 +350,7 @@ def truncate_BTS_light_curve_fractionally(x_ts, f=None):
 
     if f == None:
         # Get a random fraction between 0.1 and 1
-        f = np.random.uniform(0.1, 1.0)
+        f = np.random.uniform(0.01, 1.0)
     
     original_obs_count = x_ts.shape[0]
 
@@ -446,7 +457,7 @@ if __name__=='__main__':
     
     # <--- Example usage of the dataset --->
 
-    dataset = BTS_LC_Dataset(BTS_test_parquet_path, include_postage_stamps=True, include_lc_plots=True, transform=truncate_BTS_light_curve_fractionally, max_n_per_class=1000)
+    dataset = BTS_LC_Dataset(BTS_train_parquet_path, include_postage_stamps=True, include_lc_plots=True, transform=truncate_BTS_light_curve_fractionally, max_n_per_class=1000)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, collate_fn=custom_collate_BTS, shuffle=True)
 
     for batch in tqdm(dataloader):

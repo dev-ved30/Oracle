@@ -1,2 +1,2 @@
 model,num_epochs,batch_size,lr,max_n_per_class,alpha,dir,load_weights
-ORACLE1-lite_ZTFSims,1000,1024,0.002,10000,0.5,,
+ORACLE1-lite_ZTFSims,2000,512,0.002,3000,0.5,,

@@ -104,9 +104,9 @@ BTS_to_Astrophysical_mappings = {
     'SN Icn': 'SN-Ib/c',
     'TDE': 'Transient-Other',
     'afterglow': 'Transient-Other',
-    'nova': 'Transient-Other',
-    'nova-like': 'Transient-Other',
-    'nova?': 'Transient-Other',
+    'nova': 'CV',
+    'nova-like': 'CV',
+    'nova?': 'CV',
 
 }
 

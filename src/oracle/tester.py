@@ -7,7 +7,7 @@ from sklearn.metrics import classification_report
 from tqdm import tqdm
 from pathlib import Path    
 
-from oracle.visualization import plot_confusion_matrix, plot_roc_curves, plot_train_val_history
+from oracle.visualization import plot_confusion_matrix, plot_roc_curves, plot_train_val_history, plot_class_wise_performance_over_all_phases, plot_average_performance_over_all_phases
 
 class Tester:
     
@@ -26,6 +26,13 @@ class Tester:
         file_name = f"{self.model_dir}/loss.pdf"
         plot_train_val_history(train_loss_history, val_loss_history, file_name)
 
+    def create_metric_phase_plots(self):
+        
+        for metric in ['f1-score','precision','recall']:
+            metrics_dictionary = self.get_metric_over_all_phases(metric)
+            plot_class_wise_performance_over_all_phases(metric, metrics_dictionary, self.model_dir)
+            plot_average_performance_over_all_phases(metric, metrics_dictionary, self.model_dir)
+
 
     def create_classification_report(self, y_true, y_pred, file_name=None):
         
@@ -38,8 +45,40 @@ class Tester:
 
         if file_name:
             report_dict = classification_report(y_true, y_pred, output_dict=True)
-            pd.DataFrame(report_dict).transpose().to_csv(file_name)
-        return report 
+            pd.DataFrame(report_dict).transpose().to_csv(file_name, index_label='Class')
+        return report
+
+    def get_metric_over_all_phases(self, metric):
+        
+        # Make sure metric is valid
+        assert metric in ['f1-score','precision','recall']
+
+        nodes_by_depth = self.taxonomy.get_nodes_by_depth()
+
+        metrics_dictionary = {}
+
+        for depth in nodes_by_depth:
+
+            if depth != 0:
+
+                reports_dir = Path(f"{self.model_dir}/reports/depth{depth}/")
+                reports = list(reports_dir.glob("*.csv"))
+                reports.sort()
+                
+                day_wise_metrics = []
+
+                for report in reports:
+
+                    day = int(str(report).split("+")[1].split('.')[0])
+                    df = pd.read_csv(report, index_col='Class')[[metric]]
+                    df = df.rename(columns={metric:day})
+                    day_wise_metrics.append(df)
+
+                combined_df = pd.concat(day_wise_metrics, axis=1, join='inner')
+                combined_df = combined_df.reindex(sorted(combined_df.columns), axis=1)
+                metrics_dictionary[depth] = combined_df
+
+        return metrics_dictionary
 
     def run_all_analysis(self, test_loader, d):
 
@@ -120,8 +159,6 @@ class Tester:
                 report_file = f"{self.model_dir}/reports/depth{depth}/report_trigger+{d}.csv"
                 report = self.create_classification_report(np.array(level_true_classes), np.array(level_pred_classes), report_file)
                 print(report)
-
-
 
 
 

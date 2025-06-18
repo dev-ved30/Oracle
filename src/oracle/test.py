@@ -147,6 +147,8 @@ def run_testing_loop(args):
             model.run_all_analysis(test_dataloader, d)
 
     model.create_loss_history_plot()
+    model.create_metric_phase_plots()
+
 
 def main():
     args = parse_args()

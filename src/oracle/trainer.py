@@ -11,12 +11,13 @@ from oracle.loss import WHXE_Loss
 
 class Trainer:
     
-    def setup_training(self, alpha, lr, model_dir, device):
+    def setup_training(self, alpha, lr, model_dir, device, wandb_run):
         
         self.criterion = WHXE_Loss(self.taxonomy, alpha)
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.model_dir = model_dir
         self.device = device
+        self.wandb_run = wandb_run
         self.scheduler = ReduceLROnPlateau(self.optimizer)
 
     def train_one_epoch(self, train_loader):
@@ -98,6 +99,14 @@ class Trainer:
                   f"Val Loss: {val_loss:.4f} (Best: {min(val_loss_history):.4f})")
 
             print(f"Time taken: {time.time() - start_time:.2f}s")
+
+            # Log in weights and biases
+            self.wandb_run.log(
+                {
+                    'train_loss': train_loss,
+                    'val_loss': val_loss, 
+                }
+            )
 
             # Save the best model
             if len(train_loss_history) == 1 or val_loss == min(val_loss_history):

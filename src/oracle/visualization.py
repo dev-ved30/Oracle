@@ -12,6 +12,10 @@ cm = plt.get_cmap('gist_rainbow')
 
 def plot_confusion_matrix(y_true, y_pred, labels, title=None, img_file=None):
 
+    plt.close('all')
+    plt.style.use(['default'])
+
+
     # Only keep source where a true label exists
     idx = np.where(y_true!=None)[0]
     y_true = y_true[idx]
@@ -57,6 +61,9 @@ def plot_confusion_matrix(y_true, y_pred, labels, title=None, img_file=None):
     plt.close()
 
 def plot_roc_curves(probs_true, probs_pred, labels, title=None, img_file=None):
+
+    plt.close('all')
+    plt.style.use(['default'])
 
     # Only keep source where a true label exists
     idx = np.where(np.sum(probs_true, axis=1)!=0)[0]
@@ -142,4 +149,73 @@ def plot_train_val_history(train_loss_history, val_loss_history, file_name):
     # axs[1].set_ylim(-3.4, -1)
 
     plt.savefig(file_name)
+    plt.close()
+
+
+def plot_class_wise_performance_over_all_phases(metric, metrics_dictionary, model_dir=None):
+
+    plt.close('all')
+    plt.style.use(['default'])
+
+    for depth in metrics_dictionary:
+
+        df = metrics_dictionary[depth]
+
+        for c, row in df.iterrows():
+
+            if c not in ['accuracy','macro avg','weighted avg']:
+
+                days, value = row.index, row.values
+
+                plt.plot(days, value, label=c, marker = 'o')
+
+        plt.xlabel("Days from first detection", fontsize='xx-large')
+        plt.ylabel(f"{metric}", fontsize='xx-large')
+
+        plt.grid()
+        plt.tight_layout()
+        plt.legend(loc='lower right')
+        plt.xscale('log')
+        plt.xticks(days, days)
+
+        if model_dir == None:
+            plt.show()
+        else:
+            plt.savefig(f"{model_dir}/plots/depth{depth}/class_wise_{metric}.pdf")
+
+        plt.close()
+
+
+
+def plot_average_performance_over_all_phases(metric, metrics_dictionary, model_dir=None):
+
+    plt.close('all')
+    plt.style.use(['default'])
+
+    for depth in metrics_dictionary:
+
+        df = metrics_dictionary[depth]
+
+        for c, row in df.iterrows():
+
+            if c in ['macro avg','weighted avg']:
+
+                days, value = row.index, row.values
+
+                plt.plot(days, value, label=f"{c}(Depth={depth})", marker = 'o')
+
+    plt.xlabel("Days from first detection", fontsize='xx-large')
+    plt.ylabel(f"{metric}", fontsize='xx-large')
+
+    plt.grid()
+    plt.tight_layout()
+    plt.legend(loc='lower right')
+    plt.xscale('log')
+    plt.xticks(days, days)
+
+    if model_dir == None:
+        plt.show()
+    else:
+        plt.savefig(f"{model_dir}/plots/average_{metric}.pdf")
+
     plt.close()

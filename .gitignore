@@ -1,4 +1,5 @@
 data/
+.DS_Store
 temp.py
 __pycache__
 
@@ -9,3 +10,4 @@ src/oracle/*/__pycache__/
 
 models/*/plots
 models/*/reports
+models/.DS_Store

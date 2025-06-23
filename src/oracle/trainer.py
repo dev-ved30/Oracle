@@ -9,14 +9,34 @@ from tqdm import tqdm
 
 from oracle.loss import WHXE_Loss
 
+class EarlyStopper:
+
+    def __init__(self, patience=1, min_delta=0):
+        self.patience = patience
+        self.min_delta = min_delta
+        self.counter = 0
+        self.min_validation_loss = float('inf')
+
+    def early_stop(self, validation_loss):
+        if validation_loss < self.min_validation_loss:
+            self.min_validation_loss = validation_loss
+            self.counter = 0
+        elif validation_loss > (self.min_validation_loss + self.min_delta):
+            self.counter += 1
+            if self.counter >= self.patience:
+                return True
+        return False
+
 class Trainer:
     
-    def setup_training(self, alpha, lr, model_dir, device):
+    def setup_training(self, alpha, lr, model_dir, device, wandb_run):
         
         self.criterion = WHXE_Loss(self.taxonomy, alpha)
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.model_dir = model_dir
         self.device = device
+        self.wandb_run = wandb_run
+        self.early_stopper = EarlyStopper(25, 1e-3)
         self.scheduler = ReduceLROnPlateau(self.optimizer)
 
     def train_one_epoch(self, train_loader):
@@ -99,6 +119,14 @@ class Trainer:
 
             print(f"Time taken: {time.time() - start_time:.2f}s")
 
+            # Log in weights and biases
+            self.wandb_run.log(
+                {
+                    'train_loss': train_loss,
+                    'val_loss': val_loss, 
+                }
+            )
+
             # Save the best model
             if len(train_loss_history) == 1 or val_loss == min(val_loss_history):
                 print("Saving model...")
@@ -109,3 +137,6 @@ class Trainer:
             # Dump the train and val loss history
             np.save(f"{self.model_dir}/train_loss_history.npy", np.array(train_loss_history))
             np.save(f"{self.model_dir}/val_loss_history.npy", np.array(val_loss_history))
+
+            if self.early_stopper.early_stop(val_loss):
+                print("Early stop condition met. Exiting the loop.")

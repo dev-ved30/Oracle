@@ -1,4 +1,5 @@
 import torch
+import wandb
 import argparse
 
 from pathlib import Path    
@@ -50,7 +51,28 @@ def parse_args():
 def save_args_to_csv(args, filepath):
 
     df = pd.DataFrame([vars(args)])  # Wrap in list to make a single-row DataFrame
-    df.to_csv(filepath, index=False)    
+    df.to_csv(filepath, index=False)
+
+def get_wandb_run(args):
+
+    run = wandb.init(
+        # Set the wandb entity where your project will be logged (generally your team name).
+        entity="vedshah-email-northwestern-university",
+        # Set the wandb project where this run will be logged.
+        project="ORACLE",
+        # Track hyperparameters and run metadata.
+        config={
+            "num_epochs": args.num_epochs,
+            "batch_size": args.batch_size,
+            "lr": args.lr,
+            "max_n_per_class": args.max_n_per_class,
+            "alpha": args.alpha,
+            "model_dir": args.dir,
+            "model_choice": args.model,
+            "pretrained_model_path": args.load_weights,
+        },
+    )
+    return run    
 
 def run_training_loop(args):
 
@@ -67,6 +89,8 @@ def run_training_loop(args):
     if model_dir==None:
         model_dir = Path(f'./models/{model_choice}')
 
+    # This is used to log data
+    wandb_run = get_wandb_run(args)
 
     # Create the model directory if it does not exist   
     model_dir.mkdir(parents=True, exist_ok=True)
@@ -155,8 +179,11 @@ def run_training_loop(args):
 
     # Fit the model
     model = model.to(device)
-    model.setup_training(alpha, lr, model_dir, device)
+    model.setup_training(alpha, lr, model_dir, device, wandb_run)
     model.fit(train_dataloader, val_dataloader, num_epochs)
+
+    # End the logging run with WandB
+    wandb_run.finish()
 
 def main():
     args = parse_args()

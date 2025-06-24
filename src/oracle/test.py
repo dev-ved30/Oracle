@@ -120,6 +120,28 @@ def run_testing_loop(args):
 
             model.run_all_analysis(test_dataloader, d)
 
+    elif model_choice == "ORACLE1_BTS":
+
+        # Define the model taxonomy and architecture
+        taxonomy = BTS_Taxonomy()
+        model = ORACLE1(taxonomy, static_feature_dim=17)
+        model.load_state_dict(torch.load(f'{model_dir}/best_model.pth', map_location=device))
+
+        # Set up testing
+        model = model.to(device)
+        model.setup_testing(model_dir, device)
+
+        # Load the training set
+        test_dataset = BTS_LC_Dataset(BTS_test_parquet_path, include_lc_plots=False, max_n_per_class=max_n_per_class)
+
+        for d in defaults_days_list:
+            
+            # Set the custom transform and reate dataloader
+            test_dataset.transform = partial(truncate_BTS_light_curve_by_days_since_trigger, d=d)
+            test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_BTS, generator=generator)
+
+            model.run_all_analysis(test_dataloader, d)
+
     elif model_choice == "ORACLE1-lite_ZTFSims":
 
         # Define the model taxonomy and architecture

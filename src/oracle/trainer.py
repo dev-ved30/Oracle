@@ -37,7 +37,7 @@ class Trainer:
         self.model_dir = model_dir
         self.device = device
         self.wandb_run = wandb_run
-        self.early_stopper = EarlyStopper(25, 1e-3)
+        self.early_stopper = EarlyStopper(100, 1e-3)
         self.scheduler = ReduceLROnPlateau(self.optimizer, factor=0.8, threshold=lr/100)
 
     def train_one_epoch(self, train_loader):

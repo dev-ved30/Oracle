@@ -1,5 +1,6 @@
 import time
 import torch
+import wandb
 
 import numpy as np
 import torch.optim as optim
@@ -37,7 +38,7 @@ class Trainer:
         self.device = device
         self.wandb_run = wandb_run
         self.early_stopper = EarlyStopper(25, 1e-3)
-        self.scheduler = ReduceLROnPlateau(self.optimizer)
+        self.scheduler = ReduceLROnPlateau(self.optimizer, factor=0.8, threshold=lr/100)
 
     def train_one_epoch(self, train_loader):
 
@@ -89,7 +90,7 @@ class Trainer:
 
         return np.mean(val_loss_values)
     
-    def log_in_wandb(self, train_loss_history, val_loss_history):
+    def log_data_in_wandb(self, train_loss_history, val_loss_history):
 
         self.wandb_run.log(
             {
@@ -97,9 +98,18 @@ class Trainer:
                 'Validation Loss': val_loss_history[-1], 
                 'Min (Validation Loss)': min(val_loss_history),
                 'Min (Train Loss)': min(train_loss_history),
-                'Learning rate': self.optimizer.param_groups[0]['lr']
+                'Learning rate': self.optimizer.param_groups[0]['lr'],
+                'Last Epoch': len(train_loss_history),
             }
         )
+    
+    def save_model_in_wandb(self):
+        
+        # Save artifacts to wandb
+        print('Saving model to wandb')
+        wandb.save(f"{self.model_dir}/train_loss_history.npy")
+        wandb.save(f"{self.model_dir}/val_loss_history.npy")
+        wandb.save(f"{self.model_dir}/best_model.pth")
 
     def save_loss_history(self, train_loss_history, val_loss_history):
 
@@ -136,7 +146,7 @@ class Trainer:
             print(f"Time taken: {time.time() - start_time:.2f}s")
 
             # Log in weights and biases
-            self.log_in_wandb(train_loss_history, val_loss_history)
+            self.log_data_in_wandb(train_loss_history, val_loss_history)
 
             # Save the best model
             if len(train_loss_history) == 1 or val_loss == min(val_loss_history):

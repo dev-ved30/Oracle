@@ -60,11 +60,13 @@ flag_value = -9
 
 images_list = ['g_reference', 'g_science', 'g_difference', 'r_reference', 'r_science', 'r_difference', 'i_reference', 'i_science', 'i_difference']
 time_dependent_feature_list = ['jd', 'flux', 'flux_err', 'fid']
+time_independent_feature_list = ['sky', 'sgscore1', 'sgscore2', 'distpsnr1', 'distpsnr2', 'fwhm', 'ra', 'dec', 'diffmaglim', 'ndethist', 'nmtchps', 'drb', 'ncovhist', 'chinr', 'sharpnr', 'scorr', 'sky']
 book_keeping_feature_list = ['ZTFID', 'bts_class']
 features_to_transform = ['magpsf', 'sigmapsf']
 
 n_images = len(images_list)
 n_ts_features = len(time_dependent_feature_list)
+n_static_features = len(time_independent_feature_list)
 n_book_keeping_features = len(book_keeping_feature_list)
 
 class BTS_LC_Dataset(torch.utils.data.Dataset):
@@ -114,11 +116,18 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
             time_series_data[:,i] = np.array(row[feature], dtype=np.float32)
         time_series_data = torch.from_numpy(time_series_data)
 
+        static_data = np.ones((lc_length, n_static_features), dtype=np.float32)
+        for i, feature in enumerate(time_independent_feature_list):
+            d = np.array(row[feature], dtype=np.float32)
+            static_data[: ,i] = np.where(np.isnan(d), flag_value, d)
+        static_data = torch.from_numpy(static_data)
+
         if self.transform != None:
-            time_series_data = self.transform(time_series_data)
+            time_series_data, static_data = self.transform(time_series_data, static_data)
 
         dictionary = {
             'ts': time_series_data,
+            'static': static_data,
             'label': astrophysical_class,
             'ZTFID': ztfid,
         }
@@ -346,7 +355,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         
         return im
     
-def truncate_BTS_light_curve_fractionally(x_ts, f=None):
+def truncate_BTS_light_curve_fractionally(x_ts, x_static, f=None):
 
     if f == None:
         # Get a random fraction between 0.1 and 1
@@ -361,10 +370,11 @@ def truncate_BTS_light_curve_fractionally(x_ts, f=None):
 
     # Truncate the light curve
     x_ts = x_ts[:new_obs_count, :]
+    x_static = x_static[:new_obs_count, :]
 
-    return x_ts
+    return x_ts, x_static
 
-def truncate_BTS_light_curve_by_days_since_trigger(x_ts, d):
+def truncate_BTS_light_curve_by_days_since_trigger(x_ts, x_static, d):
 
     # NOTE: For BTS we are making the assumption that the data set does not contain any non detections. This is not the case with ELAsTiCC
 
@@ -377,8 +387,9 @@ def truncate_BTS_light_curve_by_days_since_trigger(x_ts, d):
 
     # Truncate the light curve
     x_ts = x_ts[idx, :]
+    x_static = x_static[idx, :]
 
-    return x_ts
+    return x_ts, x_static
 
 def custom_collate_BTS(batch):
 
@@ -389,6 +400,7 @@ def custom_collate_BTS(batch):
     ztfid_array = []
 
     lengths = np.zeros((batch_size), dtype=np.float32)
+    static_features_tensor = torch.zeros((batch_size, n_static_features),  dtype=torch.float32)
     lc_plot_tensor = torch.zeros((batch_size, n_channels, img_height, img_width), dtype=torch.float32)
     postage_stamps_tensor = torch.zeros((batch_size, n_channels, img_height, img_width), dtype=torch.float32)
 
@@ -397,8 +409,9 @@ def custom_collate_BTS(batch):
         ts_array.append(sample['ts'])
         label_array.append(sample['label'])
         ztfid_array.append(sample['ZTFID'])
-
+        
         lengths[i] = sample['ts'].shape[0]
+        static_features_tensor[i, :] = sample['static'][-1, :]
 
         if 'postage_stamp' in sample.keys():
             postage_stamps_tensor[i,:,:,:] = sample['postage_stamp']        
@@ -414,6 +427,7 @@ def custom_collate_BTS(batch):
 
     d = {
         'ts': ts_tensor,
+        'static': static_features_tensor,
         'length': lengths,
         'label': label_array,
         'ZTFID': ztfid_array,

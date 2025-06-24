@@ -20,7 +20,7 @@ default_max_n_per_class = int(1e7)
 default_model_dir = None
 
 # <----- Config for the model ----->
-model_choices = ["ORACLE1_ELAsTiCC", "ORACLE1-lite_ELAsTiCC", "ORACLE1-lite_BTS", "ORACLE1-lite_ZTFSims", "ORACLE2_swin_ELAsTiCC", "ORACLE2-lite_swin_ELAsTiCC", "ORACLE2_swin_BTS", "ORACLE2-lite_swin_BTS", "ORACLE2-pro_swin_BTS"]
+model_choices = ["ORACLE1_ELAsTiCC", "ORACLE1-lite_ELAsTiCC", "ORACLE1-lite_BTS", "ORACLE1-lite_ZTFSims", "ORACLE1_BTS"]
 default_model_type = "ORACLE1_ELAsTiCC"
 
 # Switch device to GPU if available
@@ -149,10 +149,29 @@ def run_training_loop(args):
         # Load the validation set
         val_dataset = []
         for f in val_truncation_fractions:
-            transform = partial(truncate_ELAsTiCC_light_curve_fractionally, f=f)
+            transform = partial(truncate_BTS_light_curve_fractionally, f=f)
             val_dataset.append(BTS_LC_Dataset(BTS_val_parquet_path, transform=transform))
         val_dataset = ConcatDataset(val_dataset)
         val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_BTS, generator=generator)
+
+    elif model_choice == "ORACLE1_BTS":
+
+        # Define the model taxonomy and architecture
+        taxonomy = BTS_Taxonomy()
+        model = ORACLE1(taxonomy, static_feature_dim=17)
+
+        # Load the training set
+        train_dataset = BTS_LC_Dataset(BTS_train_parquet_path, max_n_per_class=max_n_per_class, transform=truncate_BTS_light_curve_fractionally)
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_BTS, generator=generator)
+
+        # Load the validation set
+        val_dataset = []
+        for f in val_truncation_fractions:
+            transform = partial(truncate_BTS_light_curve_fractionally, f=f)
+            val_dataset.append(BTS_LC_Dataset(BTS_val_parquet_path, transform=transform))
+        val_dataset = ConcatDataset(val_dataset)
+        val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_BTS, generator=generator)
+
 
     elif model_choice == "ORACLE1-lite_ZTFSims":
 

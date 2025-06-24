@@ -182,7 +182,8 @@ def run_training_loop(args):
     model.setup_training(alpha, lr, model_dir, device, wandb_run)
     model.fit(train_dataloader, val_dataloader, num_epochs)
 
-    # End the logging run with WandB
+    # End the logging run with WandB and upload the model
+    model.save_model_in_wandb()
     wandb_run.finish()
 
 def main():

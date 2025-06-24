@@ -88,6 +88,23 @@ class Trainer:
                 val_loss_values.append(loss.item())
 
         return np.mean(val_loss_values)
+    
+    def log_in_wandb(self, train_loss_history, val_loss_history):
+
+        self.wandb_run.log(
+            {
+                'Train Loss': train_loss_history[-1],
+                'Validation Loss': val_loss_history[-1], 
+                'Min (Validation Loss)': min(val_loss_history),
+                'Min (Train Loss)': min(train_loss_history),
+                'Learning rate': self.optimizer.param_groups[0]['lr']
+            }
+        )
+
+    def save_loss_history(self, train_loss_history, val_loss_history):
+
+        np.save(f"{self.model_dir}/train_loss_history.npy", np.array(train_loss_history))
+        np.save(f"{self.model_dir}/val_loss_history.npy", np.array(val_loss_history))
 
     def fit(self, train_loader, val_loader, num_epochs=5):
 
@@ -116,27 +133,23 @@ class Trainer:
 
             print(f"Train Loss: {train_loss:.4f} (Best: {min(train_loss_history):.4f})\n"
                   f"Val Loss: {val_loss:.4f} (Best: {min(val_loss_history):.4f})")
-
             print(f"Time taken: {time.time() - start_time:.2f}s")
 
             # Log in weights and biases
-            self.wandb_run.log(
-                {
-                    'train_loss': train_loss,
-                    'val_loss': val_loss, 
-                }
-            )
+            self.log_in_wandb(train_loss_history, val_loss_history)
 
             # Save the best model
             if len(train_loss_history) == 1 or val_loss == min(val_loss_history):
                 print("Saving model...")
                 torch.save(self.state_dict(), f'{self.model_dir}/best_model.pth')
 
+            # Update the learning rate scheduler state
             self.scheduler.step(val_loss)
 
             # Dump the train and val loss history
-            np.save(f"{self.model_dir}/train_loss_history.npy", np.array(train_loss_history))
-            np.save(f"{self.model_dir}/val_loss_history.npy", np.array(val_loss_history))
+            self.save_loss_history(train_loss_history, val_loss_history)
 
+            # Check for early exit
             if self.early_stopper.early_stop(val_loss):
                 print("Early stop condition met. Exiting the loop.")
+                break

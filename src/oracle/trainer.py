@@ -110,6 +110,7 @@ class Trainer:
         wandb.save(f"{self.model_dir}/train_loss_history.npy")
         wandb.save(f"{self.model_dir}/val_loss_history.npy")
         wandb.save(f"{self.model_dir}/best_model.pth")
+        wandb.save(f"{self.model_dir}/train_args.csv")
 
     def save_loss_history(self, train_loss_history, val_loss_history):
 

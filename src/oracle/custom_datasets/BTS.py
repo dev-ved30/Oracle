@@ -377,6 +377,8 @@ def truncate_BTS_light_curve_fractionally(x_ts, x_static, f=None):
 def truncate_BTS_light_curve_by_days_since_trigger(x_ts, x_static, d):
 
     # NOTE: For BTS we are making the assumption that the data set does not contain any non detections. This is not the case with ELAsTiCC
+    if d == None:
+        d = 2**np.random.uniform(0, 11)
 
     # Get the days data
     jd_index = time_dependent_feature_list.index('jd')

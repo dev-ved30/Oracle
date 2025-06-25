@@ -374,7 +374,7 @@ def truncate_BTS_light_curve_fractionally(x_ts, x_static, f=None):
 
     return x_ts, x_static
 
-def truncate_BTS_light_curve_by_days_since_trigger(x_ts, x_static, d):
+def truncate_BTS_light_curve_by_days_since_trigger(x_ts, x_static, d=None):
 
     # NOTE: For BTS we are making the assumption that the data set does not contain any non detections. This is not the case with ELAsTiCC
     if d == None:

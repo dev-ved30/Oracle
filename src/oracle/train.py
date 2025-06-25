@@ -143,7 +143,7 @@ def run_training_loop(args):
         model = ORACLE1_lite(taxonomy)
 
         # Load the training set
-        train_dataset = BTS_LC_Dataset(BTS_train_parquet_path, max_n_per_class=max_n_per_class, transform=truncate_BTS_light_curve_fractionally)
+        train_dataset = BTS_LC_Dataset(BTS_train_parquet_path, max_n_per_class=max_n_per_class, transform=truncate_BTS_light_curve_by_days_since_trigger)
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_BTS, generator=generator)
 
         # Load the validation set
@@ -161,7 +161,7 @@ def run_training_loop(args):
         model = ORACLE1(taxonomy, static_feature_dim=17)
 
         # Load the training set
-        train_dataset = BTS_LC_Dataset(BTS_train_parquet_path, max_n_per_class=max_n_per_class, transform=truncate_BTS_light_curve_fractionally)
+        train_dataset = BTS_LC_Dataset(BTS_train_parquet_path, max_n_per_class=max_n_per_class, transform=truncate_BTS_light_curve_by_days_since_trigger)
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_BTS, generator=generator)
 
         # Load the validation set

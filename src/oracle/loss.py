@@ -28,7 +28,7 @@ class WHXE_Loss(nn.Module):
 
         # Pre-compute the class weights
         true_encodings = self.taxonomy.get_hierarchical_one_hot_encoding(labels)
-        self.class_weights = self.get_class_weights(torch.from_numpy(true_encodings))
+        self.class_weights = self.get_class_weights(torch.from_numpy(true_encodings).to(device))
 
         print(self.taxonomy.get_level_order_traversal(), self.class_weights)
 

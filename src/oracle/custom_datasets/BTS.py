@@ -385,7 +385,7 @@ def truncate_BTS_light_curve_by_days_since_trigger(x_ts, x_static, d=None):
     jd = x_ts[:, jd_index]
 
     # Get indices of observations within d days of the first detection (trigger)
-    idx = np.where(jd < d)[0]
+    idx = np.where(jd <= d)[0]
 
     # Truncate the light curve
     x_ts = x_ts[idx, :]

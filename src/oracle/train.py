@@ -29,7 +29,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")
 torch.set_default_device(device)
 
-val_truncation_fractions = [0.3, 0.5, 0.7, 0.9]
+val_truncation_fractions = [0.1, 0.4, 0.6, 1.0]
 
 def parse_args():
     '''
@@ -115,8 +115,8 @@ def run_training_loop(args):
         for f in val_truncation_fractions:
             transform = partial(truncate_ELAsTiCC_light_curve_fractionally, f=f)
             val_dataset.append(ELAsTiCC_LC_Dataset(ELAsTiCC_val_parquet_path, transform=transform))
-        val_dataset = ConcatDataset(val_dataset)
-        val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_ELAsTiCC, generator=generator)
+        concatenated_val_dataset = ConcatDataset(val_dataset)
+        val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_ELAsTiCC, generator=generator)
 
     elif model_choice == "ORACLE1-lite_ELAsTiCC":
 
@@ -133,8 +133,8 @@ def run_training_loop(args):
         for f in val_truncation_fractions:
             transform = partial(truncate_ELAsTiCC_light_curve_fractionally, f=f)
             val_dataset.append(ELAsTiCC_LC_Dataset(ELAsTiCC_val_parquet_path, transform=transform))
-        val_dataset = ConcatDataset(val_dataset)
-        val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_ELAsTiCC, generator=generator)
+        concatenated_val_dataset = ConcatDataset(val_dataset)
+        val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_ELAsTiCC, generator=generator)
 
     elif model_choice == "ORACLE1-lite_BTS":
 
@@ -151,8 +151,8 @@ def run_training_loop(args):
         for f in val_truncation_fractions:
             transform = partial(truncate_BTS_light_curve_fractionally, f=f)
             val_dataset.append(BTS_LC_Dataset(BTS_val_parquet_path, transform=transform))
-        val_dataset = ConcatDataset(val_dataset)
-        val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_BTS, generator=generator)
+        concatenated_val_dataset = ConcatDataset(val_dataset)
+        val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_BTS, generator=generator)
 
     elif model_choice == "ORACLE1_BTS":
 
@@ -169,8 +169,8 @@ def run_training_loop(args):
         for f in val_truncation_fractions:
             transform = partial(truncate_BTS_light_curve_fractionally, f=f)
             val_dataset.append(BTS_LC_Dataset(BTS_val_parquet_path, transform=transform))
-        val_dataset = ConcatDataset(val_dataset)
-        val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_BTS, generator=generator)
+        concatenated_val_dataset = ConcatDataset(val_dataset)
+        val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_BTS, generator=generator)
 
 
     elif model_choice == "ORACLE1-lite_ZTFSims":
@@ -188,17 +188,21 @@ def run_training_loop(args):
         for f in val_truncation_fractions:
             transform = partial(truncate_ZTF_SIM_light_curve_fractionally, f=f)
             val_dataset.append(ZTF_SIM_LC_Dataset(ZTF_sim_val_parquet_path, transform=transform))
-        val_dataset = ConcatDataset(val_dataset)
-        val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_ZTF_SIM, generator=generator)
+        concatenated_val_dataset = ConcatDataset(val_dataset)
+        val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_ZTF_SIM, generator=generator)
 
     # Load pretrained model
     if pretrained_model_path != None:
         print(f"Loading pre-trained weights from {pretrained_model_path}")
         model.load_state_dict(torch.load(pretrained_model_path, map_location=device))
 
+    # Get the train and val labels. These are used to determine weights for the loss functions
+    train_labels = train_dataset.get_all_labels()
+    val_labels = val_dataset[0].get_all_labels()
+
     # Fit the model
     model = model.to(device)
-    model.setup_training(alpha, lr, model_dir, device, wandb_run)
+    model.setup_training(alpha, lr, train_labels, val_labels, model_dir, device, wandb_run)
     model.fit(train_dataloader, val_dataloader, num_epochs)
 
     # End the logging run with WandB and upload the model

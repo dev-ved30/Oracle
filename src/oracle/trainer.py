@@ -30,9 +30,12 @@ class EarlyStopper:
 
 class Trainer:
     
-    def setup_training(self, alpha, lr, model_dir, device, wandb_run):
+    def setup_training(self, alpha, lr, train_labels, val_labels, model_dir, device, wandb_run):
         
-        self.criterion = WHXE_Loss(self.taxonomy, alpha)
+        # Set up criterion for training and validation. These need to be different because the class weights can be different
+        self.train_criterion = WHXE_Loss(self.taxonomy, train_labels, alpha)
+        self.val_criterion = WHXE_Loss(self.taxonomy, val_labels, alpha)
+
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.model_dir = model_dir
         self.device = device
@@ -57,7 +60,7 @@ class Trainer:
             # Forward pass
             logits = self(batch)
 
-            loss = self.criterion(logits, label_encodings)
+            loss = self.train_criterion(logits, label_encodings)
 
             # Backward pass
             self.optimizer.zero_grad()
@@ -85,7 +88,7 @@ class Trainer:
                 # Forward pass
                 logits = self(batch)
 
-                loss = self.criterion(logits, label_encodings)
+                loss = self.val_criterion(logits, label_encodings)
                 val_loss_values.append(loss.item())
 
         return np.mean(val_loss_values)

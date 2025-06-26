@@ -10,7 +10,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 # Implementation of Weighted Hierarchical Cross Entropy loss function by Villar et. al. 2023 (https://arxiv.org/abs/2312.02266) based on the Hierarchical Cross Entropy loss function by Bertinetto et. al. 2019 (https://arxiv.org/abs/1912.09393)
 class WHXE_Loss(nn.Module):
 
-    def __init__(self, taxonomy:Taxonomy, alpha=0.5):
+    def __init__(self, taxonomy:Taxonomy, labels, alpha=0.5):
 
         super(WHXE_Loss, self).__init__()
 
@@ -25,6 +25,12 @@ class WHXE_Loss(nn.Module):
 
         # Count the number of nodes in the taxonomy
         self.N_nodes = len(self.level_order_nodes)
+
+        # Pre-compute the class weights
+        true_encodings = self.taxonomy.get_hierarchical_one_hot_encoding(labels)
+        self.class_weights = self.get_class_weights(torch.from_numpy(true_encodings))
+
+        print(self.taxonomy.get_level_order_traversal(), self.class_weights)
 
         # Pre-compute additional terms used in the loss function
         self.compute_lambda_term()
@@ -57,9 +63,6 @@ class WHXE_Loss(nn.Module):
         # Apply softmax to sets of siblings for the logits in order to get the pseudo conditional probabilities 
         conditional_probabilities = self.taxonomy.get_conditional_probabilities(logits)
 
-        # Class weights of size (N_nodes), ordered in level order traversal
-        class_weights = self.get_class_weights(true)
-
         # At this point we have the masked soft maxes i.e. the pseudo probabilities. We can take the log of these values
         log_p = torch.log(conditional_probabilities)
 
@@ -67,7 +70,7 @@ class WHXE_Loss(nn.Module):
         log_p = log_p * self.lambda_term
 
         # Weight them by the class weight after using the target_probabilities as indicators. Then sum them up for each batch
-        v1 = torch.sum(class_weights * (log_p * true), dim=1)
+        v1 = torch.sum(self.class_weights * (log_p * true), dim=1)
 
         # Finally, find the mean over all batches. Since we are taking logs of numbers <1 (the pseudo probabilities), we have to multiply by -1 to get a +ve loss value.
         v2 = -1 * torch.mean(v1)

@@ -5,7 +5,6 @@ import argparse
 from pathlib import Path    
 from torch.utils.data import DataLoader, ConcatDataset
 
-from oracle.taxonomies import ORACLE_Taxonomy, BTS_Taxonomy
 from oracle.architectures import *
 from oracle.custom_datasets.ELAsTiCC import *
 from oracle.custom_datasets.BTS import *
@@ -103,8 +102,7 @@ def run_training_loop(args):
     if model_choice == "ORACLE1_ELAsTiCC":
         
         # Define the model taxonomy and architecture
-        taxonomy = ORACLE_Taxonomy()
-        model = ORACLE1(taxonomy)
+        model = ORACLE1(19)
 
         # Load the training set
         train_dataset = ELAsTiCC_LC_Dataset(ELAsTiCC_train_parquet_path, include_lc_plots=False, transform=truncate_ELAsTiCC_light_curve_fractionally, max_n_per_class=max_n_per_class)
@@ -121,8 +119,7 @@ def run_training_loop(args):
     elif model_choice == "ORACLE1-lite_ELAsTiCC":
 
         # Define the model taxonomy and architecture
-        taxonomy = ORACLE_Taxonomy()
-        model = ORACLE1_lite(taxonomy)
+        model = ORACLE1_lite(19)
 
         # Load the training set
         train_dataset = ELAsTiCC_LC_Dataset(ELAsTiCC_train_parquet_path, include_lc_plots=False, transform=truncate_ELAsTiCC_light_curve_fractionally, max_n_per_class=max_n_per_class)
@@ -139,8 +136,7 @@ def run_training_loop(args):
     elif model_choice == "ORACLE1-lite_BTS":
 
         # Define the model taxonomy and architecture
-        taxonomy = BTS_Taxonomy()
-        model = ORACLE1_lite(taxonomy)
+        model = ORACLE1_lite(8)
 
         # Load the training set
         train_dataset = BTS_LC_Dataset(BTS_train_parquet_path, max_n_per_class=max_n_per_class, transform=truncate_BTS_light_curve_by_days_since_trigger)
@@ -157,8 +153,7 @@ def run_training_loop(args):
     elif model_choice == "ORACLE1_BTS":
 
         # Define the model taxonomy and architecture
-        taxonomy = BTS_Taxonomy()
-        model = ORACLE1(taxonomy, static_feature_dim=17)
+        model = ORACLE1(8, static_feature_dim=17)
 
         # Load the training set
         train_dataset = BTS_LC_Dataset(BTS_train_parquet_path, max_n_per_class=max_n_per_class, transform=truncate_BTS_light_curve_by_days_since_trigger)
@@ -176,8 +171,7 @@ def run_training_loop(args):
     elif model_choice == "ORACLE1-lite_ZTFSims":
 
         # Define the model taxonomy and architecture
-        taxonomy = BTS_Taxonomy()
-        model = ORACLE1_lite(taxonomy)
+        model = ORACLE1_lite(8)
 
         # Load the training set
         train_dataset = ZTF_SIM_LC_Dataset(ZTF_sim_train_parquet_path, include_lc_plots=False, transform=truncate_ZTF_SIM_light_curve_fractionally, max_n_per_class=max_n_per_class)
@@ -202,7 +196,7 @@ def run_training_loop(args):
 
     # Fit the model
     model = model.to(device)
-    model.setup_training(alpha, lr, train_labels, val_labels, model_dir, device, wandb_run)
+    model.setup_training(lr, train_labels, val_labels, model_dir, device, wandb_run)
     model.fit(train_dataloader, val_dataloader, num_epochs)
 
     # End the logging run with WandB and upload the model

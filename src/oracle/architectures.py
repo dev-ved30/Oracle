@@ -6,8 +6,8 @@ import numpy as np
 
 from torchvision.models import swin_v2_b
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
+import torch.nn.functional as F
 
-from oracle.taxonomies import Taxonomy, ORACLE_Taxonomy
 from oracle.trainer import Trainer
 from oracle.tester import Tester
 
@@ -16,36 +16,23 @@ swin_v2_b_output_dim = 1000
 # Template for the Hierarchical Classifier
 class Hierarchical_classifier(nn.Module, Trainer, Tester):
 
-    def __init__(self, taxonomy: Taxonomy):
+    def __init__(self, output_dim):
 
         nn.Module.__init__(self)
-        self.taxonomy = taxonomy
-        self.n_nodes = len(taxonomy.get_level_order_traversal())
+        self.n_nodes = output_dim
 
     def predict_conditional_probabilities(self, batch):
         
         logits = self.forward(batch)
-        conditional_probabilities = self.taxonomy.get_conditional_probabilities(logits).detach()
+        conditional_probabilities = F.softmax(logits).detach()
+        print(conditional_probabilities.shape)
         return conditional_probabilities
-
-    def predict_class_probabilities(self, batch):
-
-        conditional_probabilities = self.predict_conditional_probabilities(batch)
-        class_probabilities = self.taxonomy.get_class_probabilities(conditional_probabilities)
-        return class_probabilities
     
     def predict_conditional_probabilities_df(self, batch):
 
-        level_order_nodes = self.taxonomy.get_level_order_traversal()
+        level_order_nodes = self.one_hot_encoder.categories_[0]
         conditional_probabilities = self.predict_conditional_probabilities(batch)
         df = pd.DataFrame(conditional_probabilities, columns=level_order_nodes)
-        return df
-    
-    def predict_class_probabilities_df(self, batch):
-
-        level_order_nodes = self.taxonomy.get_level_order_traversal()
-        class_probabilities = self.predict_class_probabilities(batch)
-        df = pd.DataFrame(class_probabilities, columns=level_order_nodes)
         return df
     
     def get_latent_space_embeddings(self, batch):
@@ -55,9 +42,9 @@ class Hierarchical_classifier(nn.Module, Trainer, Tester):
 # Base version of the classifier which only uses the Light curve image
 class ORACLE2_lite_swin(Hierarchical_classifier):
         
-    def __init__(self, taxonomy: Taxonomy):
+    def __init__(self, output_dim):
 
-        super(ORACLE2_lite_swin, self).__init__(taxonomy)
+        super(ORACLE2_lite_swin, self).__init__(output_dim)
 
         # TODO: Think about what weights we want to initialize the transformer with.
         self.swin = torch.hub.load("pytorch/vision", "swin_v2_t", weights="DEFAULT", progress=False)
@@ -91,9 +78,9 @@ class ORACLE2_lite_swin(Hierarchical_classifier):
 
 class ORACLE2_pro_swin(Hierarchical_classifier):
 
-    def __init__(self, taxonomy: Taxonomy):
+    def __init__(self, output_dim):
 
-        super(ORACLE2_pro_swin, self).__init__(taxonomy)
+        super(ORACLE2_pro_swin, self).__init__(output_dim)
 
 
         # TODO: Think about what weights we want to initialize the transformer with.
@@ -137,9 +124,9 @@ class ORACLE2_pro_swin(Hierarchical_classifier):
     
 class ORACLE1(Hierarchical_classifier):
 
-    def __init__(self, taxonomy: Taxonomy,  ts_feature_dim=5, latent_space_dim=64, static_feature_dim=18):
+    def __init__(self, output_dim,  ts_feature_dim=5, latent_space_dim=64, static_feature_dim=18):
 
-        super(ORACLE1, self).__init__(taxonomy)
+        super(ORACLE1, self).__init__(output_dim)
 
         self.latent_space_dim = latent_space_dim
         self.ts_feature_dim = ts_feature_dim
@@ -199,9 +186,9 @@ class ORACLE1(Hierarchical_classifier):
 
 class ORACLE1_lite(Hierarchical_classifier):
 
-    def __init__(self, taxonomy: Taxonomy, ts_feature_dim=5, latent_space_dim=64):
+    def __init__(self, output_dim, ts_feature_dim=5, latent_space_dim=64):
 
-        super(ORACLE1_lite,  self).__init__(taxonomy)
+        super(ORACLE1_lite,  self).__init__(output_dim)
 
         self.latent_space_dim = latent_space_dim
         self.ts_feature_dim = ts_feature_dim
@@ -248,7 +235,6 @@ class ORACLE1_lite(Hierarchical_classifier):
 
 if __name__ == '__main__':
 
-    taxonomy = ORACLE_Taxonomy()
     config = {
         "layer1_neurons": 512,
         "layer1_dropout": 0.3,
@@ -256,7 +242,7 @@ if __name__ == '__main__':
         "layer2_dropout": 0.2,
     }
     
-    model = ORACLE2_lite_swin(config, taxonomy)
+    model = ORACLE2_lite_swin(config, 6)
     model.eval()
 
     x = torch.rand(10, 3, 256, 256)

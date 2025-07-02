@@ -7,8 +7,6 @@ from tqdm import tqdm
 from pathlib import Path    
 from torch.utils.data import DataLoader
 
-from oracle.loss import WHXE_Loss
-from oracle.taxonomies import ORACLE_Taxonomy, BTS_Taxonomy
 from oracle.architectures import *
 from oracle.custom_datasets.ELAsTiCC import *
 from oracle.custom_datasets.BTS import *
@@ -58,8 +56,7 @@ def run_testing_loop(args):
     if model_choice == "ORACLE1_ELAsTiCC":
         
         # Define the model taxonomy and architecture and load model weights
-        taxonomy = ORACLE_Taxonomy()
-        model = ORACLE1(taxonomy)
+        model = ORACLE1(19)
         model.load_state_dict(torch.load(f'{model_dir}/best_model.pth', map_location=device))
 
         # Set up testing
@@ -79,8 +76,7 @@ def run_testing_loop(args):
 
     elif model_choice == "ORACLE1-lite_ELAsTiCC":
 
-        taxonomy = ORACLE_Taxonomy()
-        model = ORACLE1_lite(taxonomy)
+        model = ORACLE1_lite(19)
         model.load_state_dict(torch.load(f'{model_dir}/best_model.pth', map_location=device))
 
         # Set up testing
@@ -101,9 +97,22 @@ def run_testing_loop(args):
     elif model_choice == "ORACLE1-lite_BTS":
 
         # Define the model taxonomy and architecture
-        taxonomy = BTS_Taxonomy()
-        model = ORACLE1_lite(taxonomy)
-        model.load_state_dict(torch.load(f'{model_dir}/best_model.pth', map_location=device))
+        model = ORACLE1_lite(8)
+        ckpt = torch.load(f'{model_dir}/best_model.pth', map_location=device)
+
+        # If you saved a dict containing multiple things:
+        if isinstance(ckpt, dict) and 'model_state_dict' in ckpt:
+            state_dict = ckpt['model_state_dict']
+        else:
+            state_dict = ckpt
+
+        # Keep only parameters that belong to the model
+        filtered_state = {
+            k: v for k, v in state_dict.items()
+            if k in model.state_dict()
+        }
+
+        model.load_state_dict(filtered_state)
 
         # Set up testing
         model = model.to(device)
@@ -123,9 +132,22 @@ def run_testing_loop(args):
     elif model_choice == "ORACLE1_BTS":
 
         # Define the model taxonomy and architecture
-        taxonomy = BTS_Taxonomy()
-        model = ORACLE1(taxonomy, static_feature_dim=17)
-        model.load_state_dict(torch.load(f'{model_dir}/best_model.pth', map_location=device))
+        model = ORACLE1(8, static_feature_dim=17)
+        ckpt = torch.load(f'{model_dir}/best_model.pth', map_location=device)
+
+        # If you saved a dict containing multiple things:
+        if isinstance(ckpt, dict) and 'model_state_dict' in ckpt:
+            state_dict = ckpt['model_state_dict']
+        else:
+            state_dict = ckpt
+
+        # Keep only parameters that belong to the model
+        filtered_state = {
+            k: v for k, v in state_dict.items()
+            if k in model.state_dict()
+        }
+
+        model.load_state_dict(filtered_state)
 
         # Set up testing
         model = model.to(device)
@@ -145,13 +167,11 @@ def run_testing_loop(args):
     elif model_choice == "ORACLE1-lite_ZTFSims":
 
         # Define the model taxonomy and architecture
-        taxonomy = BTS_Taxonomy()
-        model = ORACLE1_lite(taxonomy)
+        model = ORACLE1_lite(8)
 
         # Define the model taxonomy and architecture
-        taxonomy = BTS_Taxonomy()
-        model = ORACLE1_lite(taxonomy)
-        model.load_state_dict(torch.load(f'{model_dir}/best_model.pth', map_location=device))
+        model = ORACLE1_lite(8)
+        model.load_state_dict(torch.load(f'{model_dir}/best_model.pth', map_location=device), strict=False)
 
         # Set up testing
         model = model.to(device)
@@ -169,7 +189,7 @@ def run_testing_loop(args):
             model.run_all_analysis(test_dataloader, d)
 
     model.create_loss_history_plot()
-    model.create_metric_phase_plots()
+    #model.create_metric_phase_plots()
 
 
 def main():

@@ -1,4 +1,5 @@
 import torch
+import joblib
 
 import numpy as np
 import pandas as pd
@@ -14,6 +15,7 @@ class Tester:
     def setup_testing(self, model_dir, device):
 
         self.model_dir = model_dir
+        self.one_hot_encoder = joblib.load(f"{self.model_dir}/encoder.pkl")
         self.device = device
 
     def create_loss_history_plot(self):
@@ -53,8 +55,6 @@ class Tester:
         # Make sure metric is valid
         assert metric in ['f1-score','precision','recall']
 
-        nodes_by_depth = self.taxonomy.get_nodes_by_depth()
-
         metrics_dictionary = {}
 
         for depth in nodes_by_depth:
@@ -83,7 +83,6 @@ class Tester:
     def run_all_analysis(self, test_loader, d):
 
         self.eval()
-        nodes_by_depth = self.taxonomy.get_nodes_by_depth()
 
         true_classes = []
         combined_pred_df = []
@@ -98,10 +97,10 @@ class Tester:
             batch = {k: v.to(self.device) if torch.is_tensor(v) else v for k, v in batch.items()}
 
             # Run inference and get the predictions df
-            pred_df = self.predict_class_probabilities_df(batch)
+            pred_df = self.predict_conditional_probabilities_df(batch)
 
             # Make dataframe for true labels
-            true_df = self.taxonomy.get_hierarchical_one_hot_encoding(batch['label'])
+            true_df = self.one_hot_encoder.transform(np.asarray(batch['label']).reshape(-1, 1)).toarray()
             true_df = pd.DataFrame(true_df, columns=pred_df.columns)
 
             true_classes += batch['label'].tolist()
@@ -112,53 +111,41 @@ class Tester:
         combined_pred_df = pd.concat(combined_pred_df, ignore_index=True)
         combined_true_df = pd.concat(combined_true_df, ignore_index=True)
 
-        # Run the analysis on the combined dataframe for each level
-        for depth in nodes_by_depth:
-            
-            # Skip the root node since it will always have a probability of 1
-            if depth != 0:
 
-                print(f'----------\nDEPTH: {depth}')
 
-                # Make dirs for plots and reports
-                Path(f"{self.model_dir}/plots/depth{depth}").mkdir(parents=True, exist_ok=True)
-                Path(f"{self.model_dir}/reports/depth{depth}").mkdir(parents=True, exist_ok=True)
+        # Make dirs for plots and reports
+        Path(f"{self.model_dir}/plots/depthleaf").mkdir(parents=True, exist_ok=True)
+        Path(f"{self.model_dir}/reports/depthleaf").mkdir(parents=True, exist_ok=True)
 
-                # Get all the nodes at depth 
-                nodes = nodes_by_depth[depth]
+        nodes_by_depth = {
+            'leaf': combined_pred_df.columns
+        }
+        depth = 'leaf'
 
-                # Only select the classes at the appropriate depth
-                level_pred_df = combined_pred_df[nodes]
-                level_pred_classes = nodes[np.argmax(level_pred_df.to_numpy(), axis=1)]
+        # Get all the nodes at depth 
+        nodes = nodes_by_depth[depth]
 
-                level_true_df = combined_true_df[nodes]
+        # Only select the classes at the appropriate depth
+        level_pred_df = combined_pred_df
+        level_pred_classes = nodes[np.argmax(level_pred_df.to_numpy(), axis=1)]
 
-                # Compute the true class at the appropriate level
-                true_paths = self.taxonomy.get_paths(true_classes)
+        level_true_df = combined_true_df
+        level_true_classes = nodes[np.argmax(level_true_df.to_numpy(), axis=1)]
+        
+        # Make the confusion matrix plot
+        cf_title = f"Trigger+{d} days"
+        cf_img_file = f"{self.model_dir}/plots/depth{depth}/cf_trigger+{d}.pdf"
+        plot_confusion_matrix(np.array(level_true_classes), np.array(level_pred_classes), nodes, title=cf_title, img_file=cf_img_file)
 
-                # For all the true classes, grab the label from the correct level
-                level_true_classes = []
-                for i in range(len(true_paths)):
-                    try:
-                        level_true_classes.append(true_paths[i][depth]) 
-                    except IndexError:
-                        # For some objects, a label may not exist at finer levels
-                        level_true_classes.append(None)
-                
-                # Make the confusion matrix plot
-                cf_title = f"Trigger+{d} days"
-                cf_img_file = f"{self.model_dir}/plots/depth{depth}/cf_trigger+{d}.pdf"
-                plot_confusion_matrix(np.array(level_true_classes), np.array(level_pred_classes), nodes, title=cf_title, img_file=cf_img_file)
+        # Make the ROC plot
+        roc_title = f"Trigger+{d} days"
+        roc_img_file = f"{self.model_dir}/plots/depth{depth}/roc_trigger+{d}.pdf"
+        plot_roc_curves(level_true_df.to_numpy(), level_pred_df.to_numpy(), nodes, title=roc_title, img_file=roc_img_file)
 
-                # Make the ROC plot
-                roc_title = f"Trigger+{d} days"
-                roc_img_file = f"{self.model_dir}/plots/depth{depth}/roc_trigger+{d}.pdf"
-                plot_roc_curves(level_true_df.to_numpy(), level_pred_df.to_numpy(), nodes, title=roc_title, img_file=roc_img_file)
-
-                # Make classification report
-                report_file = f"{self.model_dir}/reports/depth{depth}/report_trigger+{d}.csv"
-                report = self.create_classification_report(np.array(level_true_classes), np.array(level_pred_classes), report_file)
-                print(report)
+        # Make classification report
+        report_file = f"{self.model_dir}/reports/depth{depth}/report_trigger+{d}.csv"
+        report = self.create_classification_report(np.array(level_true_classes), np.array(level_pred_classes), report_file)
+        print(report)
 
 
 

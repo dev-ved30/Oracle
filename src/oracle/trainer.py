@@ -1,14 +1,32 @@
 import time
 import torch
 import wandb
+import joblib
 
 import numpy as np
 import torch.optim as optim
 
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.nn import CrossEntropyLoss
 from tqdm import tqdm
+from sklearn.preprocessing import OneHotEncoder
 
-from oracle.loss import WHXE_Loss
+def get_loss_weights(one_hot_encodings):
+
+    # Total number of samples
+    N = one_hot_encodings.shape[0]
+    N_c = one_hot_encodings.shape[1]
+    
+    # Class counts (sum over rows)
+    counts = np.sum(one_hot_encodings, axis=0)  # shape: (C,)
+    
+    # Inverse frequency: higher weight for rarer classes
+    weights = N / (counts * N_c)
+
+    weights = np.where(np.isinf(weights), 0, weights)
+
+    # Convert to float32 1D tensor
+    return torch.from_numpy(weights.astype(np.float32)).flatten()
 
 class EarlyStopper:
 
@@ -30,15 +48,29 @@ class EarlyStopper:
 
 class Trainer:
     
-    def setup_training(self, alpha, lr, train_labels, val_labels, model_dir, device, wandb_run):
+    def setup_training(self, lr, train_labels, val_labels, model_dir, device, wandb_run):
         
+        self.device = device
+        self.model_dir = model_dir
+
+        self.one_hot_encoder = OneHotEncoder()
+        self.one_hot_encoder.fit(np.asarray(train_labels).reshape(-1, 1))
+        joblib.dump(self.one_hot_encoder, f'{model_dir}/encoder.pkl')
+
+        self.train_encodings = self.one_hot_encoder.transform(np.asarray(train_labels).reshape(-1, 1))
+        self.val_encodings = self.one_hot_encoder.transform(np.asarray(val_labels).reshape(-1, 1))
+
         # Set up criterion for training and validation. These need to be different because the class weights can be different
-        self.train_criterion = WHXE_Loss(self.taxonomy, train_labels, alpha)
-        self.val_criterion = WHXE_Loss(self.taxonomy, val_labels, alpha)
+        self.train_weights = get_loss_weights(self.train_encodings).to(device=self.device)
+        self.val_weights = get_loss_weights(self.val_encodings).to(device=self.device)
+
+        print(self.train_weights, self.val_weights)
+
+        self.train_criterion = CrossEntropyLoss(weight=self.train_weights)
+        self.val_criterion = CrossEntropyLoss(weight=self.val_weights)
 
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
-        self.model_dir = model_dir
-        self.device = device
+
         self.wandb_run = wandb_run
         self.early_stopper = EarlyStopper(25, 1e-3)
         self.scheduler = ReduceLROnPlateau(self.optimizer, factor=0.8, threshold=lr/100)
@@ -55,7 +87,9 @@ class Trainer:
             batch = {k: v.to(self.device) if torch.is_tensor(v) else v for k, v in batch.items()}
 
             # Get the label encodings
-            label_encodings = torch.from_numpy(self.taxonomy.get_hierarchical_one_hot_encoding(batch['label'])).to(device=self.device)           
+            label_encodings = torch.from_numpy(
+                                                    self.one_hot_encoder.transform(np.asarray(batch['label']).reshape(-1, 1)).toarray()
+                                                ).to(device=self.device)           
 
             # Forward pass
             logits = self(batch)
@@ -83,8 +117,9 @@ class Trainer:
                 batch = {k: v.to(self.device) if torch.is_tensor(v) else v for k, v in batch.items()}
 
                 # Get the label encodings
-                label_encodings = torch.from_numpy(self.taxonomy.get_hierarchical_one_hot_encoding(batch['label'])).to(device=self.device)           
-
+                label_encodings = torch.from_numpy(
+                                                    self.one_hot_encoder.transform(np.asarray(batch['label']).reshape(-1, 1)).toarray()
+                                                ).to(device=self.device)    
                 # Forward pass
                 logits = self(batch)
 

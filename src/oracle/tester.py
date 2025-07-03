@@ -1,8 +1,10 @@
 import torch
 import joblib
+import umap
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from sklearn.metrics import classification_report
 from tqdm import tqdm
@@ -79,6 +81,27 @@ class Tester:
                 metrics_dictionary[depth] = combined_df
 
         return metrics_dictionary
+    
+    def get_umap_of_latent_space(self, embeddings):
+
+        reducer = umap.UMAP()
+        umap_embedding = reducer.fit_transform(embeddings.to_numpy())
+        return umap_embedding
+    
+    def save_umap_plot(self, umap_embedding, trues, title, file):
+
+        plt.close('all')
+        plt.style.use(['default'])
+
+        for c in np.unique(trues):
+
+            idx = np.where(np.asarray(trues)==c)
+            plt.scatter(umap_embedding[idx,0], umap_embedding[idx,1], label=c)
+
+        plt.legend()
+        plt.title(title)
+        plt.savefig(file)
+        plt.close()
 
     def run_all_analysis(self, test_loader, d):
 
@@ -87,6 +110,7 @@ class Tester:
         true_classes = []
         combined_pred_df = []
         combined_true_df = []
+        combined_embeddings = []
 
         print(f'==========\nStarting Analysis for Trigger + {d} days...')
 
@@ -98,6 +122,9 @@ class Tester:
 
             # Run inference and get the predictions df
             pred_df = self.predict_conditional_probabilities_df(batch)
+            embeddings = self.get_latent_space_embeddings(batch).detach()
+            embeddings = pd.DataFrame(embeddings)
+            combined_embeddings.append(embeddings)
 
             # Make dataframe for true labels
             true_df = self.one_hot_encoder.transform(np.asarray(batch['label']).reshape(-1, 1)).toarray()
@@ -110,7 +137,8 @@ class Tester:
         true_classes = np.array(true_classes)
         combined_pred_df = pd.concat(combined_pred_df, ignore_index=True)
         combined_true_df = pd.concat(combined_true_df, ignore_index=True)
-
+        combined_embeddings = pd.concat(combined_embeddings, ignore_index=True)
+        u_map_embeddings = self.get_umap_of_latent_space(combined_embeddings)
 
 
         # Make dirs for plots and reports
@@ -137,10 +165,16 @@ class Tester:
         cf_img_file = f"{self.model_dir}/plots/depth{depth}/cf_trigger+{d}.pdf"
         plot_confusion_matrix(np.array(level_true_classes), np.array(level_pred_classes), nodes, title=cf_title, img_file=cf_img_file)
 
+        umap_title = f"Trigger+{d} days"
+        umap_img_file = f"{self.model_dir}/plots/depth{depth}/umap_trigger+{d}.pdf"
+        self.save_umap_plot(u_map_embeddings, true_classes, umap_title, umap_img_file)
+
         # Make the ROC plot
         roc_title = f"Trigger+{d} days"
         roc_img_file = f"{self.model_dir}/plots/depth{depth}/roc_trigger+{d}.pdf"
         plot_roc_curves(level_true_df.to_numpy(), level_pred_df.to_numpy(), nodes, title=roc_title, img_file=roc_img_file)
+
+        
 
         # Make classification report
         report_file = f"{self.model_dir}/reports/depth{depth}/report_trigger+{d}.csv"

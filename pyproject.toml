@@ -23,6 +23,7 @@ dependencies = [
     "transformers==4.51.3",
     "wandb==0.20.1",
     "scikit-learn==1.6.1",
+    "umap-learn==0.5.8",
 ]
 
 [build-system]

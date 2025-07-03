@@ -25,7 +25,6 @@ class Hierarchical_classifier(nn.Module, Trainer, Tester):
         
         logits = self.forward(batch)
         conditional_probabilities = F.softmax(logits).detach()
-        print(conditional_probabilities.shape)
         return conditional_probabilities
     
     def predict_conditional_probabilities_df(self, batch):
@@ -183,6 +182,28 @@ class ORACLE1(Hierarchical_classifier):
         logits = self.fc_out(x)
 
         return logits
+    
+    def get_latent_space_embeddings(self, batch):
+
+        embeddings = {}
+
+        def save_latent(module, inp, out):
+            # out is the dense4 output
+            embeddings['latent'] = out.detach()
+
+        # register hook
+        hook_handle = self.dense4.register_forward_hook(save_latent)
+
+        # run your forward
+        with torch.no_grad():
+            preds = self.forward(batch)
+
+        # now embeddings['latent'] holds the (batch, latent_space_dim) tensor
+        latent_vectors = embeddings['latent']
+
+        # when done, remove the hook to avoid memory leaks
+        hook_handle.remove()
+        return latent_vectors
 
 class ORACLE1_lite(Hierarchical_classifier):
 
@@ -232,6 +253,28 @@ class ORACLE1_lite(Hierarchical_classifier):
         logits = self.fc_out(x)
 
         return logits
+    
+    def get_latent_space_embeddings(self, batch):
+
+        embeddings = {}
+
+        def save_latent(module, inp, out):
+            # out is the dense4 output
+            embeddings['latent'] = out.detach()
+
+        # register hook
+        hook_handle = self.dense2.register_forward_hook(save_latent)
+
+        # run your forward
+        with torch.no_grad():
+            preds = self.forward(batch)
+
+        # now embeddings['latent'] holds the (batch, latent_space_dim) tensor
+        latent_vectors = embeddings['latent']
+
+        # when done, remove the hook to avoid memory leaks
+        hook_handle.remove()
+        return latent_vectors
 
 if __name__ == '__main__':
 

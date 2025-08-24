@@ -10,13 +10,14 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 # Implementation of Weighted Hierarchical Cross Entropy loss function by Villar et. al. 2023 (https://arxiv.org/abs/2312.02266) based on the Hierarchical Cross Entropy loss function by Bertinetto et. al. 2019 (https://arxiv.org/abs/1912.09393)
 class WHXE_Loss(nn.Module):
 
-    def __init__(self, taxonomy:Taxonomy, labels, alpha=0.5):
+    def __init__(self, taxonomy:Taxonomy, labels, alpha=0.5, beta=1):
 
         super(WHXE_Loss, self).__init__()
 
         # Set the parameters
         self.taxonomy = taxonomy
         self.alpha = alpha
+        self.beta = beta
 
         # Use taxonomy to get other useful information
         self.level_order_nodes = self.taxonomy.get_level_order_traversal()
@@ -28,7 +29,7 @@ class WHXE_Loss(nn.Module):
 
         # Pre-compute the class weights
         true_encodings = self.taxonomy.get_hierarchical_one_hot_encoding(labels)
-        self.class_weights = self.get_class_weights(torch.from_numpy(true_encodings).to(device))
+        self.class_weights = self.get_class_weights(torch.from_numpy(true_encodings).to(device))**self.beta
 
         print(self.taxonomy.get_level_order_traversal(), self.class_weights)
 

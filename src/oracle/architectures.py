@@ -248,13 +248,13 @@ class ORACLE1_lite(Hierarchical_classifier):
     
 class GRU_plus_MD(Hierarchical_classifier):
 
-    def __init__(self, output_dim, ts_feature_dim=5, static_feature_dim=30):
+    def __init__(self, taxonomy: Taxonomy, ts_feature_dim=5, static_feature_dim=30):
 
-        super(GRU_plus_MD, self).__init__()
+        super(GRU_plus_MD, self).__init__(taxonomy)
 
         self.ts_feature_dim = ts_feature_dim
         self.static_feature_dim = static_feature_dim
-        self.output_dim = output_dim
+        self.output_dim = self.n_nodes
 
         # recurrent backbone
         self.gru = nn.GRU(input_size=ts_feature_dim, hidden_size=100, num_layers=2, batch_first=True)

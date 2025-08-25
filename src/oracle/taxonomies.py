@@ -317,13 +317,9 @@ class BTS_Taxonomy(Taxonomy):
         self.add_edges_from([('Persistent', node) for node in level_2a_nodes])
 
         # Level 2b nodes for SN-like events
-        level_2b_nodes = ['SN-Ia','SN-CC']
+        level_2b_nodes = ['SN-Ia','SN-II','SN-Ib/c','SLSN']
         self.add_nodes_from(level_2b_nodes)
         self.add_edges_from([('Transient', node) for node in level_2b_nodes])
-
-        level_3a_nodes = ['SN-II','SN-Ib/c','SLSN']
-        self.add_nodes_from(level_3a_nodes)
-        self.add_edges_from([('SN-CC', node) for node in level_3a_nodes])
 
 
 class ORACLE_Taxonomy(Taxonomy):

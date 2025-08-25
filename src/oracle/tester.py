@@ -7,7 +7,7 @@ from sklearn.metrics import classification_report
 from tqdm import tqdm
 from pathlib import Path    
 
-from oracle.visualization import plot_confusion_matrix, plot_roc_curves, plot_train_val_history, plot_class_wise_performance_over_all_phases, plot_average_performance_over_all_phases
+from oracle.visualization import plot_confusion_matrix, plot_roc_curves, plot_train_val_history, plot_class_wise_performance_over_all_phases, plot_average_performance_over_all_phases, plot_embeddings_umaps
 
 class Tester:
     
@@ -33,6 +33,32 @@ class Tester:
             plot_class_wise_performance_over_all_phases(metric, metrics_dictionary, self.model_dir)
             plot_average_performance_over_all_phases(metric, metrics_dictionary, self.model_dir)
 
+
+    def create_UMAP_plots(self, days):
+
+        dfs = []
+        days_list = []
+        class_list = []
+
+        for d in days:
+            
+            df = pd.read_csv(f"{self.model_dir}/embeddings/embeddings+{d}.csv")
+
+            dfs.append(df)
+            days_list += [d]*len(df)
+            class_list += df['class'].tolist()
+
+        dfs = pd.concat(dfs)
+        dfs.drop('class', axis=1, inplace=True)
+        days_list = np.array(days_list)
+        class_list = np.array(class_list)
+
+        if "Anomaly" in class_list:
+            Path(f"{self.model_dir}/plots/umap_AD").mkdir(parents=True, exist_ok=True)
+        else:
+            Path(f"{self.model_dir}/plots/umap").mkdir(parents=True, exist_ok=True)       
+
+        plot_embeddings_umaps(dfs, days_list, class_list, self.model_dir)
 
     def create_classification_report(self, y_true, y_pred, file_name=None):
         
@@ -88,6 +114,7 @@ class Tester:
         true_classes = []
         combined_pred_df = []
         combined_true_df = []
+        combined_embeddings = []
 
         print(f'==========\nStarting Analysis for Trigger + {d} days...')
 
@@ -99,6 +126,7 @@ class Tester:
 
             # Run inference and get the predictions df
             pred_df = self.predict_class_probabilities_df(batch)
+            embeddings = pd.DataFrame(self.get_latent_space_embeddings(batch).detach().cpu())
 
             # Make dataframe for true labels
             true_df = self.taxonomy.get_hierarchical_one_hot_encoding(batch['label'])
@@ -107,10 +135,16 @@ class Tester:
             true_classes += batch['label'].tolist()
             combined_pred_df.append(pred_df)
             combined_true_df.append(true_df)
+            combined_embeddings.append(embeddings)
         
         true_classes = np.array(true_classes)
         combined_pred_df = pd.concat(combined_pred_df, ignore_index=True)
         combined_true_df = pd.concat(combined_true_df, ignore_index=True)
+        combined_embeddings = pd.concat(combined_embeddings, ignore_index=True)
+        combined_embeddings['class'] = true_classes
+
+        Path(f"{self.model_dir}/embeddings").mkdir(parents=True, exist_ok=True)
+        combined_embeddings.to_csv(f"{self.model_dir}/embeddings/embeddings+{d}.csv", index=False)
 
         # Run the analysis on the combined dataframe for each level
         for depth in nodes_by_depth:
@@ -145,14 +179,22 @@ class Tester:
                         # For some objects, a label may not exist at finer levels
                         level_true_classes.append(None)
                 
-                # Make the confusion matrix plot
+                # Make the recall confusion matrix plot
                 cf_title = f"Trigger+{d} days"
-                cf_img_file = f"{self.model_dir}/plots/depth{depth}/cf_trigger+{d}.pdf"
+                Path(f"{self.model_dir}/plots/depth{depth}/cf_recall").mkdir(parents=True, exist_ok=True)
+                cf_img_file = f"{self.model_dir}/plots/depth{depth}/cf_recall/cf_trigger+{d}.pdf"
                 plot_confusion_matrix(np.array(level_true_classes), np.array(level_pred_classes), nodes, title=cf_title, img_file=cf_img_file)
+
+                # Make the precision confusion matrix plot
+                cf_title = f"Trigger+{d} days"
+                Path(f"{self.model_dir}/plots/depth{depth}/cf_precision").mkdir(parents=True, exist_ok=True)
+                cf_img_file = f"{self.model_dir}/plots/depth{depth}/cf_precision/cf_trigger+{d}.pdf"
+                plot_confusion_matrix(np.array(level_true_classes), np.array(level_pred_classes), nodes, normalize='pred', title=cf_title, img_file=cf_img_file)
 
                 # Make the ROC plot
                 roc_title = f"Trigger+{d} days"
-                roc_img_file = f"{self.model_dir}/plots/depth{depth}/roc_trigger+{d}.pdf"
+                Path(f"{self.model_dir}/plots/depth{depth}/roc").mkdir(parents=True, exist_ok=True)
+                roc_img_file = f"{self.model_dir}/plots/depth{depth}/roc/roc_trigger+{d}.pdf"
                 plot_roc_curves(level_true_df.to_numpy(), level_pred_df.to_numpy(), nodes, title=roc_title, img_file=roc_img_file)
 
                 # Make classification report

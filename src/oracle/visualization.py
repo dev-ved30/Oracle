@@ -1,3 +1,5 @@
+import umap
+
 import networkx as nx
 import pandas as pd
 import numpy as np
@@ -10,7 +12,7 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, roc_curve,
 
 cm = plt.get_cmap('gist_rainbow')
 
-def plot_confusion_matrix(y_true, y_pred, labels, title=None, img_file=None):
+def plot_confusion_matrix(y_true, y_pred, labels, normalize='true', title=None, img_file=None):
 
     plt.close('all')
     plt.style.use(['default'])
@@ -25,7 +27,7 @@ def plot_confusion_matrix(y_true, y_pred, labels, title=None, img_file=None):
     font = {'size'   : 25}
     plt.rc('font', **font)
     
-    cm = np.round(confusion_matrix(y_true, y_pred, labels=labels, normalize='true'),2)
+    cm = np.round(confusion_matrix(y_true, y_pred, labels=labels, normalize=normalize),2)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
     disp.plot(cmap=plt.cm.Blues)
     disp.im_.colorbar.remove()
@@ -198,7 +200,7 @@ def plot_average_performance_over_all_phases(metric, metrics_dictionary, model_d
 
         for c, row in df.iterrows():
 
-            if c in ['macro avg','weighted avg']:
+            if c in ['macro avg']: # Put things like ['macro avg','weighted avg']
 
                 days, value = row.index, row.values
 
@@ -219,3 +221,48 @@ def plot_average_performance_over_all_phases(metric, metrics_dictionary, model_d
         plt.savefig(f"{model_dir}/plots/average_{metric}.pdf")
 
     plt.close()
+
+def plot_embeddings_umaps(df, days, class_list, model_dir=None):
+
+    plt.close('all')
+    plt.style.use(['default'])
+
+    embeddings = df.to_numpy()
+
+    reducer = umap.UMAP(random_state=42)
+    umap_embedding = reducer.fit_transform(embeddings)
+
+    for d in np.unique(days):
+
+        idx = np.where(days==d)[0]
+        x = umap_embedding[idx, 0]
+        y = umap_embedding[idx, 1]
+        classes = class_list[idx]
+
+        for c in np.unique(classes):
+
+            idx_class = np.where(np.asarray(classes)==c)[0]
+            plt.scatter(x[idx_class], y[idx_class], label=c, marker='.')
+
+        plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), fancybox=True, shadow=False, ncol=2, fontsize = 12)
+        
+        plt.xlabel('UMAP 1')
+        plt.ylabel('UMAP 2')
+
+        plt.tight_layout()
+
+        plt.title(f"Trigger+{d} days")
+
+        if model_dir != None:
+            if "Anomaly" in class_list:
+                plt.savefig(f"{model_dir}/plots/umap_AD/umap_trigger+{d}.pdf")
+            else:
+                plt.savefig(f"{model_dir}/plots/umap/umap_trigger+{d}.pdf") 
+        else:
+            plt.show()
+
+        plt.close()
+
+        
+
+        

@@ -40,7 +40,7 @@ class Trainer:
         self.beta = beta
         
         # Set up criterion for training and validation. These need to be different because the class weights can be different
-        self.train_criterion = WHXE_Loss(self.taxonomy, train_labels, self.alpha)
+        self.train_criterion = WHXE_Loss(self.taxonomy, train_labels, self.alpha, self.beta)
         self.val_criterion = WHXE_Loss(self.taxonomy, val_labels, self.alpha)
 
         self.optimizer = optim.Adam(self.parameters(), lr=lr)

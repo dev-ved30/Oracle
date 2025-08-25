@@ -125,7 +125,7 @@ class Taxonomy(nx.DiGraph):
         """
 
         # Get the leaf nodes in the taxonomy
-        leaf_nodes = [x for x in self.nodes() if self.out_degree(x)==0 and self.in_degree(x)==1]
+        leaf_nodes = [x for x in self.nodes if self.out_degree(x)==0 and self.in_degree(x)==1]
         return leaf_nodes
     
     def get_hierarchical_one_hot_encoding(self, labels):
@@ -376,10 +376,12 @@ if __name__=='__main__':
     taxonomy.plot_taxonomy()
 
     all_classes = list(BTS_to_Astrophysical_mappings.values())
-    taxonomy.get_hierarchical_one_hot_encoding(all_classes)
+    #taxonomy.get_hierarchical_one_hot_encoding(all_classes)
     taxonomy.plot_colored_taxonomy(taxonomy.get_hierarchical_one_hot_encoding(['SN-II'])[0])
 
     print(taxonomy.get_nodes_by_depth())
+    print(taxonomy.get_leaf_nodes())
+    print(taxonomy.get_level_order_traversal())
 
 
     # Create a taxonomy object

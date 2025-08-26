@@ -40,7 +40,7 @@ BTS_to_Astrophysical_mappings = {
     'bogus?': 'Anomaly',
     'rock': 'Anomaly',
     'CV': 'CV',
-    'CV?': 'CV',
+    'CV?': 'Anomaly',
     'AM CVn': 'CV',
     'varstar': 'Anomaly',
     "Cataclysmic": 'CV',
@@ -68,41 +68,41 @@ BTS_to_Astrophysical_mappings = {
     'SN II': 'SN-II',
     'SN II-SL': 'SLSN',
     'SN II-norm': 'SN-II',
-    'SN II-pec': 'Anomaly',
+    'SN II-pec': 'SN-II',
     'SN II?': 'SN-II',
     'SN IIL': 'SN-II',
     'SN IIP': 'SN-II',
-    'SN IIb': 'Anomaly',
-    'SN IIb-pec': 'Anomaly',
-    'SN IIb?': 'Anomaly',
+    'SN IIb': 'SN-II',
+    'SN IIb-pec': 'SN-II',
+    'SN IIb?': 'SN-II',
     'SN IIn': 'SN-II',
     'SN IIn?': 'SN-II',
     'SN Ia': 'SN-Ia',
-    'SN Ia-00cx': 'Anomaly',# pec
-    'SN Ia-03fg': 'Anomaly',# pec
+    'SN Ia-00cx': 'SN-Ia',# pec
+    'SN Ia-03fg': 'SN-Ia',# pec
     'SN Ia-91T': 'SN-Ia',
-    'SN Ia-91bg': 'Anomaly',# pec
-    'SN Ia-91bg?': 'Anomaly',# pec
-    'SN Ia-99aa': 'Anomaly',
-    'SN Ia-CSM': 'Anomaly',# pec
-    'SN Ia-CSM?': 'Anomaly',# pec
+    'SN Ia-91bg': 'SN-Ia',# pec
+    'SN Ia-91bg?': 'SN-Ia',# pec
+    'SN Ia-99aa': 'SN-Ia',
+    'SN Ia-CSM': 'SN-Ia',# pec
+    'SN Ia-CSM?': 'SN-Ia',# pec
     'SN Ia-norm': 'SN-Ia',
-    'SN Ia-pec': 'Anomaly',# pec
-    'SN Ia?': 'Anomaly',
-    'SN Iax': 'Anomaly', # pec
+    'SN Ia-pec': 'SN-Ia',# pec
+    'SN Ia?': 'SN-Ia',
+    'SN Iax': 'SN-Ia', # pec
     'SN Ib': 'SN-Ib/c',
-    'SN Ib-pec': 'Anomaly',
+    'SN Ib-pec': 'SN-Ib/c',
     'SN Ib/c': 'SN-Ib/c',
     'SN Ib/c?': 'SN-Ib/c',
     'SN Ib?': 'SN-Ib/c',
-    'SN Ibn': 'Anomaly',
-    'SN Ibn?': 'Anomaly',
+    'SN Ibn': 'SN-Ib/c',
+    'SN Ibn?': 'SN-Ib/c',
     'SN Ic': 'SN-Ib/c',
-    'SN Ic-BL': 'Anomaly',
-    'SN Ic-BL?': 'Anomaly',
-    'SN Ic-SL': 'Anomaly',
+    'SN Ic-BL': 'SN-Ib/c',
+    'SN Ic-BL?': 'SN-Ib/c',
+    'SN Ic-SL': 'SN-Ib/c',
     'SN Ic?': 'SN-Ib/c',
-    'SN Icn': 'Anomaly',
+    'SN Icn': 'SN-Ib/c',
     'TDE': 'Anomaly',
     'afterglow': 'Anomaly',
     'nova': 'CV',

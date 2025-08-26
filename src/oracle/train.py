@@ -29,7 +29,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")
 torch.set_default_device(device)
 
-val_truncation_days = [2,8,16,32,128,256,1024]
+val_truncation_days = 2 ** np.array(range(11))
 
 def parse_args():
     '''

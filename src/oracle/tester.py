@@ -5,10 +5,10 @@ import pandas as pd
 
 from sklearn.metrics import classification_report
 from tqdm import tqdm
-from pathlib import Path    
+from pathlib import Path
+from functools import reduce    
 
-from oracle.visualization import plot_confusion_matrix, plot_roc_curves, plot_train_val_history, plot_class_wise_performance_over_all_phases, plot_average_performance_over_all_phases, plot_embeddings_umaps
-
+from oracle.visualization import *
 class Tester:
     
     def setup_testing(self, model_dir, device):
@@ -105,6 +105,68 @@ class Tester:
                 metrics_dictionary[depth] = combined_df
 
         return metrics_dictionary
+    
+    def make_embeddings_for_AD(self, test_loader, d):
+
+        self.eval()
+        nodes_by_depth = self.taxonomy.get_nodes_by_depth()
+
+        true_classes = []
+        bts_classes = []
+        ztf_ids = []
+        combined_embeddings = []
+
+        print(f'==========\nStarting Analysis for Trigger + {d} days...')
+
+        # Run inference on the test set and combine the output dataframes
+        for batch in tqdm(test_loader, desc='Testing'):
+
+            # Move everything to the device
+            batch = {k: v.to(self.device) if torch.is_tensor(v) else v for k, v in batch.items()}
+
+
+            embeddings = pd.DataFrame(self.get_latent_space_embeddings(batch).detach().cpu())
+
+            true_classes += batch['label'].tolist()
+            bts_classes += batch['bts_class'].tolist()
+            ztf_ids += batch['ZTFID'].tolist()
+
+            combined_embeddings.append(embeddings)
+        
+        true_classes = np.array(true_classes)
+        combined_embeddings = pd.concat(combined_embeddings, ignore_index=True)
+
+        Path(f"{self.model_dir}/plots/umap").mkdir(parents=True, exist_ok=True)
+        plot_umap(combined_embeddings.to_numpy(), true_classes, bts_classes, d, model_dir=self.model_dir)
+
+        combined_embeddings['class'] = true_classes
+        combined_embeddings['bts_class'] = bts_classes
+        combined_embeddings['ztf_ids'] = ztf_ids
+
+        Path(f"{self.model_dir}/embeddings").mkdir(parents=True, exist_ok=True)
+        combined_embeddings.to_csv(f"{self.model_dir}/embeddings/embeddings+{d}.csv", index=False)
+
+    def merge_performance_tables(self, days):
+
+        levels = ['1','2']
+
+        for level in levels:
+
+            data_frames = []
+
+            for d in days:
+
+                df = pd.read_csv(f"{self.model_dir}/reports/depth{level}/report_trigger+{d}.csv", index_col=0)
+                df.drop(columns=["support"], inplace=True)
+                df.index.name = 'Class'
+                df.rename(columns={'precision': '$p_{' + f"{d}" + '}$'}, inplace=True)
+                df.rename(columns={'recall': '$r_{' + f"{d}" + '}$'}, inplace=True)
+                df.rename(columns={'f1-score': '$f1_{' + f"{d}" + '}$'}, inplace=True)
+                data_frames.append(df)
+
+            df_merged = reduce(lambda  left,right: pd.merge(left,right, how='left',on='Class', sort=False), data_frames)
+            df_merged = df_merged.loc[:, df_merged.columns.str.contains("f1")]
+            print(df_merged.to_latex(float_format="%.2f"))
 
     def run_all_analysis(self, test_loader, d):
 
@@ -114,7 +176,6 @@ class Tester:
         true_classes = []
         combined_pred_df = []
         combined_true_df = []
-        combined_embeddings = []
 
         print(f'==========\nStarting Analysis for Trigger + {d} days...')
 
@@ -126,7 +187,6 @@ class Tester:
 
             # Run inference and get the predictions df
             pred_df = self.predict_class_probabilities_df(batch)
-            embeddings = pd.DataFrame(self.get_latent_space_embeddings(batch).detach().cpu())
 
             # Make dataframe for true labels
             true_df = self.taxonomy.get_hierarchical_one_hot_encoding(batch['label'])
@@ -135,16 +195,10 @@ class Tester:
             true_classes += batch['label'].tolist()
             combined_pred_df.append(pred_df)
             combined_true_df.append(true_df)
-            combined_embeddings.append(embeddings)
         
         true_classes = np.array(true_classes)
         combined_pred_df = pd.concat(combined_pred_df, ignore_index=True)
         combined_true_df = pd.concat(combined_true_df, ignore_index=True)
-        combined_embeddings = pd.concat(combined_embeddings, ignore_index=True)
-        combined_embeddings['class'] = true_classes
-
-        Path(f"{self.model_dir}/embeddings").mkdir(parents=True, exist_ok=True)
-        combined_embeddings.to_csv(f"{self.model_dir}/embeddings/embeddings+{d}.csv", index=False)
 
         # Run the analysis on the combined dataframe for each level
         for depth in nodes_by_depth:
@@ -190,6 +244,11 @@ class Tester:
                 Path(f"{self.model_dir}/plots/depth{depth}/cf_precision").mkdir(parents=True, exist_ok=True)
                 cf_img_file = f"{self.model_dir}/plots/depth{depth}/cf_precision/cf_trigger+{d}.pdf"
                 plot_confusion_matrix(np.array(level_true_classes), np.array(level_pred_classes), nodes, normalize='pred', title=cf_title, img_file=cf_img_file)
+
+                cf_title = f"Trigger+{d} days"
+                Path(f"{self.model_dir}/plots/depth{depth}/cf_plain").mkdir(parents=True, exist_ok=True)
+                cf_img_file = f"{self.model_dir}/plots/depth{depth}/cf_plain/cf_trigger+{d}.png"
+                plot_plain_cf(np.array(level_true_classes), np.array(level_pred_classes), nodes, title=cf_title, img_file=cf_img_file)
 
                 # Make the ROC plot
                 roc_title = f"Trigger+{d} days"

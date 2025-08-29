@@ -75,7 +75,15 @@ n_book_keeping_features = len(book_keeping_feature_list)
 
 class BTS_LC_Dataset(torch.utils.data.Dataset):
 
-    def __init__(self, parquet_file_path,  max_n_per_class=None, include_postage_stamps=False, include_lc_plots=False, transform=None, over_sample=False, excluded_classes=[]):
+    def __init__(self, 
+                 parquet_file_path, 
+                 mapper=None,
+                 max_n_per_class=None, 
+                 include_postage_stamps=False, 
+                 include_lc_plots=False, 
+                 transform=None, 
+                 over_sample=False, 
+                 excluded_classes=[]):
         super(BTS_LC_Dataset, self).__init__()
 
         self.parquet_file_path = parquet_file_path
@@ -85,6 +93,11 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         self.max_n_per_class = max_n_per_class
         self.over_sample = over_sample
         self.excluded_classes = excluded_classes
+
+        if mapper == None:
+            self.mapper = BTS_to_Astrophysical_mappings
+        else:
+            self.mapper = mapper
 
         print(f'Loading dataset from {self.parquet_file_path}\n')
         self.parquet_df = pl.read_parquet(self.parquet_file_path)
@@ -266,7 +279,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
 
         print("Mapping BTS samples explorer classes to astrophysical classes...")
         self.parquet_df = self.parquet_df.with_columns(
-            pl.col("bts_class").replace(BTS_to_Astrophysical_mappings, return_dtype=pl.String).alias("class")
+            pl.col("bts_class").replace(self.mapper, return_dtype=pl.String).alias("class")
         )
 
         print("Adding wise colors...")

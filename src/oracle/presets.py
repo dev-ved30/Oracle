@@ -143,7 +143,7 @@ def get_val_loader(model_choice, batch_size, val_truncation_days, excluded_class
     val_labels = val_dataset[0].get_all_labels()
     return val_dataloader, val_labels
 
-def get_test_loaders(model_choice, batch_size, max_n_per_class, days_list, excluded_classes=[]):
+def get_test_loaders(model_choice, batch_size, max_n_per_class, days_list, excluded_classes=[], mapper=None):
 
     # Keep generator on the CPU
     generator = torch.Generator(device=device)
@@ -165,7 +165,7 @@ def get_test_loaders(model_choice, batch_size, max_n_per_class, days_list, exclu
         for d in days_list:
             
             # Set the custom transform and recreate dataloader
-            test_dataset = BTS_LC_Dataset(BTS_test_parquet_path, include_lc_plots=False, max_n_per_class=max_n_per_class, excluded_classes=excluded_classes)
+            test_dataset = BTS_LC_Dataset(BTS_test_parquet_path, include_lc_plots=False, max_n_per_class=max_n_per_class, excluded_classes=excluded_classes, mapper=mapper)
             test_dataset.transform = partial(truncate_BTS_light_curve_by_days_since_trigger, d=d)
             test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_BTS, generator=generator)
             test_loaders.append(test_dataloader)

@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 
 from oracle.loss import WHXE_Loss
 from oracle.taxonomies import ORACLE_Taxonomy, BTS_Taxonomy
+from oracle.constants import BTS_to_Astrophysical_mappings_AD
 from oracle.architectures import *
 from oracle.custom_datasets.ELAsTiCC import *
 from oracle.custom_datasets.BTS import *
@@ -66,14 +67,13 @@ def run_testing_loop(args):
         model.run_all_analysis(test_dataloader, d)
 
     # Include the anomalies to see the clustering
-    # test_loaders = get_test_loaders(model_choice, batch_size, max_n_per_class, defaults_days_list)
-    # for d, test_dataloader in zip(defaults_days_list, test_loaders):
-    #     model.make_AD_UMAP_plots(test_dataloader, d)
+    test_loaders = get_test_loaders(model_choice, batch_size, max_n_per_class, defaults_days_list, mapper=BTS_to_Astrophysical_mappings_AD)
+    for d, test_dataloader in zip(defaults_days_list, test_loaders):
+        model.make_embeddings_for_AD(test_dataloader, d)
 
     model.create_loss_history_plot()
     model.create_metric_phase_plots()
-    model.create_UMAP_plots(defaults_days_list)
-    #model.create_time_evolved_umap_plot(defaults_days_list)
+    model.merge_performance_tables([1, 2, 4, 8, 16, 32, 64, 128, 512, 1024])
 
 def main():
     args = parse_args()

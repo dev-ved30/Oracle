@@ -33,33 +33,6 @@ class Tester:
             plot_class_wise_performance_over_all_phases(metric, metrics_dictionary, self.model_dir)
             plot_average_performance_over_all_phases(metric, metrics_dictionary, self.model_dir)
 
-
-    def create_UMAP_plots(self, days):
-
-        dfs = []
-        days_list = []
-        class_list = []
-
-        for d in days:
-            
-            df = pd.read_csv(f"{self.model_dir}/embeddings/embeddings+{d}.csv")
-
-            dfs.append(df)
-            days_list += [d]*len(df)
-            class_list += df['class'].tolist()
-
-        dfs = pd.concat(dfs)
-        dfs.drop('class', axis=1, inplace=True)
-        days_list = np.array(days_list)
-        class_list = np.array(class_list)
-
-        if "Anomaly" in class_list:
-            Path(f"{self.model_dir}/plots/umap_AD").mkdir(parents=True, exist_ok=True)
-        else:
-            Path(f"{self.model_dir}/plots/umap").mkdir(parents=True, exist_ok=True)       
-
-        plot_embeddings_umaps(dfs, days_list, class_list, self.model_dir)
-
     def create_classification_report(self, y_true, y_pred, file_name=None):
         
         # Only keep source where a true label exists
@@ -112,8 +85,8 @@ class Tester:
         nodes_by_depth = self.taxonomy.get_nodes_by_depth()
 
         true_classes = []
-        bts_classes = []
-        ztf_ids = []
+        raw_classes = []
+        ids = []
         combined_embeddings = []
 
         print(f'==========\nStarting Analysis for Trigger + {d} days...')
@@ -128,8 +101,8 @@ class Tester:
             embeddings = pd.DataFrame(self.get_latent_space_embeddings(batch).detach().cpu())
 
             true_classes += batch['label'].tolist()
-            bts_classes += batch['bts_class'].tolist()
-            ztf_ids += batch['ZTFID'].tolist()
+            raw_classes += batch['raw_label'].tolist()
+            ids += batch['id'].tolist()
 
             combined_embeddings.append(embeddings)
         
@@ -137,11 +110,11 @@ class Tester:
         combined_embeddings = pd.concat(combined_embeddings, ignore_index=True)
 
         Path(f"{self.model_dir}/plots/umap").mkdir(parents=True, exist_ok=True)
-        plot_umap(combined_embeddings.to_numpy(), true_classes, bts_classes, d, model_dir=self.model_dir)
+        plot_umap(combined_embeddings.to_numpy(), true_classes, raw_classes, d, model_dir=self.model_dir)
 
         combined_embeddings['class'] = true_classes
-        combined_embeddings['bts_class'] = bts_classes
-        combined_embeddings['ztf_ids'] = ztf_ids
+        combined_embeddings['raw_class'] = raw_classes
+        combined_embeddings['id'] = ids
 
         Path(f"{self.model_dir}/embeddings").mkdir(parents=True, exist_ok=True)
         combined_embeddings.to_csv(f"{self.model_dir}/embeddings/embeddings+{d}.csv", index=False)
@@ -245,10 +218,10 @@ class Tester:
                 cf_img_file = f"{self.model_dir}/plots/depth{depth}/cf_precision/cf_trigger+{d}.pdf"
                 plot_confusion_matrix(np.array(level_true_classes), np.array(level_pred_classes), nodes, normalize='pred', title=cf_title, img_file=cf_img_file)
 
-                cf_title = f"Trigger+{d} days"
-                Path(f"{self.model_dir}/plots/depth{depth}/cf_plain").mkdir(parents=True, exist_ok=True)
-                cf_img_file = f"{self.model_dir}/plots/depth{depth}/cf_plain/cf_trigger+{d}.png"
-                plot_plain_cf(np.array(level_true_classes), np.array(level_pred_classes), nodes, title=cf_title, img_file=cf_img_file)
+                # cf_title = f"Trigger+{d} days"
+                # Path(f"{self.model_dir}/plots/depth{depth}/cf_plain").mkdir(parents=True, exist_ok=True)
+                # cf_img_file = f"{self.model_dir}/plots/depth{depth}/cf_plain/cf_trigger+{d}.png"
+                # plot_plain_cf(np.array(level_true_classes), np.array(level_pred_classes), nodes, title=cf_title, img_file=cf_img_file)
 
                 # Make the ROC plot
                 roc_title = f"Trigger+{d} days"

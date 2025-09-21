@@ -18,7 +18,7 @@ from oracle.presets import get_model, get_test_loaders
 
 # <----- Defaults for training the models ----->
 default_batch_size = 1024
-default_max_n_per_class = int(1e7)
+default_max_n_per_class = None
 default_model_dir = None
 defaults_days_list = 2 ** np.array(range(11))
 

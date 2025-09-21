@@ -292,52 +292,9 @@ def plot_umap(embeddings, classes, bts_classes, d, model_dir=None):
 
     df = pd.DataFrame(umap_embedding, columns=['umap1','umap2'])
     df['class'] = classes
-    df['bts_class'] = bts_classes
-    fig = px.scatter(df, x='umap1', y='umap2', color=f"class", hover_data=['class', 'bts_class'])#, cmap='viridis', marker=markers[i])
+    df['raw_class'] = bts_classes
+    fig = px.scatter(df, x='umap1', y='umap2', color=f"class", hover_data=['class', 'raw_class'])#, cmap='viridis', marker=markers[i])
     fig.write_html(f"{model_dir}/plots/umap/umap_trigger+{d}.html")
-
-        
-
-def plot_embeddings_umaps(df, days, class_list, model_dir=None):
-
-    plt.close('all')
-    plt.style.use(['default'])
-
-    embeddings = df.to_numpy()
-
-    reducer = umap.UMAP(random_state=42)
-    umap_embedding = reducer.fit_transform(embeddings)
-
-    for d in np.unique(days):
-
-        idx = np.where(days==d)[0]
-        x = umap_embedding[idx, 0]
-        y = umap_embedding[idx, 1]
-        classes = class_list[idx]
-
-        for c in np.unique(classes):
-
-            idx_class = np.where(np.asarray(classes)==c)[0]
-            plt.scatter(x[idx_class], y[idx_class], label=c, marker='.')
-
-        plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), fancybox=True, shadow=False, ncol=2, fontsize = 12)
-        
-        plt.xlabel('UMAP 1')
-        plt.ylabel('UMAP 2')
-
-        plt.tight_layout()
-
-        plt.title(f"Trigger+{d} days")
-
-        if model_dir != None:
-            if "Anomaly" in class_list:
-                plt.savefig(f"{model_dir}/plots/umap_AD/umap_trigger+{d}.pdf")
-            else:
-                plt.savefig(f"{model_dir}/plots/umap/umap_trigger+{d}.pdf") 
-        else:
-            plt.show()
-
-        plt.close()
 
         
 

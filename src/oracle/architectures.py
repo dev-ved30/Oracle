@@ -52,122 +52,35 @@ class Hierarchical_classifier(nn.Module, Trainer, Tester):
 
         raise NotImplementedError
     
-# Base version of the classifier which only uses the Light curve image
-class ORACLE2_lite_swin(Hierarchical_classifier):
-        
-    def __init__(self, taxonomy: Taxonomy):
+class GRU(Hierarchical_classifier):
 
-        super(ORACLE2_lite_swin, self).__init__(taxonomy)
+    def __init__(self, taxonomy: Taxonomy, ts_feature_dim=5):
 
-        # TODO: Think about what weights we want to initialize the transformer with.
-        self.swin = torch.hub.load("pytorch/vision", "swin_v2_t", weights="DEFAULT", progress=False)
+        super(GRU, self).__init__(taxonomy)
 
-        # Make sure all parameters in Swin are trainable
-        for param in self.swin.parameters():
-            param.requires_grad = True
-
-        # Additional layers for classification
-        self.fc = nn.Sequential(
-            nn.Linear(1000, 512),
-            nn.ReLU(True),
-            nn.Dropout(0.3),
-            nn.Linear(512, 256),
-            nn.ReLU(True),
-            nn.Dropout(0.3),
-            nn.Linear(256, 128),
-            nn.ReLU(True),
-            nn.Dropout(0.3),
-            nn.Linear(128, 64),
-            nn.ReLU(True),
-            nn.Dropout(0.3),
-            nn.Linear(64, self.n_nodes),
-        )
-    
-    def forward(self, batch):
-        
-        swin_output = self.swin(batch['lc_plot'])
-        logits = self.fc(swin_output)
-        return logits
-
-class ORACLE2_pro_swin(Hierarchical_classifier):
-
-    def __init__(self, taxonomy: Taxonomy):
-
-        super(ORACLE2_pro_swin, self).__init__(taxonomy)
-
-
-        # TODO: Think about what weights we want to initialize the transformer with.
-        self.swin_lc = torch.hub.load("pytorch/vision", "swin_v2_t", weights="DEFAULT", progress=False)
-
-        # Make sure all parameters in Swin are trainable
-        for param in self.swin_lc.parameters():
-            param.requires_grad = True
-
-        # TODO: Think about what weights we want to initialize the transformer with.
-        self.swin_postage = torch.hub.load("pytorch/vision", "swin_v2_t", weights="DEFAULT", progress=False)
-
-        # Make sure all parameters in Swin are trainable
-        for param in self.swin_postage.parameters():
-            param.requires_grad = True
-
-        # Additional layers for classification
-        self.fc = nn.Sequential(
-            nn.Linear(2000, 512),
-            nn.ReLU(True),
-            nn.Dropout(0.3),
-            nn.Linear(512, 256),
-            nn.ReLU(True),
-            nn.Dropout(0.3),
-            nn.Linear(256, 128),
-            nn.ReLU(True),
-            nn.Dropout(0.3),
-            nn.Linear(128, 64),
-            nn.ReLU(True),
-            nn.Dropout(0.3),
-            nn.Linear(64, self.n_nodes),
-        )
-
-    def forward(self, batch):
-        
-        swin_lc_output = self.swin_lc(batch['lc_plot'])
-        swin_postage_output = self.swin_lc(batch['postage_stamp'])
-        combined_output = torch.concat((swin_lc_output, swin_postage_output), dim=1)
-        logits = self.fc(combined_output)
-        return logits
-    
-class ORACLE1(Hierarchical_classifier):
-
-    def __init__(self, taxonomy: Taxonomy,  ts_feature_dim=5, latent_space_dim=64, static_feature_dim=18):
-
-        super(ORACLE1, self).__init__(taxonomy)
-
-        self.latent_space_dim = latent_space_dim
         self.ts_feature_dim = ts_feature_dim
-        self.static_feature_dim = static_feature_dim
+        self.output_dim = self.n_nodes
 
         # recurrent backbone
         self.gru = nn.GRU(input_size=ts_feature_dim, hidden_size=100, num_layers=2, batch_first=True)
 
         # post‐GRU dense on time‐series path
-        self.dense1 = nn.Linear(100, 100)
-
-        # dense on static path
-        self.dense2 = nn.Linear(static_feature_dim, 10)
+        self.dense1 = nn.Linear(100, 64)
 
         # merge & head
-        self.dense3 = nn.Linear(100 + 10, 100)
-        self.dense4 = nn.Linear(100, self.latent_space_dim)
+        self.dense2 = nn.Linear(64, 32)
 
-        self.fc_out = nn.Linear(self.latent_space_dim, self.n_nodes)
+        self.dense3 = nn.Linear(32, 16)
+
+        self.fc_out = nn.Linear(16, self.output_dim)
 
         self.tanh = nn.Tanh()
         self.relu = nn.ReLU()
 
-    def forward(self, batch):
+    def get_latent_space_embeddings(self, batch):
 
         x_ts = batch['ts'] # (batch_size, seq_len, n_ts_features)
         lengths = batch['length'] # (batch_size)
-        x_static = batch['static'] # (batch_size, n_static_features)
 
         # Pack the padded time series data. the lengths vector lets the GRU know the true lengths of each TS, so it can ignore padding
         packed = pack_padded_sequence(x_ts, lengths.cpu(), batch_first=True, enforce_sorted=False)
@@ -183,74 +96,29 @@ class ORACLE1(Hierarchical_classifier):
         dense1 = self.dense1(gru_out)
         dense1 = self.tanh(dense1)
 
-        # Dense on static path
-        dense2 = self.dense2(x_static)
+        # Merge & head
+        dense2 = self.dense2(dense1)
         dense2 = self.tanh(dense2)
 
-        # Merge & head
-        x = torch.cat((dense1, dense2), dim=1)
-        x = self.dense3(x)
-        x = self.relu(x)
-        x = self.dense4(x)
-        x = self.relu(x)
-        logits = self.fc_out(x)
-
-        return logits
-
-class ORACLE1_lite(Hierarchical_classifier):
-
-    def __init__(self, taxonomy: Taxonomy, ts_feature_dim=5, latent_space_dim=64):
-
-        super(ORACLE1_lite,  self).__init__(taxonomy)
-
-        self.latent_space_dim = latent_space_dim
-        self.ts_feature_dim = ts_feature_dim
-
-        # recurrent backbone
-        self.gru = nn.GRU(input_size=ts_feature_dim, hidden_size=100, num_layers=2, batch_first=True)
-
-        # post‐GRU dense on time‐series path
-        self.dense1 = nn.Linear(100, 100)
-
-        # merge & head
-        self.dense2 = nn.Linear(100, self.latent_space_dim)
-
-        self.fc_out = nn.Linear(self.latent_space_dim, self.n_nodes)
-
-        self.tanh = nn.Tanh()
-        self.relu = nn.ReLU()
+        x = self.dense3(dense2)
+        return x
 
     def forward(self, batch):
 
-        x_ts = batch['ts'] # (batch_size, seq_len, n_ts_features)
-        lengths = batch['length'] # (batch_size)
+        # Get the latent space embedding
+        x = self.get_latent_space_embeddings(batch)
 
-        # Pack the padded time series data. the lengths vector lets the GRU know the true lengths of each TS, so it can ignore padding
-        packed = pack_padded_sequence(x_ts, lengths.cpu(), batch_first=True, enforce_sorted=False)
-
-        # Recurrent backbone
-        h0 = torch.zeros(2, x_ts.shape[0], 100).to(x_ts.device)
-        _, hidden = self.gru(packed, h0)
-
-        # Take the last output of the GRU
-        gru_out = hidden[-1] # (batch_size, hidden_size)
-
-        # Post-GRU dense on time-series path
-        dense1 = self.dense1(gru_out)
-        dense1 = self.tanh(dense1)
-
-        # Merge & head
-        x = self.dense2(dense1)
+        # Final step to produce logits
         x = self.relu(x)
         logits = self.fc_out(x)
 
         return logits
     
-class GRU_plus_MD(Hierarchical_classifier):
+class GRU_MD(Hierarchical_classifier):
 
     def __init__(self, taxonomy: Taxonomy, ts_feature_dim=5, static_feature_dim=30):
 
-        super(GRU_plus_MD, self).__init__(taxonomy)
+        super(GRU_MD, self).__init__(taxonomy)
 
         self.ts_feature_dim = ts_feature_dim
         self.static_feature_dim = static_feature_dim
@@ -325,74 +193,12 @@ class GRU_plus_MD(Hierarchical_classifier):
         logits = self.fc_out(x)
 
         return logits
-
-class GRU(Hierarchical_classifier):
-
-    def __init__(self, output_dim, ts_feature_dim=5):
-
-        super(GRU,  self).__init__()
-
-        self.ts_feature_dim = ts_feature_dim
-        self.output_dim = output_dim
-
-        # recurrent backbone
-        self.gru = nn.GRU(input_size=ts_feature_dim, hidden_size=100, num_layers=2, batch_first=True)
-
-        # post‐GRU dense on time‐series path
-        self.dense1 = nn.Linear(100, 64)
-
-        # merge & head
-        self.dense2 = nn.Linear(64, 32)
-
-        self.dense3 = nn.Linear(32, 16)
-
-        self.fc_out = nn.Linear(16, self.output_dim)
-
-        self.tanh = nn.Tanh()
-        self.relu = nn.ReLU()
-
-    def get_latent_space_embeddings(self, batch):
-
-        x_ts = batch['ts'] # (batch_size, seq_len, n_ts_features)
-        lengths = batch['length'] # (batch_size)
-
-        # Pack the padded time series data. the lengths vector lets the GRU know the true lengths of each TS, so it can ignore padding
-        packed = pack_padded_sequence(x_ts, lengths.cpu(), batch_first=True, enforce_sorted=False)
-
-        # Recurrent backbone
-        h0 = torch.zeros(2, x_ts.shape[0], 100).to(x_ts.device)
-        _, hidden = self.gru(packed, h0)
-
-        # Take the last output of the GRU
-        gru_out = hidden[-1] # (batch_size, hidden_size)
-
-        # Post-GRU dense on time-series path
-        dense1 = self.dense1(gru_out)
-        dense1 = self.tanh(dense1)
-
-        # Merge & head
-        dense2 = self.dense2(dense1)
-        dense2 = self.tanh(dense2)
-
-        x = self.dense3(dense2)
-        return x
-
-    def forward(self, batch):
-
-        # Get the latent space embedding
-        x = self.get_latent_space_embeddings(batch)
-
-        # Final step to produce logits
-        x = self.relu(x)
-        logits = self.fc_out(x)
-
-        return logits
     
-class GRU_MM(Hierarchical_classifier):
+class GRU_MD_MM(Hierarchical_classifier):
 
     def __init__(self, output_dim, ts_feature_dim=5, static_feature_dim=18):
 
-        super(GRU_MM, self).__init__()
+        super(GRU_MD_MM, self).__init__()
 
         self.ts_feature_dim = ts_feature_dim
         self.static_feature_dim = static_feature_dim
@@ -491,17 +297,14 @@ class GRU_MM(Hierarchical_classifier):
 if __name__ == '__main__':
 
     taxonomy = ORACLE_Taxonomy()
-    config = {
-        "layer1_neurons": 512,
-        "layer1_dropout": 0.3,
-        "layer2_neurons": 128,
-        "layer2_dropout": 0.2,
-    }
     
-    model = ORACLE2_lite_swin(config, taxonomy)
+    model = GRU(taxonomy)
     model.eval()
 
-    x = torch.rand(10, 3, 256, 256)
+    x = {
+        'ts': torch.rand(10, 256, 5),
+        'length': torch.from_numpy(np.array([256]*10))
+    }
 
     print(model.predict_conditional_probabilities_df(x))
     print(model.predict_class_probabilities_df(x))

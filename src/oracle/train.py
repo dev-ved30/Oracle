@@ -17,10 +17,10 @@ default_learning_rate = 1e-5
 default_alpha = 0.0
 default_max_n_per_class = None
 default_model_dir = None
-default_beta = 1
+default_gamma = 1
 
 # <----- Config for the model ----->
-model_choices = ["ORACLE1_ELAsTiCC", "ORACLE1-lite_ELAsTiCC", "ORACLE1-lite_BTS", "ORACLE1-lite_ZTFSims", "ORACLE1_BTS", "BTS"]
+model_choices = ["BTS-lite", "BTS", "ZTF_Sims-lite"]
 default_model_type = "BTS"
 
 # Switch device to GPU if available
@@ -42,7 +42,7 @@ def parse_args():
     parser.add_argument('--lr', type=float, default=default_learning_rate, help='Learning rate used for training.')
     parser.add_argument('--max_n_per_class', type=int, default=default_max_n_per_class, help='Maximum number of samples for any class. This allows for balancing of datasets. ')
     parser.add_argument('--alpha', type=float, default=default_alpha, help='Alpha value used for the loss function. See Villar et al. (2024) for more information. [https://arxiv.org/abs/2312.02266]')
-    parser.add_argument('--beta', type=float, default=default_beta, help='Exponent for the training weights.')
+    parser.add_argument('--gamma', type=float, default=default_gamma, help='Exponent for the training weights.')
     parser.add_argument('--dir', type=Path, default=default_model_dir, help='Directory for saving the models and best model during training.')
     parser.add_argument('--load_weights', type=Path, default=None, help='Path to model which should be loaded before training stars.')
 
@@ -68,7 +68,7 @@ def get_wandb_run(args):
             "lr": args.lr,
             "max_n_per_class": args.max_n_per_class,
             "alpha": args.alpha,
-            "beta": args.beta,
+            "gamma": args.gamma,
             "model_dir": args.dir,
             "model_choice": args.model,
             "pretrained_model_path": args.load_weights,
@@ -84,7 +84,7 @@ def run_training_loop(args):
     lr = args.lr
     max_n_per_class = args.max_n_per_class
     alpha = args.alpha
-    beta = args.beta
+    gamma = args.gamma
     model_dir = args.dir
     model_choice = args.model
     pretrained_model_path = args.load_weights
@@ -111,7 +111,7 @@ def run_training_loop(args):
 
     # Fit the model
     model = model.to(device)
-    model.setup_training(alpha, beta, lr, train_labels, val_labels, model_dir, device, wandb_run)
+    model.setup_training(alpha, gamma, lr, train_labels, val_labels, model_dir, device, wandb_run)
     model.fit(train_dataloader, val_dataloader, num_epochs)
 
     # End the logging run with WandB and upload the model

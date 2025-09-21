@@ -34,13 +34,13 @@ class EarlyStopper:
 
 class Trainer:
     
-    def setup_training(self, alpha, beta, lr, train_labels, val_labels, model_dir, device, wandb_run):
+    def setup_training(self, alpha, gamma, lr, train_labels, val_labels, model_dir, device, wandb_run):
 
         self.alpha = alpha
-        self.beta = beta
+        self.gamma = gamma
         
         # Set up criterion for training and validation. These need to be different because the class weights can be different
-        self.train_criterion = WHXE_Loss(self.taxonomy, train_labels, self.alpha, self.beta)
+        self.train_criterion = WHXE_Loss(self.taxonomy, train_labels, self.alpha, self.gamma)
         self.val_criterion = WHXE_Loss(self.taxonomy, val_labels, self.alpha)
 
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
@@ -143,7 +143,6 @@ class Trainer:
 
     def save_model_in_wandb(self):
         
-        # Save artifacts to wandb
         # Save artifacts to wandb
         print('Saving model to wandb')
         wandb.save(f"{self.model_dir}/train_loss_history.npy")

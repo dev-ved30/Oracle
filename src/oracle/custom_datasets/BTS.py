@@ -553,16 +553,8 @@ def custom_collate_BTS(batch):
         'static': static_features_tensor,
         'length': lengths,
         'label': label_array,
-<<<<<<< Updated upstream
-        'bts_class': bts_array, 
-=======
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-        'ZTFID': ztfid_array,
-=======
         'raw_label': bts_array, 
         'id': ztfid_array,
->>>>>>> Stashed changes
     }
 
     if 'postage_stamp' in sample.keys():

@@ -5,10 +5,10 @@ import pandas as pd
 
 from sklearn.metrics import classification_report
 from tqdm import tqdm
-from pathlib import Path    
+from pathlib import Path
+from functools import reduce    
 
-from oracle.visualization import plot_confusion_matrix, plot_roc_curves, plot_train_val_history, plot_class_wise_performance_over_all_phases, plot_average_performance_over_all_phases
-
+from oracle.visualization import *
 class Tester:
     
     def setup_testing(self, model_dir, device):
@@ -33,6 +33,32 @@ class Tester:
             plot_class_wise_performance_over_all_phases(metric, metrics_dictionary, self.model_dir)
             plot_average_performance_over_all_phases(metric, metrics_dictionary, self.model_dir)
 
+
+    def create_UMAP_plots(self, days):
+
+        dfs = []
+        days_list = []
+        class_list = []
+
+        for d in days:
+            
+            df = pd.read_csv(f"{self.model_dir}/embeddings/embeddings+{d}.csv")
+
+            dfs.append(df)
+            days_list += [d]*len(df)
+            class_list += df['class'].tolist()
+
+        dfs = pd.concat(dfs)
+        dfs.drop('class', axis=1, inplace=True)
+        days_list = np.array(days_list)
+        class_list = np.array(class_list)
+
+        if "Anomaly" in class_list:
+            Path(f"{self.model_dir}/plots/umap_AD").mkdir(parents=True, exist_ok=True)
+        else:
+            Path(f"{self.model_dir}/plots/umap").mkdir(parents=True, exist_ok=True)       
+
+        plot_embeddings_umaps(dfs, days_list, class_list, self.model_dir)
 
     def create_classification_report(self, y_true, y_pred, file_name=None):
         
@@ -79,6 +105,68 @@ class Tester:
                 metrics_dictionary[depth] = combined_df
 
         return metrics_dictionary
+    
+    def make_embeddings_for_AD(self, test_loader, d):
+
+        self.eval()
+        nodes_by_depth = self.taxonomy.get_nodes_by_depth()
+
+        true_classes = []
+        bts_classes = []
+        ztf_ids = []
+        combined_embeddings = []
+
+        print(f'==========\nStarting Analysis for Trigger + {d} days...')
+
+        # Run inference on the test set and combine the output dataframes
+        for batch in tqdm(test_loader, desc='Testing'):
+
+            # Move everything to the device
+            batch = {k: v.to(self.device) if torch.is_tensor(v) else v for k, v in batch.items()}
+
+
+            embeddings = pd.DataFrame(self.get_latent_space_embeddings(batch).detach().cpu())
+
+            true_classes += batch['label'].tolist()
+            bts_classes += batch['bts_class'].tolist()
+            ztf_ids += batch['ZTFID'].tolist()
+
+            combined_embeddings.append(embeddings)
+        
+        true_classes = np.array(true_classes)
+        combined_embeddings = pd.concat(combined_embeddings, ignore_index=True)
+
+        Path(f"{self.model_dir}/plots/umap").mkdir(parents=True, exist_ok=True)
+        plot_umap(combined_embeddings.to_numpy(), true_classes, bts_classes, d, model_dir=self.model_dir)
+
+        combined_embeddings['class'] = true_classes
+        combined_embeddings['bts_class'] = bts_classes
+        combined_embeddings['ztf_ids'] = ztf_ids
+
+        Path(f"{self.model_dir}/embeddings").mkdir(parents=True, exist_ok=True)
+        combined_embeddings.to_csv(f"{self.model_dir}/embeddings/embeddings+{d}.csv", index=False)
+
+    def merge_performance_tables(self, days):
+
+        levels = ['1','2']
+
+        for level in levels:
+
+            data_frames = []
+
+            for d in days:
+
+                df = pd.read_csv(f"{self.model_dir}/reports/depth{level}/report_trigger+{d}.csv", index_col=0)
+                df.drop(columns=["support"], inplace=True)
+                df.index.name = 'Class'
+                df.rename(columns={'precision': '$p_{' + f"{d}" + '}$'}, inplace=True)
+                df.rename(columns={'recall': '$r_{' + f"{d}" + '}$'}, inplace=True)
+                df.rename(columns={'f1-score': '$f1_{' + f"{d}" + '}$'}, inplace=True)
+                data_frames.append(df)
+
+            df_merged = reduce(lambda  left,right: pd.merge(left,right, how='left',on='Class', sort=False), data_frames)
+            df_merged = df_merged.loc[:, df_merged.columns.str.contains("f1")]
+            print(df_merged.to_latex(float_format="%.2f"))
 
     def run_all_analysis(self, test_loader, d):
 
@@ -145,14 +233,27 @@ class Tester:
                         # For some objects, a label may not exist at finer levels
                         level_true_classes.append(None)
                 
-                # Make the confusion matrix plot
+                # Make the recall confusion matrix plot
                 cf_title = f"Trigger+{d} days"
-                cf_img_file = f"{self.model_dir}/plots/depth{depth}/cf_trigger+{d}.pdf"
+                Path(f"{self.model_dir}/plots/depth{depth}/cf_recall").mkdir(parents=True, exist_ok=True)
+                cf_img_file = f"{self.model_dir}/plots/depth{depth}/cf_recall/cf_trigger+{d}.pdf"
                 plot_confusion_matrix(np.array(level_true_classes), np.array(level_pred_classes), nodes, title=cf_title, img_file=cf_img_file)
+
+                # Make the precision confusion matrix plot
+                cf_title = f"Trigger+{d} days"
+                Path(f"{self.model_dir}/plots/depth{depth}/cf_precision").mkdir(parents=True, exist_ok=True)
+                cf_img_file = f"{self.model_dir}/plots/depth{depth}/cf_precision/cf_trigger+{d}.pdf"
+                plot_confusion_matrix(np.array(level_true_classes), np.array(level_pred_classes), nodes, normalize='pred', title=cf_title, img_file=cf_img_file)
+
+                cf_title = f"Trigger+{d} days"
+                Path(f"{self.model_dir}/plots/depth{depth}/cf_plain").mkdir(parents=True, exist_ok=True)
+                cf_img_file = f"{self.model_dir}/plots/depth{depth}/cf_plain/cf_trigger+{d}.png"
+                plot_plain_cf(np.array(level_true_classes), np.array(level_pred_classes), nodes, title=cf_title, img_file=cf_img_file)
 
                 # Make the ROC plot
                 roc_title = f"Trigger+{d} days"
-                roc_img_file = f"{self.model_dir}/plots/depth{depth}/roc_trigger+{d}.pdf"
+                Path(f"{self.model_dir}/plots/depth{depth}/roc").mkdir(parents=True, exist_ok=True)
+                roc_img_file = f"{self.model_dir}/plots/depth{depth}/roc/roc_trigger+{d}.pdf"
                 plot_roc_curves(level_true_df.to_numpy(), level_pred_df.to_numpy(), nodes, title=roc_title, img_file=roc_img_file)
 
                 # Make classification report

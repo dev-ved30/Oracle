@@ -553,8 +553,16 @@ def custom_collate_BTS(batch):
         'static': static_features_tensor,
         'length': lengths,
         'label': label_array,
+<<<<<<< Updated upstream
         'bts_class': bts_array, 
+=======
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
         'ZTFID': ztfid_array,
+=======
+        'raw_label': bts_array, 
+        'id': ztfid_array,
+>>>>>>> Stashed changes
     }
 
     if 'postage_stamp' in sample.keys():
@@ -605,8 +613,8 @@ if __name__=='__main__':
         for k in (batch.keys()):
             print(f"{k}: \t{batch[k].shape}")
 
-        if 'postage_stamp' in batch.keys():
-            show_batch(batch['postage_stamp'], batch['label'])
+        # if 'postage_stamp' in batch.keys():
+        #     show_batch(batch['postage_stamp'], batch['label'])
         
         # if 'lc_plot' in batch.keys():
         #     show_batch(batch['lc_plot'], batch['label'])

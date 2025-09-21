@@ -97,7 +97,8 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
 
         row = self.parquet_df.row(index, named=True) 
-
+        
+        ELASTICC_class = row['ELASTICC_class']
         snid = row['SNID']
         astrophysical_class = row['class']
 
@@ -119,6 +120,7 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
             'ts': time_series_data,
             'static': static_data,
             'label': astrophysical_class,
+            'ELASTICC_class': ELASTICC_class,
             'SNID': snid,
         }
 
@@ -309,6 +311,7 @@ def custom_collate_ELAsTiCC(batch):
 
     ts_array = []
     label_array = []
+    ELASTICC_class_array = []
     snid_array = np.zeros((batch_size))
 
     lengths = np.zeros((batch_size), dtype=np.int32)
@@ -319,6 +322,7 @@ def custom_collate_ELAsTiCC(batch):
 
         ts_array.append(sample['ts'])
         label_array.append(sample['label'])
+        ELASTICC_class_array.append(sample['ELASTICC_class'])
 
         snid_array[i] = sample['SNID']
         lengths[i] = sample['ts'].shape[0]
@@ -329,6 +333,7 @@ def custom_collate_ELAsTiCC(batch):
 
     lengths = torch.from_numpy(lengths)
     label_array = np.array(label_array)
+    ELASTICC_class_array = np.array(ELASTICC_class_array)
 
     ts_tensor = pad_sequence(ts_array, batch_first=True, padding_value=flag_value)
 
@@ -337,7 +342,8 @@ def custom_collate_ELAsTiCC(batch):
         'static': static_features_tensor, 
         'length': lengths,
         'label': label_array,
-        'SNID': snid_array,
+        'raw_label': ELASTICC_class_array,
+        'id': snid_array,
     }
 
     if 'lc_plot' in sample.keys():
@@ -382,6 +388,8 @@ if __name__=='__main__':
 
         pass
 
+        for k in (batch.keys()):
+            print(f"{k}: \t{batch[k].shape}")
         # print(batch['label'])
 
         # for k in (batch.keys()):

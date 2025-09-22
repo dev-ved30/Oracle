@@ -70,7 +70,12 @@ n_book_keeping_features = len(book_keeping_feature_list)
 
 class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
 
-    def __init__(self, parquet_file_path, max_n_per_class=None, include_lc_plots=False, transform=None):
+    def __init__(self, 
+                 parquet_file_path, 
+                 max_n_per_class=None, 
+                 include_lc_plots=False, 
+                 transform=None,
+                 excluded_classes=[]):
         super(ELAsTiCC_LC_Dataset, self).__init__()
 
         # Columns to be read from the parquet file
@@ -80,12 +85,14 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         self.transform = transform
         self.include_lc_plots = include_lc_plots
         self.max_n_per_class = max_n_per_class
+        self.excluded_classes = excluded_classes
 
         print(f'Loading dataset from {self.parquet_file_path}\n')
         self.parquet_df = pl.read_parquet(self.parquet_file_path, columns=self.columns)
         self.columns_dtypes = self.parquet_df.schema
 
         self.clean_up_dataset()
+        self.exclude_classes()
 
         if self.max_n_per_class != None:
             self.limit_max_samples_per_class()
@@ -130,6 +137,21 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
             dictionary['lc_plot'] = light_curve_plot
         
         return dictionary
+    
+    def exclude_classes(self):
+
+        print(f"Excluding {self.excluded_classes} from the dataset...")
+
+        class_dfs = []
+        unique_classes = np.unique(self.parquet_df['class'])
+
+        for c in unique_classes:
+
+            if c not in self.excluded_classes:
+                class_df = self.parquet_df.filter(pl.col("class") == c)
+                class_dfs.append(class_df)
+
+        self.parquet_df = pl.concat(class_dfs)
     
     def clean_up_dataset(self):
 
@@ -266,7 +288,10 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
 
         return self.parquet_df['class'].to_list()
     
-def truncate_ELAsTiCC_light_curve_by_days_since_trigger(x_ts, d):
+def truncate_ELAsTiCC_light_curve_by_days_since_trigger(x_ts, d=None):
+
+    if d == None:
+        d = 2**np.random.uniform(0, 11)
 
     # Get the first detection index
     photflags = x_ts[:,time_dependent_feature_list.index('PHOTFLAG')]

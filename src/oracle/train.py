@@ -60,7 +60,7 @@ def get_wandb_run(args):
         # Set the wandb entity where your project will be logged (generally your team name).
         entity="vedshah-email-northwestern-university",
         # Set the wandb project where this run will be logged.
-        project="AD",
+        project="ORACLE",
         # Track hyperparameters and run metadata.
         config={
             "num_epochs": args.num_epochs,

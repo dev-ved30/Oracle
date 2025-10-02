@@ -90,12 +90,13 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         print(f'Loading dataset from {self.parquet_file_path}\n')
         self.parquet_df = pl.read_parquet(self.parquet_file_path, columns=self.columns)
         self.columns_dtypes = self.parquet_df.schema
-
-        self.clean_up_dataset()
-        self.exclude_classes()
+        self.map_models_to_classes()
 
         if self.max_n_per_class != None:
             self.limit_max_samples_per_class()
+
+        self.clean_up_dataset()
+        self.exclude_classes()
                
     def __len__(self):
 
@@ -138,6 +139,13 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         
         return dictionary
     
+    def map_models_to_classes(self):
+
+        print("Mapping ELAsTiCC classes to astrophysical classes...")
+        self.parquet_df = self.parquet_df.with_columns(
+            pl.col("ELASTICC_class").replace(ELAsTiCC_to_Astrophysical_mappings, return_dtype=pl.String).alias("class")
+        )
+
     def exclude_classes(self):
 
         print(f"Excluding {self.excluded_classes} from the dataset...")
@@ -198,11 +206,6 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         print("Subtracting time of first observation...")
         self.parquet_df = self.parquet_df.with_columns(
             pl.col("MJD_clean").map_elements(lambda x: (np.array(x) - min(x)).tolist(), return_dtype=pl.List(pl.Float64)).alias("MJD_clean")
-        )
-
-        print("Mapping ELAsTiCC classes to astrophysical classes...")
-        self.parquet_df = self.parquet_df.with_columns(
-            pl.col("ELASTICC_class").replace(ELAsTiCC_to_Astrophysical_mappings, return_dtype=pl.String).alias("class")
         )
 
         for feature in time_independent_feature_list:

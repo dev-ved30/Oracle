@@ -4,7 +4,7 @@ from pathlib import Path
 from astropy.table import Table
 
 from oracle.presets import GRU, GRU_MD
-from oracle.taxonomies import ORACLE_Taxonomy, BTS_Taxonomy
+from oracle.taxonomies import ORACLE_Taxonomy
 from oracle.custom_datasets.ELAsTiCC import *
 
 device = "cuda" if torch.cuda.is_available() else "cpu"

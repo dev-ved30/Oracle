@@ -1,0 +1,321 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>oracle.presets &mdash; oracle 1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=29a6c3e3"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            oracle
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">src</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">oracle</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">oracle.presets</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for oracle.presets</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">ConcatDataset</span><span class="p">,</span> <span class="n">WeightedRandomSampler</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">oracle.architectures</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">oracle.custom_datasets.BTS</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">oracle.custom_datasets.ZTF_sims</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">oracle.custom_datasets.ELAsTiCC</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">oracle.taxonomies</span><span class="w"> </span><span class="kn">import</span> <span class="n">BTS_Taxonomy</span><span class="p">,</span> <span class="n">ORACLE_Taxonomy</span>
+
+<span class="n">device</span> <span class="o">=</span> <span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span>
+<span class="n">torch</span><span class="o">.</span><span class="n">set_default_device</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+<div class="viewcode-block" id="get_class_weights">
+<a class="viewcode-back" href="../../oracle.html#oracle.presets.get_class_weights">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_class_weights</span><span class="p">(</span><span class="n">labels</span><span class="p">):</span>
+
+    <span class="n">classes</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">classes</span><span class="p">,</span> <span class="n">counts</span><span class="p">):</span>
+        <span class="n">weights</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">n</span>
+
+    <span class="k">return</span> <span class="n">weights</span></div>
+
+
+<div class="viewcode-block" id="get_model">
+<a class="viewcode-back" href="../../oracle.html#oracle.presets.get_model">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_model</span><span class="p">(</span><span class="n">model_choice</span><span class="p">):</span>
+
+    <span class="k">if</span> <span class="n">model_choice</span> <span class="o">==</span> <span class="s2">&quot;BTS-lite&quot;</span><span class="p">:</span>
+        <span class="n">taxonomy</span> <span class="o">=</span> <span class="n">BTS_Taxonomy</span><span class="p">()</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">GRU</span><span class="p">(</span><span class="n">taxonomy</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">model_choice</span> <span class="o">==</span> <span class="s2">&quot;BTS&quot;</span><span class="p">:</span>
+        <span class="n">taxonomy</span> <span class="o">=</span> <span class="n">BTS_Taxonomy</span><span class="p">()</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">GRU_MD</span><span class="p">(</span><span class="n">taxonomy</span><span class="p">,</span> <span class="n">static_feature_dim</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">model_choice</span> <span class="o">==</span> <span class="s2">&quot;ZTF_Sims-lite&quot;</span><span class="p">:</span>
+        <span class="n">taxonomy</span> <span class="o">=</span> <span class="n">BTS_Taxonomy</span><span class="p">()</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">GRU</span><span class="p">(</span><span class="n">taxonomy</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">model_choice</span> <span class="o">==</span> <span class="s2">&quot;ELAsTiCC-lite&quot;</span><span class="p">:</span>
+        <span class="n">taxonomy</span> <span class="o">=</span> <span class="n">ORACLE_Taxonomy</span><span class="p">()</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">GRU</span><span class="p">(</span><span class="n">taxonomy</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">model_choice</span> <span class="o">==</span> <span class="s2">&quot;ELAsTiCC&quot;</span><span class="p">:</span>
+        <span class="n">taxonomy</span> <span class="o">=</span> <span class="n">ORACLE_Taxonomy</span><span class="p">()</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">GRU_MD</span><span class="p">(</span><span class="n">taxonomy</span><span class="p">,</span> <span class="n">static_feature_dim</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+<div class="viewcode-block" id="get_train_loader">
+<a class="viewcode-back" href="../../oracle.html#oracle.presets.get_train_loader">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_train_loader</span><span class="p">(</span><span class="n">model_choice</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">max_n_per_class</span><span class="p">,</span> <span class="n">excluded_classes</span><span class="o">=</span><span class="p">[]):</span>
+
+    <span class="c1"># Keep generator on the CPU</span>
+    <span class="n">generator</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Generator</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">model_choice</span> <span class="o">==</span> <span class="s2">&quot;BTS-lite&quot;</span><span class="p">:</span>
+
+        <span class="c1"># Load the training set</span>
+        <span class="n">transform</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">truncate_BTS_light_curve_by_days_since_trigger</span><span class="p">,</span> <span class="n">add_jitter</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">train_dataset</span> <span class="o">=</span> <span class="n">BTS_LC_Dataset</span><span class="p">(</span><span class="n">BTS_train_parquet_path</span><span class="p">,</span> <span class="n">max_n_per_class</span><span class="o">=</span><span class="n">max_n_per_class</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span> <span class="n">excluded_classes</span><span class="o">=</span><span class="n">excluded_classes</span><span class="p">)</span>
+        <span class="n">collate_fn</span> <span class="o">=</span> <span class="n">custom_collate_BTS</span>
+
+    <span class="k">elif</span> <span class="n">model_choice</span> <span class="o">==</span> <span class="s2">&quot;BTS&quot;</span><span class="p">:</span>
+
+        <span class="c1"># Load the training set</span>
+        <span class="n">transform</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">truncate_BTS_light_curve_by_days_since_trigger</span><span class="p">,</span> <span class="n">add_jitter</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">train_dataset</span> <span class="o">=</span> <span class="n">BTS_LC_Dataset</span><span class="p">(</span><span class="n">BTS_train_parquet_path</span><span class="p">,</span> <span class="n">max_n_per_class</span><span class="o">=</span><span class="n">max_n_per_class</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span> <span class="n">excluded_classes</span><span class="o">=</span><span class="n">excluded_classes</span><span class="p">)</span>
+        <span class="n">collate_fn</span> <span class="o">=</span> <span class="n">custom_collate_BTS</span>
+
+    <span class="k">elif</span> <span class="n">model_choice</span> <span class="o">==</span> <span class="s2">&quot;ZTF_Sims-lite&quot;</span><span class="p">:</span>
+
+        <span class="c1"># Load the training set</span>
+        <span class="n">train_dataset</span> <span class="o">=</span> <span class="n">ZTF_SIM_LC_Dataset</span><span class="p">(</span><span class="n">ZTF_sim_train_parquet_path</span><span class="p">,</span> <span class="n">include_lc_plots</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">truncate_ZTF_SIM_light_curve_fractionally</span><span class="p">,</span> <span class="n">max_n_per_class</span><span class="o">=</span><span class="n">max_n_per_class</span><span class="p">,</span> <span class="n">excluded_classes</span><span class="o">=</span><span class="n">excluded_classes</span><span class="p">)</span>
+        <span class="n">collate_fn</span> <span class="o">=</span> <span class="n">custom_collate_ZTF_SIM</span>
+
+    <span class="k">elif</span> <span class="n">model_choice</span> <span class="o">==</span> <span class="s2">&quot;ELAsTiCC-lite&quot;</span><span class="p">:</span>
+
+        <span class="c1"># Load the training set</span>
+        <span class="n">train_dataset</span> <span class="o">=</span> <span class="n">ELAsTiCC_LC_Dataset</span><span class="p">(</span><span class="n">ELAsTiCC_train_parquet_path</span><span class="p">,</span> <span class="n">include_lc_plots</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">truncate_ELAsTiCC_light_curve_by_days_since_trigger</span><span class="p">,</span> <span class="n">max_n_per_class</span><span class="o">=</span><span class="n">max_n_per_class</span><span class="p">,</span> <span class="n">excluded_classes</span><span class="o">=</span><span class="n">excluded_classes</span><span class="p">)</span>
+        <span class="n">collate_fn</span> <span class="o">=</span> <span class="n">custom_collate_ELAsTiCC</span>
+
+    <span class="k">elif</span> <span class="n">model_choice</span> <span class="o">==</span> <span class="s2">&quot;ELAsTiCC&quot;</span><span class="p">:</span>
+
+        <span class="c1"># Load the training set</span>
+        <span class="n">train_dataset</span> <span class="o">=</span> <span class="n">ELAsTiCC_LC_Dataset</span><span class="p">(</span><span class="n">ELAsTiCC_train_parquet_path</span><span class="p">,</span> <span class="n">include_lc_plots</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">truncate_ELAsTiCC_light_curve_by_days_since_trigger</span><span class="p">,</span> <span class="n">max_n_per_class</span><span class="o">=</span><span class="n">max_n_per_class</span><span class="p">,</span> <span class="n">excluded_classes</span><span class="o">=</span><span class="n">excluded_classes</span><span class="p">)</span>
+        <span class="n">collate_fn</span> <span class="o">=</span> <span class="n">custom_collate_ELAsTiCC</span>
+
+    <span class="n">train_labels</span> <span class="o">=</span> <span class="n">train_dataset</span><span class="o">.</span><span class="n">get_all_labels</span><span class="p">()</span>
+
+    <span class="n">class_weights</span> <span class="o">=</span> <span class="n">get_class_weights</span><span class="p">(</span><span class="n">train_labels</span><span class="p">)</span>
+    <span class="n">train_weights</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">class_weights</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">train_labels</span><span class="p">]))</span>
+    <span class="n">sampler</span> <span class="o">=</span> <span class="n">WeightedRandomSampler</span><span class="p">(</span><span class="n">train_weights</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_weights</span><span class="p">))</span>
+    <span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">collate_fn</span><span class="p">,</span> <span class="n">generator</span><span class="o">=</span><span class="n">generator</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">train_dataloader</span><span class="p">,</span> <span class="n">train_labels</span></div>
+
+
+<div class="viewcode-block" id="get_val_loader">
+<a class="viewcode-back" href="../../oracle.html#oracle.presets.get_val_loader">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_val_loader</span><span class="p">(</span><span class="n">model_choice</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">val_truncation_days</span><span class="p">,</span> <span class="n">excluded_classes</span><span class="o">=</span><span class="p">[]):</span>
+
+    <span class="c1"># Keep generator on the CPU</span>
+    <span class="n">generator</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Generator</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">model_choice</span> <span class="o">==</span> <span class="s2">&quot;BTS-lite&quot;</span><span class="p">:</span>
+
+        <span class="c1"># Load the validation set</span>
+        <span class="n">val_dataset</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">val_truncation_days</span><span class="p">:</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">truncate_BTS_light_curve_by_days_since_trigger</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="n">d</span><span class="p">)</span>
+            <span class="n">val_dataset</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">BTS_LC_Dataset</span><span class="p">(</span><span class="n">BTS_val_parquet_path</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span> <span class="n">excluded_classes</span><span class="o">=</span><span class="n">excluded_classes</span><span class="p">))</span>
+        <span class="n">concatenated_val_dataset</span> <span class="o">=</span> <span class="n">ConcatDataset</span><span class="p">(</span><span class="n">val_dataset</span><span class="p">)</span>
+        <span class="n">val_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">concatenated_val_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">custom_collate_BTS</span><span class="p">,</span> <span class="n">generator</span><span class="o">=</span><span class="n">generator</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">model_choice</span> <span class="o">==</span> <span class="s2">&quot;BTS&quot;</span><span class="p">:</span>
+
+        <span class="c1"># Load the validation set</span>
+        <span class="n">val_dataset</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">val_truncation_days</span><span class="p">:</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">truncate_BTS_light_curve_by_days_since_trigger</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="n">d</span><span class="p">)</span>
+            <span class="n">val_dataset</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">BTS_LC_Dataset</span><span class="p">(</span><span class="n">BTS_val_parquet_path</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>  <span class="n">excluded_classes</span><span class="o">=</span><span class="n">excluded_classes</span><span class="p">))</span>
+        <span class="n">concatenated_val_dataset</span> <span class="o">=</span> <span class="n">ConcatDataset</span><span class="p">(</span><span class="n">val_dataset</span><span class="p">)</span>
+        <span class="n">val_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">concatenated_val_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">custom_collate_BTS</span><span class="p">,</span> <span class="n">generator</span><span class="o">=</span><span class="n">generator</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">model_choice</span> <span class="o">==</span> <span class="s2">&quot;ZTF_Sims-lite&quot;</span><span class="p">:</span>
+
+        <span class="c1"># Load the validation set</span>
+        <span class="n">val_dataset</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">val_truncation_days</span><span class="p">:</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">truncate_ZTF_SIM_light_curve_by_days_since_trigger</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="n">d</span><span class="p">)</span>
+            <span class="n">val_dataset</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ZTF_SIM_LC_Dataset</span><span class="p">(</span><span class="n">ZTF_sim_val_parquet_path</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span> <span class="n">excluded_classes</span><span class="o">=</span><span class="n">excluded_classes</span><span class="p">))</span>
+        <span class="n">concatenated_val_dataset</span> <span class="o">=</span> <span class="n">ConcatDataset</span><span class="p">(</span><span class="n">val_dataset</span><span class="p">)</span>
+        <span class="n">val_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">concatenated_val_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">custom_collate_ZTF_SIM</span><span class="p">,</span> <span class="n">generator</span><span class="o">=</span><span class="n">generator</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">model_choice</span> <span class="o">==</span> <span class="s2">&quot;ELAsTiCC-lite&quot;</span><span class="p">:</span>
+
+        <span class="c1"># Load the training set</span>
+        <span class="n">val_dataset</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">val_truncation_days</span><span class="p">:</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">truncate_ELAsTiCC_light_curve_by_days_since_trigger</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="n">d</span><span class="p">)</span>
+            <span class="n">val_dataset</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ELAsTiCC_LC_Dataset</span><span class="p">(</span><span class="n">ELAsTiCC_val_parquet_path</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span> <span class="n">excluded_classes</span><span class="o">=</span><span class="n">excluded_classes</span><span class="p">))</span>
+        <span class="n">concatenated_val_dataset</span> <span class="o">=</span> <span class="n">ConcatDataset</span><span class="p">(</span><span class="n">val_dataset</span><span class="p">)</span>
+        <span class="n">val_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">concatenated_val_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">custom_collate_ELAsTiCC</span><span class="p">,</span> <span class="n">generator</span><span class="o">=</span><span class="n">generator</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">model_choice</span> <span class="o">==</span> <span class="s2">&quot;ELAsTiCC&quot;</span><span class="p">:</span>
+
+        <span class="c1"># Load the training set</span>
+        <span class="n">val_dataset</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">val_truncation_days</span><span class="p">:</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">truncate_ELAsTiCC_light_curve_by_days_since_trigger</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="n">d</span><span class="p">)</span>
+            <span class="n">val_dataset</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ELAsTiCC_LC_Dataset</span><span class="p">(</span><span class="n">ELAsTiCC_val_parquet_path</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span> <span class="n">excluded_classes</span><span class="o">=</span><span class="n">excluded_classes</span><span class="p">))</span>
+        <span class="n">concatenated_val_dataset</span> <span class="o">=</span> <span class="n">ConcatDataset</span><span class="p">(</span><span class="n">val_dataset</span><span class="p">)</span>
+        <span class="n">val_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">concatenated_val_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">custom_collate_ELAsTiCC</span><span class="p">,</span> <span class="n">generator</span><span class="o">=</span><span class="n">generator</span><span class="p">)</span>
+
+    <span class="n">val_labels</span> <span class="o">=</span> <span class="n">val_dataset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_all_labels</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">val_dataloader</span><span class="p">,</span> <span class="n">val_labels</span></div>
+
+
+<div class="viewcode-block" id="get_test_loaders">
+<a class="viewcode-back" href="../../oracle.html#oracle.presets.get_test_loaders">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_test_loaders</span><span class="p">(</span><span class="n">model_choice</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">max_n_per_class</span><span class="p">,</span> <span class="n">days_list</span><span class="p">,</span> <span class="n">excluded_classes</span><span class="o">=</span><span class="p">[],</span> <span class="n">mapper</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="c1"># Keep generator on the CPU</span>
+    <span class="n">generator</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Generator</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+
+    <span class="n">test_loaders</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">model_choice</span> <span class="o">==</span> <span class="s2">&quot;BTS-lite&quot;</span><span class="p">:</span>
+
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">days_list</span><span class="p">:</span>
+            
+            <span class="c1"># Set the custom transform and recreate dataloader</span>
+            <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">BTS_LC_Dataset</span><span class="p">(</span><span class="n">BTS_test_parquet_path</span><span class="p">,</span> <span class="n">include_lc_plots</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">max_n_per_class</span><span class="o">=</span><span class="n">max_n_per_class</span><span class="p">,</span> <span class="n">excluded_classes</span><span class="o">=</span><span class="n">excluded_classes</span><span class="p">)</span>
+            <span class="n">test_dataset</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">truncate_BTS_light_curve_by_days_since_trigger</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="n">d</span><span class="p">)</span>
+            <span class="n">test_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">test_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">custom_collate_BTS</span><span class="p">,</span> <span class="n">generator</span><span class="o">=</span><span class="n">generator</span><span class="p">)</span>
+            <span class="n">test_loaders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">test_dataloader</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">model_choice</span> <span class="o">==</span> <span class="s2">&quot;BTS&quot;</span><span class="p">:</span>
+
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">days_list</span><span class="p">:</span>
+            
+            <span class="c1"># Set the custom transform and recreate dataloader</span>
+            <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">BTS_LC_Dataset</span><span class="p">(</span><span class="n">BTS_test_parquet_path</span><span class="p">,</span> <span class="n">include_lc_plots</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">max_n_per_class</span><span class="o">=</span><span class="n">max_n_per_class</span><span class="p">,</span> <span class="n">excluded_classes</span><span class="o">=</span><span class="n">excluded_classes</span><span class="p">,</span> <span class="n">mapper</span><span class="o">=</span><span class="n">mapper</span><span class="p">)</span>
+            <span class="n">test_dataset</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">truncate_BTS_light_curve_by_days_since_trigger</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="n">d</span><span class="p">)</span>
+            <span class="n">test_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">test_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">custom_collate_BTS</span><span class="p">,</span> <span class="n">generator</span><span class="o">=</span><span class="n">generator</span><span class="p">)</span>
+            <span class="n">test_loaders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">test_dataloader</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">model_choice</span> <span class="o">==</span> <span class="s2">&quot;ZTF_Sims-lite&quot;</span><span class="p">:</span>
+
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">days_list</span><span class="p">:</span>
+            
+            <span class="c1"># Set the custom transform and recreate dataloader</span>
+            <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">ZTF_SIM_LC_Dataset</span><span class="p">(</span><span class="n">ZTF_sim_test_parquet_path</span><span class="p">,</span> <span class="n">include_lc_plots</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">max_n_per_class</span><span class="o">=</span><span class="n">max_n_per_class</span><span class="p">,</span> <span class="n">excluded_classes</span><span class="o">=</span><span class="n">excluded_classes</span><span class="p">)</span>
+            <span class="n">test_dataset</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">truncate_ZTF_SIM_light_curve_by_days_since_trigger</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="n">d</span><span class="p">)</span>
+            <span class="n">test_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">test_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">custom_collate_ZTF_SIM</span><span class="p">,</span> <span class="n">generator</span><span class="o">=</span><span class="n">generator</span><span class="p">)</span>
+            <span class="n">test_loaders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">test_dataloader</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">model_choice</span> <span class="o">==</span> <span class="s2">&quot;ELAsTiCC-lite&quot;</span><span class="p">:</span>
+
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">days_list</span><span class="p">:</span>
+            
+            <span class="c1"># Set the custom transform and recreate dataloader</span>
+            <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">ELAsTiCC_LC_Dataset</span><span class="p">(</span><span class="n">ELAsTiCC_test_parquet_path</span><span class="p">,</span> <span class="n">include_lc_plots</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">max_n_per_class</span><span class="o">=</span><span class="n">max_n_per_class</span><span class="p">,</span> <span class="n">excluded_classes</span><span class="o">=</span><span class="n">excluded_classes</span><span class="p">)</span>
+            <span class="n">test_dataset</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">truncate_ELAsTiCC_light_curve_by_days_since_trigger</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="n">d</span><span class="p">)</span>
+            <span class="n">test_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">test_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">custom_collate_ELAsTiCC</span><span class="p">,</span> <span class="n">generator</span><span class="o">=</span><span class="n">generator</span><span class="p">)</span>
+            <span class="n">test_loaders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">test_dataloader</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">model_choice</span> <span class="o">==</span> <span class="s2">&quot;ELAsTiCC&quot;</span><span class="p">:</span>
+
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">days_list</span><span class="p">:</span>
+            
+            <span class="c1"># Set the custom transform and recreate dataloader</span>
+            <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">ELAsTiCC_LC_Dataset</span><span class="p">(</span><span class="n">ELAsTiCC_test_parquet_path</span><span class="p">,</span> <span class="n">include_lc_plots</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">max_n_per_class</span><span class="o">=</span><span class="n">max_n_per_class</span><span class="p">,</span> <span class="n">excluded_classes</span><span class="o">=</span><span class="n">excluded_classes</span><span class="p">)</span>
+            <span class="n">test_dataset</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">truncate_ELAsTiCC_light_curve_by_days_since_trigger</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="n">d</span><span class="p">)</span>
+            <span class="n">test_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">test_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">custom_collate_ELAsTiCC</span><span class="p">,</span> <span class="n">generator</span><span class="o">=</span><span class="n">generator</span><span class="p">)</span>
+            <span class="n">test_loaders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">test_dataloader</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">test_loaders</span></div>
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Ved Shah.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

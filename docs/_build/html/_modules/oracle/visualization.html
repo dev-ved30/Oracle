@@ -1,0 +1,423 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>oracle.visualization &mdash; oracle 1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=29a6c3e3"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            oracle
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">src</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">oracle</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">oracle.visualization</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for oracle.visualization</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">umap</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">plotly.express</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">px</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.animation</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">animation</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.patches</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpatches</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.calibration</span><span class="w"> </span><span class="kn">import</span> <span class="n">calibration_curve</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">confusion_matrix</span><span class="p">,</span> <span class="n">ConfusionMatrixDisplay</span><span class="p">,</span> <span class="n">roc_curve</span><span class="p">,</span> <span class="n">roc_auc_score</span>
+
+<span class="n">cm</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;gist_rainbow&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="plot_confusion_matrix">
+<a class="viewcode-back" href="../../oracle.html#oracle.visualization.plot_confusion_matrix">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_confusion_matrix</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">img_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">([</span><span class="s1">&#39;default&#39;</span><span class="p">])</span>
+
+
+    <span class="c1"># Only keep source where a true label exists</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">y_true</span><span class="o">!=</span><span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">y_true</span> <span class="o">=</span> <span class="n">y_true</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">y_pred</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+    
+    <span class="n">n_class</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+    <span class="n">font</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;size&#39;</span>   <span class="p">:</span> <span class="mi">25</span><span class="p">}</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;font&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">font</span><span class="p">)</span>
+    
+    <span class="n">cm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">confusion_matrix</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">),</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">disp</span> <span class="o">=</span> <span class="n">ConfusionMatrixDisplay</span><span class="p">(</span><span class="n">confusion_matrix</span><span class="o">=</span><span class="n">cm</span><span class="p">,</span> <span class="n">display_labels</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
+    <span class="n">disp</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">Blues</span><span class="p">)</span>
+    <span class="n">disp</span><span class="o">.</span><span class="n">im_</span><span class="o">.</span><span class="n">colorbar</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+    
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">disp</span><span class="o">.</span><span class="n">figure_</span>
+    <span class="k">if</span> <span class="n">n_class</span> <span class="o">&gt;</span> <span class="mi">7</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">)</span>
+    
+    <span class="n">fig</span><span class="o">.</span><span class="n">set_figwidth</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">set_figheight</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">disp</span><span class="o">.</span><span class="n">text_</span><span class="o">.</span><span class="n">ravel</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">n_class</span> <span class="o">&gt;</span> <span class="mi">7</span><span class="p">:</span>
+            <span class="n">label</span><span class="o">.</span><span class="n">set_fontsize</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">n_class</span> <span class="o">&lt;=</span> <span class="mi">7</span> <span class="ow">and</span> <span class="n">n_class</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">disp</span><span class="o">.</span><span class="n">ax_</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+            <span class="n">label</span><span class="o">.</span><span class="n">set_fontsize</span><span class="p">(</span><span class="s1">&#39;xx-large&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">disp</span><span class="o">.</span><span class="n">ax_</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+            <span class="n">label</span><span class="o">.</span><span class="n">set_fontsize</span><span class="p">(</span><span class="s1">&#39;xx-large&#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">title</span><span class="p">:</span>
+        <span class="n">disp</span><span class="o">.</span><span class="n">ax_</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Predicted Label&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+        <span class="n">disp</span><span class="o">.</span><span class="n">ax_</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;True Label&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+        <span class="n">disp</span><span class="o">.</span><span class="n">ax_</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">img_file</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">img_file</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="plot_plain_cf">
+<a class="viewcode-back" href="../../oracle.html#oracle.visualization.plot_plain_cf">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_plain_cf</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">img_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">([</span><span class="s1">&#39;default&#39;</span><span class="p">])</span>
+
+    <span class="c1"># Only keep source where a true label exists</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">y_true</span><span class="o">!=</span><span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">y_true</span> <span class="o">=</span> <span class="n">y_true</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">y_pred</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+    
+    <span class="n">cm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">confusion_matrix</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">),</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">disp</span> <span class="o">=</span> <span class="n">ConfusionMatrixDisplay</span><span class="p">(</span><span class="n">confusion_matrix</span><span class="o">=</span><span class="n">cm</span><span class="p">,</span> <span class="n">display_labels</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
+    <span class="n">disp</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">include_values</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">colorbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Blues&#39;</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+    <span class="c1"># 🔹 Remove spines</span>
+    <span class="k">for</span> <span class="n">spine</span> <span class="ow">in</span> <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">spine</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>    
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">img_file</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">img_file</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="plot_roc_curves">
+<a class="viewcode-back" href="../../oracle.html#oracle.visualization.plot_roc_curves">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_roc_curves</span><span class="p">(</span><span class="n">probs_true</span><span class="p">,</span> <span class="n">probs_pred</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">img_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">([</span><span class="s1">&#39;default&#39;</span><span class="p">])</span>
+
+    <span class="c1"># Only keep source where a true label exists</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">probs_true</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">!=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">probs_true</span> <span class="o">=</span> <span class="n">probs_true</span><span class="p">[</span><span class="n">idx</span><span class="p">,:]</span>
+    <span class="n">probs_pred</span> <span class="o">=</span> <span class="n">probs_pred</span><span class="p">[</span><span class="n">idx</span><span class="p">,:]</span>
+
+    <span class="n">chance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">0.001</span><span class="p">,</span><span class="mf">1.01</span><span class="p">,</span><span class="mf">0.001</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">probs_pred</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span><span class="mi">10</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">12</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">16</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">chance</span><span class="p">,</span> <span class="n">chance</span><span class="p">,</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+
+    <span class="n">color_arr</span><span class="o">=</span><span class="p">[</span><span class="n">cm</span><span class="p">(</span><span class="mf">1.</span><span class="o">*</span><span class="n">i</span><span class="o">/</span><span class="n">probs_true</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">probs_true</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+
+    <span class="n">n_classes</span> <span class="o">=</span> <span class="n">probs_true</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>   
+    <span class="n">fpr_all</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_classes</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">chance</span><span class="p">)))</span>
+    <span class="n">tpr_all</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_classes</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">chance</span><span class="p">)))</span>
+    <span class="n">macro_auc</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labels</span><span class="p">):</span>
+
+        <span class="n">score</span> <span class="o">=</span> <span class="n">roc_auc_score</span><span class="p">(</span><span class="n">probs_true</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">probs_pred</span><span class="p">[:,</span> <span class="n">i</span><span class="p">])</span>
+        <span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">roc_curve</span><span class="p">(</span><span class="n">probs_true</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">probs_pred</span><span class="p">[:,</span> <span class="n">i</span><span class="p">])</span>
+
+        <span class="n">macro_auc</span> <span class="o">+=</span> <span class="n">score</span>
+        <span class="n">fpr_all</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">chance</span>
+        <span class="n">tpr_all</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">chance</span><span class="p">,</span> <span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> (AUC = </span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color_arr</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="n">macro_auc</span> <span class="o">=</span> <span class="n">macro_auc</span><span class="o">/</span><span class="n">probs_true</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">fpr_macro</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">fpr_all</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">tpr_macro</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tpr_all</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fpr_macro</span><span class="p">,</span> <span class="n">tpr_macro</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">4</span> <span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Macro avg (AUC = </span><span class="si">{</span><span class="n">macro_auc</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;False Positive Rate&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;True Positive Rate&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper center&#39;</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.15</span><span class="p">),</span> <span class="n">fancybox</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">shadow</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ncol</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">fontsize</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">img_file</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">img_file</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="plot_train_val_history">
+<a class="viewcode-back" href="../../oracle.html#oracle.visualization.plot_train_val_history">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_train_val_history</span><span class="p">(</span><span class="n">train_loss_history</span><span class="p">,</span> <span class="n">val_loss_history</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+
+    <span class="n">window_size</span> <span class="o">=</span> <span class="mi">10</span>
+
+    <span class="n">rolling_train</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">rolling_val</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">train_loss_history</span><span class="p">)</span> <span class="o">-</span> <span class="n">window_size</span><span class="p">):</span>
+
+        <span class="n">rolling_train</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">train_loss_history</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">window_size</span><span class="p">]))</span>
+        <span class="n">rolling_val</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">val_loss_history</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">window_size</span><span class="p">]))</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="c1">#s.append(i + window_size)</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">ncols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">nrows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span> <span class="n">layout</span><span class="o">=</span><span class="s2">&quot;constrained&quot;</span><span class="p">)</span>
+
+    <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">train_loss_history</span><span class="p">))),</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">train_loss_history</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Train Loss&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;C0&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rolling_train</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Rolling Avg Train Loss&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;C1&#39;</span><span class="p">)</span>
+
+    <span class="c1"># axs[0].set_ylabel(&quot;Mean log loss&quot;, fontsize=&#39;x-large&#39;)</span>
+    <span class="c1"># axs[0].legend()</span>
+    <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
+
+    <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">val_loss_history</span><span class="p">))),</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">val_loss_history</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Validation Loss&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;C0&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rolling_val</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Rolling Avg Validation Loss&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;C1&#39;</span><span class="p">)</span>
+
+    <span class="c1"># axs[1].set_xlabel(&quot;Epoch&quot;, fontsize=&#39;x-large&#39;)</span>
+    <span class="c1"># axs[1].set_ylabel(&quot;Mean log loss&quot;, fontsize=&#39;x-large&#39;)</span>
+    <span class="c1"># axs[1].legend()</span>
+
+    <span class="c1"># axs[0].set_ylim(-3.4, -1)</span>
+    <span class="c1"># axs[1].set_ylim(-3.4, -1)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="plot_class_wise_performance_over_all_phases">
+<a class="viewcode-back" href="../../oracle.html#oracle.visualization.plot_class_wise_performance_over_all_phases">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_class_wise_performance_over_all_phases</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="n">metrics_dictionary</span><span class="p">,</span> <span class="n">model_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">([</span><span class="s1">&#39;default&#39;</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">depth</span> <span class="ow">in</span> <span class="n">metrics_dictionary</span><span class="p">:</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">metrics_dictionary</span><span class="p">[</span><span class="n">depth</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+
+            <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">,</span><span class="s1">&#39;macro avg&#39;</span><span class="p">,</span><span class="s1">&#39;weighted avg&#39;</span><span class="p">]:</span>
+
+                <span class="n">days</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">values</span>
+
+                <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">days</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">marker</span> <span class="o">=</span> <span class="s1">&#39;o&#39;</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Days from first detection&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;xx-large&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;xx-large&#39;</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower right&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">days</span><span class="p">,</span> <span class="n">days</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">model_dir</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/plots/depth</span><span class="si">{</span><span class="n">depth</span><span class="si">}</span><span class="s2">/class_wise_</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">.pdf&quot;</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+
+<div class="viewcode-block" id="plot_average_performance_over_all_phases">
+<a class="viewcode-back" href="../../oracle.html#oracle.visualization.plot_average_performance_over_all_phases">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_average_performance_over_all_phases</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="n">metrics_dictionary</span><span class="p">,</span> <span class="n">model_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">([</span><span class="s1">&#39;default&#39;</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">depth</span> <span class="ow">in</span> <span class="n">metrics_dictionary</span><span class="p">:</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">metrics_dictionary</span><span class="p">[</span><span class="n">depth</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+
+            <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;macro avg&#39;</span><span class="p">]:</span> <span class="c1"># Put things like [&#39;macro avg&#39;,&#39;weighted avg&#39;]</span>
+
+                <span class="n">days</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">values</span>
+
+                <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">days</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">c</span><span class="si">}</span><span class="s2">(Depth=</span><span class="si">{</span><span class="n">depth</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">marker</span> <span class="o">=</span> <span class="s1">&#39;o&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="n">days</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Days from first detection&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;xx-large&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;xx-large&#39;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower right&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">days</span><span class="p">,</span> <span class="n">days</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">model_dir</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/plots/average_</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">.pdf&quot;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="plot_umap">
+<a class="viewcode-back" href="../../oracle.html#oracle.visualization.plot_umap">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_umap</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">bts_classes</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">model_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">([</span><span class="s1">&#39;default&#39;</span><span class="p">])</span>
+
+    <span class="n">reducer</span> <span class="o">=</span> <span class="n">umap</span><span class="o">.</span><span class="n">UMAP</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+    <span class="n">umap_embedding</span> <span class="o">=</span> <span class="n">reducer</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">umap_embedding</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">umap_embedding</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">classes</span><span class="p">):</span>
+
+        <span class="n">idx_class</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">classes</span><span class="p">)</span><span class="o">==</span><span class="n">c</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">idx_class</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">idx_class</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper center&#39;</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.15</span><span class="p">),</span> <span class="n">fancybox</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">shadow</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ncol</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">fontsize</span> <span class="o">=</span> <span class="mi">12</span><span class="p">)</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;UMAP 1&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;UMAP 2&#39;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trigger+</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2"> days&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">model_dir</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/plots/umap/umap_trigger+</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2">.pdf&quot;</span><span class="p">)</span> 
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">umap_embedding</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;umap1&#39;</span><span class="p">,</span><span class="s1">&#39;umap2&#39;</span><span class="p">])</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;class&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">classes</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;raw_class&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bts_classes</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s1">&#39;umap1&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">&#39;umap2&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;class&quot;</span><span class="p">,</span> <span class="n">hover_data</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;class&#39;</span><span class="p">,</span> <span class="s1">&#39;raw_class&#39;</span><span class="p">])</span><span class="c1">#, cmap=&#39;viridis&#39;, marker=markers[i])</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/plots/umap/umap_trigger+</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2">.html&quot;</span><span class="p">)</span></div>
+
+
+        
+
+        
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Ved Shah.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

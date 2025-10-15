@@ -1,0 +1,371 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>oracle.tester &mdash; oracle 1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=29a6c3e3"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            oracle
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">src</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">oracle</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">oracle.tester</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for oracle.tester</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">classification_report</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">reduce</span>    
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">oracle.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<div class="viewcode-block" id="Tester">
+<a class="viewcode-back" href="../../oracle.html#oracle.tester.Tester">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Tester</span><span class="p">:</span>
+    
+<div class="viewcode-block" id="Tester.setup_testing">
+<a class="viewcode-back" href="../../oracle.html#oracle.tester.Tester.setup_testing">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setup_testing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_dir</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span> <span class="o">=</span> <span class="n">model_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span></div>
+
+
+<div class="viewcode-block" id="Tester.create_loss_history_plot">
+<a class="viewcode-back" href="../../oracle.html#oracle.tester.Tester.create_loss_history_plot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_loss_history_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="c1"># Load the train and validation loss history</span>
+        <span class="n">train_loss_history</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/train_loss_history.npy&quot;</span><span class="p">)</span>
+        <span class="n">val_loss_history</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/val_loss_history.npy&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Save the plot</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/loss.pdf&quot;</span>
+        <span class="n">plot_train_val_history</span><span class="p">(</span><span class="n">train_loss_history</span><span class="p">,</span> <span class="n">val_loss_history</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Tester.create_metric_phase_plots">
+<a class="viewcode-back" href="../../oracle.html#oracle.tester.Tester.create_metric_phase_plots">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_metric_phase_plots</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;f1-score&#39;</span><span class="p">,</span><span class="s1">&#39;precision&#39;</span><span class="p">,</span><span class="s1">&#39;recall&#39;</span><span class="p">]:</span>
+            <span class="n">metrics_dictionary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_metric_over_all_phases</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
+            <span class="n">plot_class_wise_performance_over_all_phases</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="n">metrics_dictionary</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="p">)</span>
+            <span class="n">plot_average_performance_over_all_phases</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="n">metrics_dictionary</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Tester.create_classification_report">
+<a class="viewcode-back" href="../../oracle.html#oracle.tester.Tester.create_classification_report">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_classification_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        
+        <span class="c1"># Only keep source where a true label exists</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">y_true</span><span class="o">!=</span><span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">y_true</span> <span class="o">=</span> <span class="n">y_true</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="n">y_pred</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+        <span class="n">report</span> <span class="o">=</span> <span class="n">classification_report</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">file_name</span><span class="p">:</span>
+            <span class="n">report_dict</span> <span class="o">=</span> <span class="n">classification_report</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">output_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">report_dict</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s1">&#39;Class&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">report</span></div>
+
+
+<div class="viewcode-block" id="Tester.get_metric_over_all_phases">
+<a class="viewcode-back" href="../../oracle.html#oracle.tester.Tester.get_metric_over_all_phases">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_metric_over_all_phases</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric</span><span class="p">):</span>
+        
+        <span class="c1"># Make sure metric is valid</span>
+        <span class="k">assert</span> <span class="n">metric</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;f1-score&#39;</span><span class="p">,</span><span class="s1">&#39;precision&#39;</span><span class="p">,</span><span class="s1">&#39;recall&#39;</span><span class="p">]</span>
+
+        <span class="n">nodes_by_depth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">taxonomy</span><span class="o">.</span><span class="n">get_nodes_by_depth</span><span class="p">()</span>
+
+        <span class="n">metrics_dictionary</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">depth</span> <span class="ow">in</span> <span class="n">nodes_by_depth</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="n">depth</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+
+                <span class="n">reports_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/reports/depth</span><span class="si">{</span><span class="n">depth</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">)</span>
+                <span class="n">reports</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">reports_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*.csv&quot;</span><span class="p">))</span>
+                <span class="n">reports</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+                
+                <span class="n">day_wise_metrics</span> <span class="o">=</span> <span class="p">[]</span>
+
+                <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">reports</span><span class="p">:</span>
+
+                    <span class="n">day</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">report</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;+&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="s1">&#39;Class&#39;</span><span class="p">)[[</span><span class="n">metric</span><span class="p">]]</span>
+                    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="n">metric</span><span class="p">:</span><span class="n">day</span><span class="p">})</span>
+                    <span class="n">day_wise_metrics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+
+                <span class="n">combined_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">day_wise_metrics</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s1">&#39;inner&#39;</span><span class="p">)</span>
+                <span class="n">combined_df</span> <span class="o">=</span> <span class="n">combined_df</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">combined_df</span><span class="o">.</span><span class="n">columns</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">metrics_dictionary</span><span class="p">[</span><span class="n">depth</span><span class="p">]</span> <span class="o">=</span> <span class="n">combined_df</span>
+
+        <span class="k">return</span> <span class="n">metrics_dictionary</span></div>
+
+    
+<div class="viewcode-block" id="Tester.make_embeddings_for_AD">
+<a class="viewcode-back" href="../../oracle.html#oracle.tester.Tester.make_embeddings_for_AD">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_embeddings_for_AD</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_loader</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="n">nodes_by_depth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">taxonomy</span><span class="o">.</span><span class="n">get_nodes_by_depth</span><span class="p">()</span>
+
+        <span class="n">true_classes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">raw_classes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">combined_embeddings</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;==========</span><span class="se">\n</span><span class="s1">Starting Analysis for Trigger + </span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s1"> days...&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Run inference on the test set and combine the output dataframes</span>
+        <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">test_loader</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Testing&#39;</span><span class="p">):</span>
+
+            <span class="c1"># Move everything to the device</span>
+            <span class="n">batch</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">batch</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+
+            <span class="n">embeddings</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_latent_space_embeddings</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">())</span>
+
+            <span class="n">true_classes</span> <span class="o">+=</span> <span class="n">batch</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">raw_classes</span> <span class="o">+=</span> <span class="n">batch</span><span class="p">[</span><span class="s1">&#39;raw_label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">ids</span> <span class="o">+=</span> <span class="n">batch</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+            <span class="n">combined_embeddings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>
+        
+        <span class="n">true_classes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">true_classes</span><span class="p">)</span>
+        <span class="n">combined_embeddings</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">combined_embeddings</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/plots/umap&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">plot_umap</span><span class="p">(</span><span class="n">combined_embeddings</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">true_classes</span><span class="p">,</span> <span class="n">raw_classes</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">model_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="p">)</span>
+
+        <span class="n">combined_embeddings</span><span class="p">[</span><span class="s1">&#39;class&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">true_classes</span>
+        <span class="n">combined_embeddings</span><span class="p">[</span><span class="s1">&#39;raw_class&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_classes</span>
+        <span class="n">combined_embeddings</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ids</span>
+
+        <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/embeddings&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">combined_embeddings</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/embeddings/embeddings+</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2">.csv&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Tester.merge_performance_tables">
+<a class="viewcode-back" href="../../oracle.html#oracle.tester.Tester.merge_performance_tables">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">merge_performance_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">days</span><span class="p">):</span>
+
+        <span class="n">levels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;1&#39;</span><span class="p">,</span><span class="s1">&#39;2&#39;</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">levels</span><span class="p">:</span>
+
+            <span class="n">data_frames</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">days</span><span class="p">:</span>
+
+                <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/reports/depth</span><span class="si">{</span><span class="n">level</span><span class="si">}</span><span class="s2">/report_trigger+</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2">.csv&quot;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;support&quot;</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Class&#39;</span>
+                <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;precision&#39;</span><span class="p">:</span> <span class="s1">&#39;$p_{&#39;</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s1">&#39;}$&#39;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;recall&#39;</span><span class="p">:</span> <span class="s1">&#39;$r_{&#39;</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s1">&#39;}$&#39;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;f1-score&#39;</span><span class="p">:</span> <span class="s1">&#39;$f1_{&#39;</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s1">&#39;}$&#39;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">data_frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+
+            <span class="n">df_merged</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span>  <span class="n">left</span><span class="p">,</span><span class="n">right</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">left</span><span class="p">,</span><span class="n">right</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span><span class="n">on</span><span class="o">=</span><span class="s1">&#39;Class&#39;</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">data_frames</span><span class="p">)</span>
+            <span class="n">df_merged</span> <span class="o">=</span> <span class="n">df_merged</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">df_merged</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;f1&quot;</span><span class="p">)]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">df_merged</span><span class="o">.</span><span class="n">to_latex</span><span class="p">(</span><span class="n">float_format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Tester.run_all_analysis">
+<a class="viewcode-back" href="../../oracle.html#oracle.tester.Tester.run_all_analysis">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_all_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_loader</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="n">nodes_by_depth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">taxonomy</span><span class="o">.</span><span class="n">get_nodes_by_depth</span><span class="p">()</span>
+
+        <span class="n">true_classes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">combined_pred_df</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">combined_true_df</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;==========</span><span class="se">\n</span><span class="s1">Starting Analysis for Trigger + </span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s1"> days...&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Run inference on the test set and combine the output dataframes</span>
+        <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">test_loader</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Testing&#39;</span><span class="p">):</span>
+
+            <span class="c1"># Move everything to the device</span>
+            <span class="n">batch</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">batch</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+            <span class="c1"># Run inference and get the predictions df</span>
+            <span class="n">pred_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_class_probabilities_df</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+
+            <span class="c1"># Make dataframe for true labels</span>
+            <span class="n">true_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">taxonomy</span><span class="o">.</span><span class="n">get_hierarchical_one_hot_encoding</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
+            <span class="n">true_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">true_df</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">pred_df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+
+            <span class="n">true_classes</span> <span class="o">+=</span> <span class="n">batch</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">combined_pred_df</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pred_df</span><span class="p">)</span>
+            <span class="n">combined_true_df</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">true_df</span><span class="p">)</span>
+        
+        <span class="n">true_classes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">true_classes</span><span class="p">)</span>
+        <span class="n">combined_pred_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">combined_pred_df</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">combined_true_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">combined_true_df</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Run the analysis on the combined dataframe for each level</span>
+        <span class="k">for</span> <span class="n">depth</span> <span class="ow">in</span> <span class="n">nodes_by_depth</span><span class="p">:</span>
+            
+            <span class="c1"># Skip the root node since it will always have a probability of 1</span>
+            <span class="k">if</span> <span class="n">depth</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;----------</span><span class="se">\n</span><span class="s1">DEPTH: </span><span class="si">{</span><span class="n">depth</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+                <span class="c1"># Make dirs for plots and reports</span>
+                <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/plots/depth</span><span class="si">{</span><span class="n">depth</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/reports/depth</span><span class="si">{</span><span class="n">depth</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+                <span class="c1"># Get all the nodes at depth </span>
+                <span class="n">nodes</span> <span class="o">=</span> <span class="n">nodes_by_depth</span><span class="p">[</span><span class="n">depth</span><span class="p">]</span>
+
+                <span class="c1"># Only select the classes at the appropriate depth</span>
+                <span class="n">level_pred_df</span> <span class="o">=</span> <span class="n">combined_pred_df</span><span class="p">[</span><span class="n">nodes</span><span class="p">]</span>
+                <span class="n">level_pred_classes</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">level_pred_df</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+
+                <span class="n">level_true_df</span> <span class="o">=</span> <span class="n">combined_true_df</span><span class="p">[</span><span class="n">nodes</span><span class="p">]</span>
+
+                <span class="c1"># Compute the true class at the appropriate level</span>
+                <span class="n">true_paths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">taxonomy</span><span class="o">.</span><span class="n">get_paths</span><span class="p">(</span><span class="n">true_classes</span><span class="p">)</span>
+
+                <span class="c1"># For all the true classes, grab the label from the correct level</span>
+                <span class="n">level_true_classes</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">true_paths</span><span class="p">)):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">level_true_classes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">true_paths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">depth</span><span class="p">])</span> 
+                    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                        <span class="c1"># For some objects, a label may not exist at finer levels</span>
+                        <span class="n">level_true_classes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+                
+                <span class="c1"># Make the recall confusion matrix plot</span>
+                <span class="n">cf_title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Trigger+</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2"> days&quot;</span>
+                <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/plots/depth</span><span class="si">{</span><span class="n">depth</span><span class="si">}</span><span class="s2">/cf_recall&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">cf_img_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/plots/depth</span><span class="si">{</span><span class="n">depth</span><span class="si">}</span><span class="s2">/cf_recall/cf_trigger+</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2">.pdf&quot;</span>
+                <span class="n">plot_confusion_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">level_true_classes</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">level_pred_classes</span><span class="p">),</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">cf_title</span><span class="p">,</span> <span class="n">img_file</span><span class="o">=</span><span class="n">cf_img_file</span><span class="p">)</span>
+
+                <span class="c1"># Make the precision confusion matrix plot</span>
+                <span class="n">cf_title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Trigger+</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2"> days&quot;</span>
+                <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/plots/depth</span><span class="si">{</span><span class="n">depth</span><span class="si">}</span><span class="s2">/cf_precision&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">cf_img_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/plots/depth</span><span class="si">{</span><span class="n">depth</span><span class="si">}</span><span class="s2">/cf_precision/cf_trigger+</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2">.pdf&quot;</span>
+                <span class="n">plot_confusion_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">level_true_classes</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">level_pred_classes</span><span class="p">),</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="s1">&#39;pred&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">cf_title</span><span class="p">,</span> <span class="n">img_file</span><span class="o">=</span><span class="n">cf_img_file</span><span class="p">)</span>
+
+                <span class="c1"># cf_title = f&quot;Trigger+{d} days&quot;</span>
+                <span class="c1"># Path(f&quot;{self.model_dir}/plots/depth{depth}/cf_plain&quot;).mkdir(parents=True, exist_ok=True)</span>
+                <span class="c1"># cf_img_file = f&quot;{self.model_dir}/plots/depth{depth}/cf_plain/cf_trigger+{d}.png&quot;</span>
+                <span class="c1"># plot_plain_cf(np.array(level_true_classes), np.array(level_pred_classes), nodes, title=cf_title, img_file=cf_img_file)</span>
+
+                <span class="c1"># Make the ROC plot</span>
+                <span class="n">roc_title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Trigger+</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2"> days&quot;</span>
+                <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/plots/depth</span><span class="si">{</span><span class="n">depth</span><span class="si">}</span><span class="s2">/roc&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">roc_img_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/plots/depth</span><span class="si">{</span><span class="n">depth</span><span class="si">}</span><span class="s2">/roc/roc_trigger+</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2">.pdf&quot;</span>
+                <span class="n">plot_roc_curves</span><span class="p">(</span><span class="n">level_true_df</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">level_pred_df</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">roc_title</span><span class="p">,</span> <span class="n">img_file</span><span class="o">=</span><span class="n">roc_img_file</span><span class="p">)</span>
+
+                <span class="c1"># Make classification report</span>
+                <span class="n">report_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="si">}</span><span class="s2">/reports/depth</span><span class="si">{</span><span class="n">depth</span><span class="si">}</span><span class="s2">/report_trigger+</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2">.csv&quot;</span>
+                <span class="n">report</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_classification_report</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">level_true_classes</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">level_pred_classes</span><span class="p">),</span> <span class="n">report_file</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">report</span><span class="p">)</span></div>
+</div>
+
+
+
+
+
+
+
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Ved Shah.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

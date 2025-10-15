@@ -103,7 +103,6 @@ class ORACLE1_ELAsTiCC(GRU_MD):
         
         return preds_by_depth
 
-
 class ORACLE1_ELAsTiCC_lite(GRU):
 
     def __init__(self, model_dir=default_oracle1_elasticc_lite_model_path):
@@ -159,8 +158,6 @@ class ORACLE1_ELAsTiCC_lite(GRU):
             preds_by_depth[level] = level_classes[np.argmax(scores_by_depth[level].to_numpy(), axis=1)][0]
         
         return preds_by_depth
-
-
 
 if __name__=='__main__':
 

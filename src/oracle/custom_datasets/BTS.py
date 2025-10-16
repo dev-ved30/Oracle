@@ -292,10 +292,10 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         Converts magnitude measurements to flux values and computes the corresponding flux uncertainties.
         The method processes the dataframe stored in `self.parquet_df` by adding two new columns:
             - "flux": Computed from the "magpsf" column using the relation:
-                        flux = F0 * 10^(-0.4 * magpsf)
+                flux = F0 * 10^(-0.4 * magpsf)
                 where F0 is set to 3631.0 * 1e6 micro-Janskys (µJy).
             - "flux_err": Calculated via error propagation using both "magpsf" and "sigmapsf" columns:
-                        flux_err = (0.4 * ln(10)) * F0 * 10^(-0.4 * magpsf) * sigmapsf
+                flux_err = (0.4 * ln(10)) * F0 * 10^(-0.4 * magpsf) * sigmapsf
 
         Note:
             - Element-wise operations are employed to map the magnitude values (and their uncertainties)
@@ -460,14 +460,16 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
     def get_lc_plots(self, x_ts):
         """
         Generates a light curve plot image from time series data and returns it as a Torch tensor.
+
         Parameters:
             x_ts (numpy.ndarray): 2D array where each row corresponds to a time step and columns represent
-                                  various features including 'jd' (Julian Date), 'flux' (observed flux),
-                                  'flux_err' (flux error), and 'fid' (filter identifier). The feature indices
-                                  are determined using the global variable time_dependent_feature_list.
+                various features including 'jd' (Julian Date), 'flux' (observed flux),
+                'flux_err' (flux error), and 'fid' (filter identifier). The feature indices
+                are determined using the global variable time_dependent_feature_list.
+
         Returns:
-            torch.Tensor: A tensor representing the RGB image of the generated light curve plot with shape
-                          (3, H, W), where H and W are the height and width of the image in pixels.
+            torch.Tensor: A tensor representing the RGB image of the generated light curve plot 
+            with shape (3, H, W), where H and W are the height and width of the image in pixels.
 
         Note:
             - The function uses matplotlib to create the plot and PIL to handle image conversion.
@@ -540,10 +542,11 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
 
         Parameters:
             examples (dict): A dictionary containing image data corresponding to each filter reference,
-                             with keys formatted as '{filter}_reference'.
+                with keys formatted as '{filter}_reference'.
+
         Returns:
             torch.Tensor: A tensor of shape (len(ztf_filters), img_length, img_length) representing the
-                          postage stamp images, with pixel values scaled to the range [0, 255].
+            postage stamp images, with pixel values scaled to the range [0, 255].
         """
 
         img_length = ztf_alert_image_dimension[0]
@@ -563,12 +566,14 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         dictionary. The canvas is then plotted using matplotlib, without axis ticks or spines, and saved into a PNG image
         buffer. This image is subsequently loaded via PIL, converted to a NumPy array with channel-first ordering, and finally
         wrapped into a PyTorch tensor.
+
         Parameters:
             examples (dict): A dictionary containing image data. For every filter in the global variable ztf_filters, the key
-                             corresponding to the image is expected to be formatted as "{filter}_reference".
+                corresponding to the image is expected to be formatted as "{filter}_reference".
+
         Returns:
             torch.Tensor: The resulting image as a PyTorch tensor with shape (C, H, W), where C is the number of color channels,
-                          and H and W correspond to the height and width of the assembled image, respectively.
+            and H and W correspond to the height and width of the assembled image, respectively.
 
         Warning:
             - [TODO] This function can be optimized further to avoid using matplotlib and PIL altogether. Its really slow right now...
@@ -628,14 +633,15 @@ def truncate_BTS_light_curve_by_days_since_trigger(x_ts, x_static, d=None, add_j
     Truncate the BTS light curve based on the number of days since the first trigger.
     This function selects observations from the time-series data (x_ts) that occur within a specified number of days (d) from the first detection (trigger).
     It also optionally adds jitter to the flux measurements and normalizes the flux values.
+    
     Parameters:
         x_ts (numpy.ndarray): Time-dependent features array where each row represents an observation. 
-                              Expected to contain the following features:
-                              - 'jd': Julian date of the observation.
-                              - 'magpsf': magnitude.
-                              - 'sigmapsf': Uncertainty of the magnitude.
-                              - 'fid': Filter identifier.
-                              - 'photflag': Photometric flag (added as an extra column to maintain compatibility with ZTF sims and always assumed to be 1).
+            Expected to contain the following features:
+                - 'jd': Julian date of the observation.
+                - 'magpsf': magnitude.
+                - 'sigmapsf': Uncertainty of the magnitude.
+                - 'fid': Filter identifier.
+                - 'photflag': Photometric flag (added as an extra column to maintain compatibility with ZTF sims and always assumed to be 1).
         x_static (numpy.ndarray): Corresponding static features array for each observation.
         d (float, optional): Maximum number of days from the trigger within which to keep observations.
                              If None, a random threshold is generated using 2^(uniform(0, 11)).
@@ -779,12 +785,14 @@ def show_batch(images, labels, n=16):
     Display a grid of images with corresponding labels.
     This function creates a visual representation of the first n images from the provided dataset.
     It arranges the images in a square grid and annotates each image with its corresponding label.
+
     Parameters:
         images (Tensor or array-like): Collection of images to be displayed. Each image is expected to have the shape
             (C, H, W), where C is the number of channels. For grayscale images, C should be 1.
         labels (Sequence): Sequence of labels corresponding to each image.
         n (int, optional): The number of images to display. The function uses the first n images from the collection.
             Defaults to 16.
+
     Displays:
         A matplotlib figure containing a grid of images, each annotated with its respective label.
     """

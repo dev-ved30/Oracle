@@ -44,21 +44,21 @@ def run_testing_loop(args):
     Runs the testing loop for a specified model using the provided arguments.
 
     This function performs the following steps:
-    1. Extracts key parameters (batch_size, max_n_per_class, and model directory) from the input arguments.
-    2. Reads the model choice from 'train_args.csv' located in the specified model directory.
-    3. Creates necessary subdirectories ('plots' and 'reports') within the model directory if they do not already exist.
-    4. Loads the appropriate model architecture based on the model choice and loads its pre-trained weights from 'best_model_f1.pth'.
-    5. Sets up the model for testing and moves it to the designated device.
-    6. Retrieves test datasets for multiple default days (ignoring the 'Anomaly' class) and runs comprehensive analysis on each.
-    7. Retrieves additional test datasets (using an alternative mapping for anomalies) to generate embeddings for anomaly detection.
-    8. Generates and saves performance plots, including loss history and metrics across different phases.
-    9. Merges and displays performance tables based on a predefined list of thresholds.
+        - Extracts key parameters (batch_size, max_n_per_class, and model directory) from the input arguments.
+        - Reads the model choice from 'train_args.csv' located in the specified model directory.
+        - Creates necessary subdirectories ('plots' and 'reports') within the model directory if they do not already exist.
+        - Loads the appropriate model architecture based on the model choice and loads its pre-trained weights from 'best_model_f1.pth'.
+        - Sets up the model for testing and moves it to the designated device.
+        - Retrieves test datasets for multiple default days (ignoring the 'Anomaly' class) and runs comprehensive analysis on each.
+        - Retrieves additional test datasets (using an alternative mapping for anomalies) to generate embeddings for anomaly detection.
+        - Generates and saves performance plots, including loss history and metrics across different phases.
+        - Merges and displays performance tables based on a predefined list of thresholds.
 
     Parameters:
         args (Namespace): An object containing the following attributes:
-            - batch_size (int): The batch size for data loading.
-            - max_n_per_class (int): The maximum number of samples per class for testing.
-            - dir (str): The directory path where the model and related files are stored.
+            1. batch_size (int): The batch size for data loading.
+            2. max_n_per_class (int): The maximum number of samples per class for testing.
+            3. dir (str): The directory path where the model and related files are stored.
 
     Returns:
         None

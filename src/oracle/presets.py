@@ -147,10 +147,8 @@ def get_val_loader(model_choice, batch_size, val_truncation_days, excluded_class
             A list of classes to be excluded from the dataset. Defaults to an empty list.
 
     Returns:
-        tuple:
-            A tuple containing:
-            - DataLoader: The DataLoader for the concatenated validation dataset with the specified batch size
-              and collate function, constructed with a CPU-based torch.Generator.
+        tuple: A tuple containing:
+            - DataLoader: The DataLoader for the concatenated validation dataset with the specified batch size and collate function, constructed with a CPU-based torch.Generator.
             - list: A list of validation labels obtained from the first dataset in the list via get_all_labels().
     """
 
@@ -226,7 +224,8 @@ def get_test_loaders(model_choice, batch_size, max_n_per_class, days_list, exclu
     Returns:
         List[DataLoader]: A list of DataLoader objects, each configured with a custom transformation based on a corresponding
         day from days_list.
-    Notes:
+
+    Note:
         Each DataLoader is constructed for a specific truncation of the light curve based on the day value.
         The generator for DataLoader shuffling is explicitly created on the CPU.
     """

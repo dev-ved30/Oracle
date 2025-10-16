@@ -101,19 +101,19 @@
 <p class="rubric">Functions</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="../source/oracle.pretrained.html#oracle.pretrained.ELAsTiCC.augment_table" title="oracle.pretrained.ELAsTiCC.augment_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">augment_table</span></code></a>(table)</p></td>
-<td><p>Hello function to make sure Sphinx sees something.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../source/oracle.pretrained.ELAsTiCC.html#oracle.pretrained.ELAsTiCC.augment_table" title="oracle.pretrained.ELAsTiCC.augment_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">augment_table</span></code></a>(table)</p></td>
+<td><p>Augments an astronomical observation table by cleaning and transforming its data. This function performs several modifications on the input table:     - Creates a copy of the table to avoid modifying the original. - Removes rows where the 'PHOTFLAG' column indicates saturation (using a bitmask with 1024). - Reassigns the 'PHOTFLAG' column values:           * Sets to 1 for detections (when the bitmask with 4096 is non-zero). * Sets to 0 for non-detections. - Converts band labels in the 'BAND' column to mean wavelengths using the       'LSST_passband_to_wavelengths' mapping. - Normalizes time data by subtracting the Modified Julian Date (MJD) of the first       detection from all 'MJD' entries. - Reorders the columns based on the predefined list 'time_dependent_feature_list'. - Iterates over the metadata ('meta') of the table and replaces any values that       match entries in 'missing_data_flags' with 'flag_value'.</p></td>
 </tr>
 </tbody>
 </table>
 <p class="rubric">Classes</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="../source/oracle.pretrained.html#oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC" title="oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ORACLE1_ELAsTiCC</span></code></a>([model_dir])</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../source/oracle.pretrained.ELAsTiCC.html#oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC" title="oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ORACLE1_ELAsTiCC</span></code></a>([model_dir])</p></td>
+<td><p>ORACLE1_ELAsTiCC is a model class that inherits from GRU_MD designed to load a pre-trained ELAsTiCC model and perform predictions on time series data augmented with static features.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../source/oracle.pretrained.html#oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC_lite" title="oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC_lite"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ORACLE1_ELAsTiCC_lite</span></code></a>([model_dir])</p></td>
-<td><p></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../source/oracle.pretrained.ELAsTiCC.html#oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC_lite" title="oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC_lite"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ORACLE1_ELAsTiCC_lite</span></code></a>([model_dir])</p></td>
+<td><p>Predict class probability scores for a single time-series table.</p></td>
 </tr>
 </tbody>
 </table>

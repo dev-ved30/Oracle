@@ -4,21 +4,11 @@ oracle.pretrained package
 Submodules
 ----------
 
-oracle.pretrained.BTS module
-----------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: oracle.pretrained.BTS
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-oracle.pretrained.ELAsTiCC module
----------------------------------
-
-.. automodule:: oracle.pretrained.ELAsTiCC
-   :members:
-   :show-inheritance:
-   :undoc-members:
+   oracle.pretrained.BTS
+   oracle.pretrained.ELAsTiCC
 
 Module contents
 ---------------

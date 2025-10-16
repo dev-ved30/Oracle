@@ -102,24 +102,24 @@
 <p class="rubric">Functions</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="../source/oracle.custom_datasets.html#oracle.custom_datasets.ELAsTiCC.custom_collate_ELAsTiCC" title="oracle.custom_datasets.ELAsTiCC.custom_collate_ELAsTiCC"><code class="xref py py-obj docutils literal notranslate"><span class="pre">custom_collate_ELAsTiCC</span></code></a>(batch)</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../source/oracle.custom_datasets.ELAsTiCC.html#oracle.custom_datasets.ELAsTiCC.custom_collate_ELAsTiCC" title="oracle.custom_datasets.ELAsTiCC.custom_collate_ELAsTiCC"><code class="xref py py-obj docutils literal notranslate"><span class="pre">custom_collate_ELAsTiCC</span></code></a>(batch)</p></td>
+<td><p>Custom collation function for processing a batch of ELAsTiCC dataset samples.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../source/oracle.custom_datasets.html#oracle.custom_datasets.ELAsTiCC.show_batch" title="oracle.custom_datasets.ELAsTiCC.show_batch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">show_batch</span></code></a>(images, labels[, n])</p></td>
-<td><p></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../source/oracle.custom_datasets.ELAsTiCC.html#oracle.custom_datasets.ELAsTiCC.show_batch" title="oracle.custom_datasets.ELAsTiCC.show_batch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">show_batch</span></code></a>(images, labels[, n])</p></td>
+<td><p>Display a grid of images with corresponding labels. This function creates a visual representation of the first n images from the provided dataset. It arranges the images in a square grid and annotates each image with its corresponding label. :param images: Collection of images to be displayed. Each image is expected to have the shape                (C, H, W), where C is the number of channels. For grayscale images, C should be 1. :type images: Tensor or array-like :param labels: Sequence of labels corresponding to each image. :type labels: Sequence :param n: The number of images to display. The function uses the first n images from the collection. Defaults to 16. :type n: int, optional.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../source/oracle.custom_datasets.html#oracle.custom_datasets.ELAsTiCC.truncate_ELAsTiCC_light_curve_by_days_since_trigger" title="oracle.custom_datasets.ELAsTiCC.truncate_ELAsTiCC_light_curve_by_days_since_trigger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">truncate_ELAsTiCC_light_curve_by_days_since_trigger</span></code></a>(x_ts)</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../source/oracle.custom_datasets.ELAsTiCC.html#oracle.custom_datasets.ELAsTiCC.truncate_ELAsTiCC_light_curve_by_days_since_trigger" title="oracle.custom_datasets.ELAsTiCC.truncate_ELAsTiCC_light_curve_by_days_since_trigger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">truncate_ELAsTiCC_light_curve_by_days_since_trigger</span></code></a>(x_ts)</p></td>
+<td><p>Truncates the light curve data to only include observations within a specified number of days since the first detection.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../source/oracle.custom_datasets.html#oracle.custom_datasets.ELAsTiCC.truncate_ELAsTiCC_light_curve_fractionally" title="oracle.custom_datasets.ELAsTiCC.truncate_ELAsTiCC_light_curve_fractionally"><code class="xref py py-obj docutils literal notranslate"><span class="pre">truncate_ELAsTiCC_light_curve_fractionally</span></code></a>(x_ts)</p></td>
-<td><p></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../source/oracle.custom_datasets.ELAsTiCC.html#oracle.custom_datasets.ELAsTiCC.truncate_ELAsTiCC_light_curve_fractionally" title="oracle.custom_datasets.ELAsTiCC.truncate_ELAsTiCC_light_curve_fractionally"><code class="xref py py-obj docutils literal notranslate"><span class="pre">truncate_ELAsTiCC_light_curve_fractionally</span></code></a>(x_ts)</p></td>
+<td><p>Truncate an ELAstiCC light curve by a fractional amount. This function reduces the number of observations in the light curve array based on a specified fraction. If no fraction is provided, a random fraction between 0.1 and 1.0 is chosen. The truncation ensures that at least one observation remains. :param x_ts: A 2D array representing the light curve data, where each row              corresponds to an observation and the columns represent different features. :type x_ts: numpy.ndarray :param f: A fraction between 0.0 and 1.0 to determine the portion of the           light curve to retain. If None, a random fraction in the range [0.1, 1.0] is used. :type f: float, optional.</p></td>
 </tr>
 </tbody>
 </table>
 <p class="rubric">Classes</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="../source/oracle.custom_datasets.html#oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset" title="oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ELAsTiCC_LC_Dataset</span></code></a>(parquet_file_path[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../source/oracle.custom_datasets.ELAsTiCC.html#oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset" title="oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ELAsTiCC_LC_Dataset</span></code></a>(parquet_file_path[, ...])</p></td>
 <td><p></p></td>
 </tr>
 </tbody>

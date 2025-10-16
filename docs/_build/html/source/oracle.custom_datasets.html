@@ -73,198 +73,60 @@
 <h1>oracle.custom_datasets package<a class="headerlink" href="#oracle-custom-datasets-package" title="Link to this heading"></a></h1>
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
-</section>
-<section id="module-oracle.custom_datasets.BTS">
-<span id="oracle-custom-datasets-bts-module"></span><h2>oracle.custom_datasets.BTS module<a class="headerlink" href="#module-oracle.custom_datasets.BTS" title="Link to this heading"></a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="oracle.custom_datasets.BTS.BTS_LC_Dataset">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.custom_datasets.BTS.</span></span><span class="sig-name descname"><span class="pre">BTS_LC_Dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parquet_file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_per_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_postage_stamps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_lc_plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">over_sample</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excluded_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.BTS.BTS_LC_Dataset" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.BTS.BTS_LC_Dataset.clean_up_dataset">
-<span class="sig-name descname"><span class="pre">clean_up_dataset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.BTS.BTS_LC_Dataset.clean_up_dataset" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.BTS.BTS_LC_Dataset.convert_mags_to_flux">
-<span class="sig-name descname"><span class="pre">convert_mags_to_flux</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.BTS.BTS_LC_Dataset.convert_mags_to_flux" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.BTS.BTS_LC_Dataset.exclude_classes">
-<span class="sig-name descname"><span class="pre">exclude_classes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.BTS.BTS_LC_Dataset.exclude_classes" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.BTS.BTS_LC_Dataset.get_all_labels">
-<span class="sig-name descname"><span class="pre">get_all_labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.BTS.BTS_LC_Dataset.get_all_labels" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.BTS.BTS_LC_Dataset.get_lc_plots">
-<span class="sig-name descname"><span class="pre">get_lc_plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_ts</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.BTS.BTS_LC_Dataset.get_lc_plots" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.BTS.BTS_LC_Dataset.get_postage_stamp">
-<span class="sig-name descname"><span class="pre">get_postage_stamp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">examples</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.BTS.BTS_LC_Dataset.get_postage_stamp" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.BTS.BTS_LC_Dataset.get_postage_stamp_plot">
-<span class="sig-name descname"><span class="pre">get_postage_stamp_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">examples</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.BTS.BTS_LC_Dataset.get_postage_stamp_plot" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.BTS.BTS_LC_Dataset.limit_max_samples_per_class">
-<span class="sig-name descname"><span class="pre">limit_max_samples_per_class</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.BTS.BTS_LC_Dataset.limit_max_samples_per_class" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.BTS.BTS_LC_Dataset.over_sample_minority_classes">
-<span class="sig-name descname"><span class="pre">over_sample_minority_classes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.BTS.BTS_LC_Dataset.over_sample_minority_classes" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.BTS.BTS_LC_Dataset.print_dataset_composition">
-<span class="sig-name descname"><span class="pre">print_dataset_composition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.BTS.BTS_LC_Dataset.print_dataset_composition" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="oracle.custom_datasets.BTS.custom_collate_BTS">
-<span class="sig-prename descclassname"><span class="pre">oracle.custom_datasets.BTS.</span></span><span class="sig-name descname"><span class="pre">custom_collate_BTS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.BTS.custom_collate_BTS" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="oracle.custom_datasets.BTS.show_batch">
-<span class="sig-prename descclassname"><span class="pre">oracle.custom_datasets.BTS.</span></span><span class="sig-name descname"><span class="pre">show_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.BTS.show_batch" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="oracle.custom_datasets.BTS.truncate_BTS_light_curve_by_days_since_trigger">
-<span class="sig-prename descclassname"><span class="pre">oracle.custom_datasets.BTS.</span></span><span class="sig-name descname"><span class="pre">truncate_BTS_light_curve_by_days_since_trigger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_ts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_static</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_jitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.BTS.truncate_BTS_light_curve_by_days_since_trigger" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="oracle.custom_datasets.BTS.truncate_BTS_light_curve_fractionally">
-<span class="sig-prename descclassname"><span class="pre">oracle.custom_datasets.BTS.</span></span><span class="sig-name descname"><span class="pre">truncate_BTS_light_curve_fractionally</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_ts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_static</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.BTS.truncate_BTS_light_curve_fractionally" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-</section>
-<section id="module-oracle.custom_datasets.ELAsTiCC">
-<span id="oracle-custom-datasets-elasticc-module"></span><h2>oracle.custom_datasets.ELAsTiCC module<a class="headerlink" href="#module-oracle.custom_datasets.ELAsTiCC" title="Link to this heading"></a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.custom_datasets.ELAsTiCC.</span></span><span class="sig-name descname"><span class="pre">ELAsTiCC_LC_Dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parquet_file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_per_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_lc_plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excluded_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.clean_up_dataset">
-<span class="sig-name descname"><span class="pre">clean_up_dataset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.clean_up_dataset" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.exclude_classes">
-<span class="sig-name descname"><span class="pre">exclude_classes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.exclude_classes" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.get_all_labels">
-<span class="sig-name descname"><span class="pre">get_all_labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.get_all_labels" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.get_lc_plots">
-<span class="sig-name descname"><span class="pre">get_lc_plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_ts</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.get_lc_plots" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.limit_max_samples_per_class">
-<span class="sig-name descname"><span class="pre">limit_max_samples_per_class</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.limit_max_samples_per_class" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.map_models_to_classes">
-<span class="sig-name descname"><span class="pre">map_models_to_classes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.map_models_to_classes" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ELAsTiCC.custom_collate_ELAsTiCC">
-<span class="sig-prename descclassname"><span class="pre">oracle.custom_datasets.ELAsTiCC.</span></span><span class="sig-name descname"><span class="pre">custom_collate_ELAsTiCC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ELAsTiCC.custom_collate_ELAsTiCC" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ELAsTiCC.show_batch">
-<span class="sig-prename descclassname"><span class="pre">oracle.custom_datasets.ELAsTiCC.</span></span><span class="sig-name descname"><span class="pre">show_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ELAsTiCC.show_batch" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ELAsTiCC.truncate_ELAsTiCC_light_curve_by_days_since_trigger">
-<span class="sig-prename descclassname"><span class="pre">oracle.custom_datasets.ELAsTiCC.</span></span><span class="sig-name descname"><span class="pre">truncate_ELAsTiCC_light_curve_by_days_since_trigger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_ts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ELAsTiCC.truncate_ELAsTiCC_light_curve_by_days_since_trigger" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ELAsTiCC.truncate_ELAsTiCC_light_curve_fractionally">
-<span class="sig-prename descclassname"><span class="pre">oracle.custom_datasets.ELAsTiCC.</span></span><span class="sig-name descname"><span class="pre">truncate_ELAsTiCC_light_curve_fractionally</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_ts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ELAsTiCC.truncate_ELAsTiCC_light_curve_fractionally" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-</section>
-<section id="module-oracle.custom_datasets.ZTF_sims">
-<span id="oracle-custom-datasets-ztf-sims-module"></span><h2>oracle.custom_datasets.ZTF_sims module<a class="headerlink" href="#module-oracle.custom_datasets.ZTF_sims" title="Link to this heading"></a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.custom_datasets.ZTF_sims.</span></span><span class="sig-name descname"><span class="pre">ZTF_SIM_LC_Dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parquet_file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_per_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_lc_plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset.clean_up_dataset">
-<span class="sig-name descname"><span class="pre">clean_up_dataset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset.clean_up_dataset" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset.get_all_labels">
-<span class="sig-name descname"><span class="pre">get_all_labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset.get_all_labels" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset.get_lc_plots">
-<span class="sig-name descname"><span class="pre">get_lc_plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_ts</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset.get_lc_plots" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset.limit_max_samples_per_class">
-<span class="sig-name descname"><span class="pre">limit_max_samples_per_class</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset.limit_max_samples_per_class" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset.print_dataset_composition">
-<span class="sig-name descname"><span class="pre">print_dataset_composition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset.print_dataset_composition" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ZTF_sims.custom_collate_ZTF_SIM">
-<span class="sig-prename descclassname"><span class="pre">oracle.custom_datasets.ZTF_sims.</span></span><span class="sig-name descname"><span class="pre">custom_collate_ZTF_SIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ZTF_sims.custom_collate_ZTF_SIM" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ZTF_sims.show_batch">
-<span class="sig-prename descclassname"><span class="pre">oracle.custom_datasets.ZTF_sims.</span></span><span class="sig-name descname"><span class="pre">show_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ZTF_sims.show_batch" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ZTF_sims.truncate_ZTF_SIM_light_curve_by_days_since_trigger">
-<span class="sig-prename descclassname"><span class="pre">oracle.custom_datasets.ZTF_sims.</span></span><span class="sig-name descname"><span class="pre">truncate_ZTF_SIM_light_curve_by_days_since_trigger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_ts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ZTF_sims.truncate_ZTF_SIM_light_curve_by_days_since_trigger" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="oracle.custom_datasets.ZTF_sims.truncate_ZTF_SIM_light_curve_fractionally">
-<span class="sig-prename descclassname"><span class="pre">oracle.custom_datasets.ZTF_sims.</span></span><span class="sig-name descname"><span class="pre">truncate_ZTF_SIM_light_curve_fractionally</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_ts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ZTF_sims.truncate_ZTF_SIM_light_curve_fractionally" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="oracle.custom_datasets.BTS.html">oracle.custom_datasets.BTS module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.BTS_LC_Dataset"><code class="docutils literal notranslate"><span class="pre">BTS_LC_Dataset</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.BTS_LC_Dataset.clean_up_dataset"><code class="docutils literal notranslate"><span class="pre">BTS_LC_Dataset.clean_up_dataset()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.BTS_LC_Dataset.convert_mags_to_flux"><code class="docutils literal notranslate"><span class="pre">BTS_LC_Dataset.convert_mags_to_flux()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.BTS_LC_Dataset.exclude_classes"><code class="docutils literal notranslate"><span class="pre">BTS_LC_Dataset.exclude_classes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.BTS_LC_Dataset.get_all_labels"><code class="docutils literal notranslate"><span class="pre">BTS_LC_Dataset.get_all_labels()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.BTS_LC_Dataset.get_lc_plots"><code class="docutils literal notranslate"><span class="pre">BTS_LC_Dataset.get_lc_plots()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.BTS_LC_Dataset.get_postage_stamp"><code class="docutils literal notranslate"><span class="pre">BTS_LC_Dataset.get_postage_stamp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.BTS_LC_Dataset.get_postage_stamp_plot"><code class="docutils literal notranslate"><span class="pre">BTS_LC_Dataset.get_postage_stamp_plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.BTS_LC_Dataset.limit_max_samples_per_class"><code class="docutils literal notranslate"><span class="pre">BTS_LC_Dataset.limit_max_samples_per_class()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.BTS_LC_Dataset.over_sample_minority_classes"><code class="docutils literal notranslate"><span class="pre">BTS_LC_Dataset.over_sample_minority_classes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.BTS_LC_Dataset.print_dataset_composition"><code class="docutils literal notranslate"><span class="pre">BTS_LC_Dataset.print_dataset_composition()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.custom_collate_BTS"><code class="docutils literal notranslate"><span class="pre">custom_collate_BTS()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.show_batch"><code class="docutils literal notranslate"><span class="pre">show_batch()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.truncate_BTS_light_curve_by_days_since_trigger"><code class="docutils literal notranslate"><span class="pre">truncate_BTS_light_curve_by_days_since_trigger()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oracle.custom_datasets.ELAsTiCC.html">oracle.custom_datasets.ELAsTiCC module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oracle.custom_datasets.ELAsTiCC.html#oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset"><code class="docutils literal notranslate"><span class="pre">ELAsTiCC_LC_Dataset</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.ELAsTiCC.html#oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.clean_up_dataset"><code class="docutils literal notranslate"><span class="pre">ELAsTiCC_LC_Dataset.clean_up_dataset()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.ELAsTiCC.html#oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.exclude_classes"><code class="docutils literal notranslate"><span class="pre">ELAsTiCC_LC_Dataset.exclude_classes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.ELAsTiCC.html#oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.get_all_labels"><code class="docutils literal notranslate"><span class="pre">ELAsTiCC_LC_Dataset.get_all_labels()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.ELAsTiCC.html#oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.get_lc_plots"><code class="docutils literal notranslate"><span class="pre">ELAsTiCC_LC_Dataset.get_lc_plots()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.ELAsTiCC.html#oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.limit_max_samples_per_class"><code class="docutils literal notranslate"><span class="pre">ELAsTiCC_LC_Dataset.limit_max_samples_per_class()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.ELAsTiCC.html#oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.map_models_to_classes"><code class="docutils literal notranslate"><span class="pre">ELAsTiCC_LC_Dataset.map_models_to_classes()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="oracle.custom_datasets.ELAsTiCC.html#oracle.custom_datasets.ELAsTiCC.custom_collate_ELAsTiCC"><code class="docutils literal notranslate"><span class="pre">custom_collate_ELAsTiCC()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="oracle.custom_datasets.ELAsTiCC.html#oracle.custom_datasets.ELAsTiCC.show_batch"><code class="docutils literal notranslate"><span class="pre">show_batch()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="oracle.custom_datasets.ELAsTiCC.html#oracle.custom_datasets.ELAsTiCC.truncate_ELAsTiCC_light_curve_by_days_since_trigger"><code class="docutils literal notranslate"><span class="pre">truncate_ELAsTiCC_light_curve_by_days_since_trigger()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="oracle.custom_datasets.ELAsTiCC.html#oracle.custom_datasets.ELAsTiCC.truncate_ELAsTiCC_light_curve_fractionally"><code class="docutils literal notranslate"><span class="pre">truncate_ELAsTiCC_light_curve_fractionally()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oracle.custom_datasets.ZTF_sims.html">oracle.custom_datasets.ZTF_sims module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oracle.custom_datasets.ZTF_sims.html#oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset"><code class="docutils literal notranslate"><span class="pre">ZTF_SIM_LC_Dataset</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.ZTF_sims.html#oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset.clean_up_dataset"><code class="docutils literal notranslate"><span class="pre">ZTF_SIM_LC_Dataset.clean_up_dataset()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.ZTF_sims.html#oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset.get_all_labels"><code class="docutils literal notranslate"><span class="pre">ZTF_SIM_LC_Dataset.get_all_labels()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.ZTF_sims.html#oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset.get_lc_plots"><code class="docutils literal notranslate"><span class="pre">ZTF_SIM_LC_Dataset.get_lc_plots()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.ZTF_sims.html#oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset.limit_max_samples_per_class"><code class="docutils literal notranslate"><span class="pre">ZTF_SIM_LC_Dataset.limit_max_samples_per_class()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.ZTF_sims.html#oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset.print_dataset_composition"><code class="docutils literal notranslate"><span class="pre">ZTF_SIM_LC_Dataset.print_dataset_composition()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="oracle.custom_datasets.ZTF_sims.html#oracle.custom_datasets.ZTF_sims.custom_collate_ZTF_SIM"><code class="docutils literal notranslate"><span class="pre">custom_collate_ZTF_SIM()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="oracle.custom_datasets.ZTF_sims.html#oracle.custom_datasets.ZTF_sims.show_batch"><code class="docutils literal notranslate"><span class="pre">show_batch()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="oracle.custom_datasets.ZTF_sims.html#oracle.custom_datasets.ZTF_sims.truncate_ZTF_SIM_light_curve_by_days_since_trigger"><code class="docutils literal notranslate"><span class="pre">truncate_ZTF_SIM_light_curve_by_days_since_trigger()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="oracle.custom_datasets.ZTF_sims.html#oracle.custom_datasets.ZTF_sims.truncate_ZTF_SIM_light_curve_fractionally"><code class="docutils literal notranslate"><span class="pre">truncate_ZTF_SIM_light_curve_fractionally()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
 </section>
 <section id="module-oracle.custom_datasets">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-oracle.custom_datasets" title="Link to this heading"></a></h2>

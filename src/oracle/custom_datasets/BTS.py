@@ -649,8 +649,8 @@ def truncate_BTS_light_curve_by_days_since_trigger(x_ts, x_static, d=None, add_j
         normalize_flux (bool, optional): If True, normalizes the flux ('magpsf') using its mean and standard deviation.
     Returns:
         tuple: A tuple containing:
-               - x_ts (numpy.ndarray): The truncated time-dependent features array.
-               - x_static (numpy.ndarray): The static features array.
+            - x_ts (numpy.ndarray): The truncated time-dependent features array.
+            - x_static (numpy.ndarray): The static features array.
 
     Note:
         - The function assumes that the dataset does not contain any non-detections.

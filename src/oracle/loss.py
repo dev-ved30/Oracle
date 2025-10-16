@@ -63,8 +63,10 @@ class WHXE_Loss(nn.Module):
         This method calculates the secondary weighting term using an exponential decay based on the node depths.
         The decay is controlled by the attribute 'alpha'. The resulting lambda term emphasizes different
         levels of the tree according to their depth.
+        
         Returns:
             None
+            
         Side Effects:
             - Sets self.lambda_term to a PyTorch tensor of shape (N_nodes) containing the computed values.
         """
@@ -98,7 +100,7 @@ class WHXE_Loss(nn.Module):
     def forward(self, logits, true, epsilon=1e-10):
         """
         Compute the hierarchical loss using the pseudo probabilities from masked softmaxes based on a taxonomy structure.
-        
+
         Parameters:
             logits (torch.Tensor): The raw output logits from the model for a batch.
             true (torch.Tensor): A tensor containing the indicator values for the true class labels.

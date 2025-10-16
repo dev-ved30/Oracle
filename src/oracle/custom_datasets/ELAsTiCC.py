@@ -154,9 +154,11 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
             time_series_data[:,i] = np.array(row[f"{feature}_clean"], dtype=np.float32)
         time_series_data = torch.from_numpy(time_series_data)
 
-        static_data = torch.zeros(n_static_features)
+        # create on CPU via numpy then convert to torch on CPU
+        static_np = np.zeros((n_static_features,), dtype=np.float32)
         for i, feature in enumerate(time_independent_feature_list):
-            static_data[i] = row[feature]
+            static_np[i] = float(row[feature]) if row[feature] is not None else float(flag_value)
+        static_data = torch.from_numpy(static_np)   # CPU tensor
 
         if self.transform != None:
             time_series_data = self.transform(time_series_data)
@@ -532,8 +534,8 @@ def custom_collate_ELAsTiCC(batch):
     snid_array = np.zeros((batch_size))
 
     lengths = np.zeros((batch_size), dtype=np.int32)
-    static_features_tensor = torch.zeros((batch_size, n_static_features),  dtype=torch.float32)
-    lc_plot_tensor = torch.zeros((batch_size, n_channels, img_height, img_width), dtype=torch.float32)
+    static_features_tensor = torch.zeros((batch_size, n_static_features),  dtype=torch.float32, device='cpu')
+    lc_plot_tensor = torch.zeros((batch_size, n_channels, img_height, img_width), dtype=torch.float32, device='cpu')
 
     for i, sample in enumerate(batch):
 
@@ -614,14 +616,16 @@ if __name__=='__main__':
     # <--- Example usage of the dataset --->
 
     dataset = ELAsTiCC_LC_Dataset(ELAsTiCC_test_parquet_path, include_lc_plots=False, transform=truncate_ELAsTiCC_light_curve_fractionally, max_n_per_class=20000)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True, collate_fn=custom_collate_ELAsTiCC)
+    #dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True, collate_fn=custom_collate_ELAsTiCC)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True, collate_fn=custom_collate_ELAsTiCC, num_workers=4, pin_memory=True, prefetch_factor=2)
 
-    for batch in tqdm(dataloader):
+    for k in range(10):
+        for batch in tqdm(dataloader):
+            
+            pass
 
-        pass
-
-        for k in (batch.keys()):
-            print(f"{k}: \t{batch[k].shape}")
+        # for k in (batch.keys()):
+        #     print(f"{k}: \t{batch[k].shape}")
         # print(batch['label'])
 
         # for k in (batch.keys()):

@@ -4,6 +4,7 @@ import argparse
 
 from pathlib import Path    
 from torch.utils.data import DataLoader, ConcatDataset
+import torch.multiprocessing as mp
 
 from oracle.custom_datasets.ELAsTiCC import *
 from oracle.custom_datasets.BTS import *
@@ -180,5 +181,6 @@ def main():
     run_training_loop(args)
 
 if __name__=='__main__':
-
+    # Set the start method for multiprocessing to 'spawn' for compatibility on GPU systems
+    mp.set_start_method('spawn', force=True)
     main()

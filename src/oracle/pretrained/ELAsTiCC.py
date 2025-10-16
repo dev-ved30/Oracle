@@ -72,6 +72,7 @@ class ORACLE1_ELAsTiCC(GRU_MD):
     ORACLE1_ELAsTiCC is a model class that inherits from GRU_MD designed to load a pre-trained
     ELAsTiCC model and perform predictions on time series data augmented with static features.
     The model uses a hierarchical taxonomy to output predictions at multiple levels of granularity.
+
     Attributes:
         taxonomy (ORACLE_Taxonomy): An instance of the taxonomy used to structure the class labels.
         ts_feature_dim (int): Dimensionality of the time series input features.
@@ -113,17 +114,16 @@ class ORACLE1_ELAsTiCC(GRU_MD):
         time_independent_feature_list.
 
         Parameters:
-            - table: Astropy Table containing time-series data and metadata.
+            table (astropy.table.Table): Astropy Table containing time-series data and metadata.
 
         Returns:
-            - pd.DataFrame: A DataFrame containing class probability scores for each class in the taxonomy.
+            pd.DataFrame: A DataFrame containing class probability scores for each class in the taxonomy.
 
         Raises:
             KeyError
-            If one or more keys in time_independent_feature_list are missing from table.meta.
+                If one or more keys in time_independent_feature_list are missing from table.meta.
             ValueError
-            If time-series columns have inconsistent lengths or if the table is empty
-            in a way that the downstream model cannot handle.
+                If time-series columns have inconsistent lengths or if the table is empty in a way that the downstream model cannot handle.
 
         Note:
             - Numeric inputs are converted to numpy.float32 and then to torch tensors.
@@ -164,16 +164,17 @@ class ORACLE1_ELAsTiCC(GRU_MD):
         and 3 are removed because they are irrelevant in the current taxonomy.
 
         Parameters:
-            table (pandas.DataFrame): Input observations/features to be scored.
+            table (astropy.table.Table): Input observations/features to be scored.
 
         Returns:
             dict[int, pandas.DataFrame]: A mapping from taxonomy depth level to a
-                DataFrame of predicted scores for nodes at that level. Each DataFrame
-                is a subset of the full prediction DataFrame containing only the
-                columns for the nodes at that depth.
+            DataFrame of predicted scores for nodes at that level. Each DataFrame
+            is a subset of the full prediction DataFrame containing only the
+            columns for the nodes at that depth.
 
         Raises:
-            KeyError: If expected node columns (from self.taxonomy.get_nodes_by_depth())
+            KeyError: 
+                If expected node columns (from self.taxonomy.get_nodes_by_depth())
                 are not present in the DataFrame returned by predict_full_scores().
 
         Note:
@@ -199,16 +200,16 @@ class ORACLE1_ELAsTiCC(GRU_MD):
         Predict the label at each hierarchical level for the table.
 
         Parameters:
-            table (pandas.DataFrame or array-like): Input data containing one or more rows.
+            table (astropy.table.Table): Input data containing one or more rows.
 
         Returns:
             dict: Mapping from hierarchical level (as returned by self.score) to the predicted class
-                label. For each level, self.score(table) is expected to return a
-                pandas.DataFrame of shape (n_samples, n_classes) with class labels as columns; the
-                predicted label is the column with the highest score for the first sample.
+            label. For each level, self.score(table) is expected to return a
+            pandas.DataFrame of shape (n_samples, n_classes) with class labels as columns; the
+            predicted label is the column with the highest score for the first sample.
+
         Raises:
-            Any exceptions raised by self.score or by numpy operations (e.g., if the score DataFrame
-            is empty) will be propagated.
+            Any exceptions raised by self.score or by numpy operations (e.g., if the score DataFrame is empty) will be propagated.
         """
 
         scores_by_depth = self.score(table)
@@ -230,15 +231,14 @@ class ORACLE1_ELAsTiCC_lite(GRU):
     require additional metadata entries.
 
     Parameters:
-        - table: Astropy Table containing time-series data.
+        table (astropy.table.Table): Astropy Table containing time-series data.
 
     Returns:
-        - pd.DataFrame: A DataFrame containing class probability scores for each class in the taxonomy.
+        pd.DataFrame: A DataFrame containing class probability scores for each class in the taxonomy.
 
     Raises:
         ValueError
-        If time-series columns have inconsistent lengths or if the table is empty
-        in a way that the downstream model cannot handle.
+            If time-series columns have inconsistent lengths or if the table is empty in a way that the downstream model cannot handle.
 
     Note:
         - This model does not use static features, and can classify using the light curve alone.
@@ -278,15 +278,14 @@ class ORACLE1_ELAsTiCC_lite(GRU):
         'PHOTFLAG'.
 
         Parameters:
-            - table: Astropy Table containing time-series data.
+            table (astropy.table.Table): Astropy Table containing time-series data.
 
         Returns:
-            - pd.DataFrame: A DataFrame containing class probability scores for each class in the taxonomy.
+            pd.DataFrame: A DataFrame containing class probability scores for each class in the taxonomy.
 
         Raises:
             ValueError
-            If time-series columns have inconsistent lengths or if the table is empty
-            in a way that the downstream model cannot handle.
+                If time-series columns have inconsistent lengths or if the table is empty in a way that the downstream model cannot handle.
 
         Note:
             - Numeric inputs are converted to numpy.float32 and then to torch tensors.
@@ -317,7 +316,7 @@ class ORACLE1_ELAsTiCC_lite(GRU):
         and 3 are removed because they are irrelevant in the current taxonomy.
 
         Parameters:
-            table (pandas.DataFrame): Input observations/features to be scored.
+            table (astropy.table.Table): Input observations/features to be scored.
 
         Returns:
             dict[int, pandas.DataFrame]: A mapping from taxonomy depth level to a
@@ -326,8 +325,8 @@ class ORACLE1_ELAsTiCC_lite(GRU):
                 columns for the nodes at that depth.
 
         Raises:
-            KeyError: If expected node columns (from self.taxonomy.get_nodes_by_depth())
-                are not present in the DataFrame returned by predict_full_scores().
+            KeyError: 
+                If expected node columns (from self.taxonomy.get_nodes_by_depth()) are not present in the DataFrame returned by predict_full_scores().
 
         Note:
             - This is very similar to the model used for the original ORACLE paper.
@@ -351,16 +350,16 @@ class ORACLE1_ELAsTiCC_lite(GRU):
         Predict the label at each hierarchical level for the table.
 
         Parameters:
-            table (pandas.DataFrame or array-like): Input data containing one or more rows.
+            table (astropy.table.Table): Input data containing one or more rows.
 
         Returns:
             dict: Mapping from hierarchical level (as returned by self.score) to the predicted class
                 label. For each level, self.score(table) is expected to return a
                 pandas.DataFrame of shape (n_samples, n_classes) with class labels as columns; the
                 predicted label is the column with the highest score for the first sample.
+
         Raises:
-            Any exceptions raised by self.score or by numpy operations (e.g., if the score DataFrame
-            is empty) will be propagated.
+            Any exceptions raised by self.score or by numpy operations (e.g., if the score DataFrame is empty) will be propagated.
         """
         scores_by_depth = self.score(table)
         preds_by_depth = {}

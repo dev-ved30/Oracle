@@ -81,12 +81,14 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         This initializer loads a parquet dataset from the specified file path, sets up the columns to be read, and performs
         various preprocessing steps including mapping models to classes, limiting the number of samples per class (if specified),
         cleaning up the dataset, and excluding specific classes.
+
         Parameters:
             parquet_file_path (str): Path to the parquet file containing the dataset.
             max_n_per_class (int, optional): Maximum number of samples allowed per class. If None, no limit is enforced.
             include_lc_plots (bool, optional): Flag indicating whether to include light curve plots as part of the dataset.
             transform (callable, optional): An optional transform to be applied to the data samples.
             excluded_classes (list, optional): List of classes that should be excluded from the dataset.
+            
         Note:
             - The initializer prints a message indicating the path from which the dataset is being loaded.
             - Subsequent methods called within this initializer handle additional dataset modifications such as mapping models
@@ -180,8 +182,10 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         'ELASTICC_class' column of the DataFrame with the corresponding astrophysical 
         class names. The transformation is done in-place on self.parquet_df by creating 
         a new column named 'class'.
+
         Returns:
             None
+
         Side Effects:
             - Modifies self.parquet_df by adding/updating the 'class' column.
         """
@@ -198,8 +202,10 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         This method filters the records in self.parquet_df, removing any rows where the "class"
         column matches an entry in self.excluded_classes. It concatenates the remaining dataframes
         per class and updates self.parquet_df with the result.
+
         Returns:
             None
+
         Side Effects:
             - Modifies self.parquet_df by excluding rows of unwanted classes.
         """
@@ -241,12 +247,14 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         def remove_saturations_from_series(phot_flag_arr, feature_arr):
             """
             Remove saturated entries from a series of features based on photometric flags.
+
             Parameters:
                 phot_flag_arr (list or array-like): An array of photometric flag values for each observation.
                     Saturation is identified by applying a bitwise AND with 1024.
                 feature_arr (list or array-like): An array of features corresponding to the photometric flags.
                     The function returns a filtered list containing only the features where the 
                     observations are not saturated.
+
             Returns:
                 list: A filtered array of features with saturated entries removed.
             """
@@ -258,9 +266,11 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         def replace_missing_flags(x):
             """
             Replaces missing data flags in the input value.
+
             Parameters:
                 x: Any
                     The value to be checked against the predefined missing data flags.
+
             Returns:
                 float or any:
                     Returns the flag value (as a float) if 'x' is found in the missing data flags; otherwise, returns 'x' unchanged.
@@ -337,14 +347,15 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
     def get_lc_plots(self, x_ts):
         """
         Generates a light curve plot image from time series data and returns it as a Torch tensor.
+
         Parameters:
             x_ts (numpy.ndarray): 2D array where each row corresponds to a time step and columns represent
-                                  various features including 'jd' (Julian Date), 'flux' (observed flux),
-                                  'flux_err' (flux error), and 'fid' (filter identifier). The feature indices
-                                  are determined using the global variable time_dependent_feature_list.
+                various features including 'jd' (Julian Date), 'flux' (observed flux),
+                'flux_err' (flux error), and 'fid' (filter identifier). The feature indices
+                are determined using the global variable time_dependent_feature_list.
         Returns:
             torch.Tensor: A tensor representing the RGB image of the generated light curve plot with shape
-                          (3, H, W), where H and W are the height and width of the image in pixels.
+            (3, H, W), where H and W are the height and width of the image in pixels.
 
         Note:
             - The function uses matplotlib to create the plot and PIL to handle image conversion.
@@ -415,6 +426,7 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
     def get_all_labels(self):
         """
         Retrieves all labels from the parquet dataframe's 'class' column.
+
         Returns:
             list: A list of labels extracted from the 'class' column.
         """
@@ -466,14 +478,16 @@ def truncate_ELAsTiCC_light_curve_fractionally(x_ts, f=None):
     This function reduces the number of observations in the light curve array based on 
     a specified fraction. If no fraction is provided, a random fraction between 0.1 and 1.0 
     is chosen. The truncation ensures that at least one observation remains.
+
     Parameters:
         x_ts (numpy.ndarray): A 2D array representing the light curve data, where each row 
             corresponds to an observation and the columns represent different features.
         f (float, optional): A fraction between 0.0 and 1.0 to determine the portion of the 
             light curve to retain. If None, a random fraction in the range [0.1, 1.0] is used.
+
     Returns:
         numpy.ndarray: The truncated light curve, containing only the first portion of the 
-            observations as determined by the fraction.
+        observations as determined by the fraction.
     """
 
     if f == None:
@@ -497,25 +511,17 @@ def custom_collate_ELAsTiCC(batch):
     Custom collation function for processing a batch of ELAsTiCC dataset samples.
 
     Parameters:
-        batch (list): A list of dictionaries, each representing a sample with the following keys:
-            - 'ts' (Tensor): A tensor containing the time series data.
-            - 'label' (array-like): An array-like label associated with the sample.
-            - 'ELASTICC_class' (array-like): An array-like raw ELAsTiCC class label.
-            - 'SNID' (numeric): The unique identifier for the sample.
-            - 'static' (Tensor): A tensor of static features with shape (n_static_features,).
-            - 'lc_plot' (optional, Tensor): A tensor representing the light curve plot with shape (n_channels, img_height, img_width).
+        batch (list): A list of dictionaries, each representing a sample.
 
     Returns:
         dict: A dictionary containing the collated batch with the following keys:
-            - 'ts': A padded tensor of time series data with shape (batch_size, max_length, ...),
-                    where padding is applied using the predefined flag_value.
+            - 'ts': A padded tensor of time series data with shape (batch_size, max_length, ...), where padding is applied using the predefined flag_value.
             - 'static': A tensor of static features with shape (batch_size, n_static_features).
             - 'length': A tensor containing the lengths of each time series in the batch.
             - 'label': A numpy array of labels for the batch (array-like).
             - 'raw_label': A numpy array of raw ELAsTiCC class labels (array-like).
             - 'id': A numpy array of SNIDs corresponding to each sample.
-            - 'lc_plot' (if present in the input samples): A tensor of light curve plots with shape
-                      (batch_size, n_channels, img_height, img_width).
+            - 'lc_plot' (if present in the input samples): A tensor of light curve plots with shape (batch_size, n_channels, img_height, img_width).
     """
 
     batch_size = len(batch)
@@ -567,12 +573,14 @@ def show_batch(images, labels, n=16):
     Display a grid of images with corresponding labels.
     This function creates a visual representation of the first n images from the provided dataset.
     It arranges the images in a square grid and annotates each image with its corresponding label.
+
     Parameters:
         images (Tensor or array-like): Collection of images to be displayed. Each image is expected to have the shape
             (C, H, W), where C is the number of channels. For grayscale images, C should be 1.
         labels (Sequence): Sequence of labels corresponding to each image.
         n (int, optional): The number of images to display. The function uses the first n images from the collection.
             Defaults to 16.
+            
     Displays:
         A matplotlib figure containing a grid of images, each annotated with its respective label.
     """

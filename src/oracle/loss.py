@@ -11,6 +11,26 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 class WHXE_Loss(nn.Module):
 
     def __init__(self, taxonomy:Taxonomy, labels, alpha=0.5, beta=1):
+        """
+        Initializes an instance of the WHXE_Loss class.
+
+        Parameters:
+            taxonomy (Taxonomy): An instance providing hierarchical structure, level order traversal,
+                                 depths, and sibling mask information.
+            labels (array-like): A collection of labels used to generate the weights for the loss function.
+            alpha (float, optional): A weighting parameter used within the loss function (default is 0.5).
+            beta (float, optional): An exponent to scale the computed class weights (default is 1).
+
+        Attributes:
+            taxonomy (Taxonomy): The provided taxonomy for hierarchical structures.
+            alpha (float): The alpha value used in the loss computation.
+            beta (float): The beta value used to scale class weights.
+            level_order_nodes (list): List of nodes in level order as obtained from the taxonomy.
+            depths (dict): A dictionary mapping each node to its depth in the taxonomy.
+            masks (dict): Sibling masks computed from the taxonomy, used in hierarchical loss calculations.
+            N_nodes (int): The total number of nodes in the taxonomy.
+            class_weights (Tensor): The precomputed and beta-scaled class weights based on hierarchical one-hot encodings.
+        """
 
         super(WHXE_Loss, self).__init__()
 
@@ -37,6 +57,17 @@ class WHXE_Loss(nn.Module):
         self.compute_lambda_term()
 
     def compute_lambda_term(self):
+        """
+        Compute the lambda term for node weighting.
+
+        This method calculates the secondary weighting term using an exponential decay based on the node depths.
+        The decay is controlled by the attribute 'alpha'. The resulting lambda term emphasizes different
+        levels of the tree according to their depth.
+        Returns:
+            None
+        Side Effects:
+            - Sets self.lambda_term to a PyTorch tensor of shape (N_nodes) containing the computed values.
+        """
 
         # Compute the secondary weight term, which emphasizes different levels of the tree. See paper for more details.
 
@@ -44,6 +75,13 @@ class WHXE_Loss(nn.Module):
         self.lambda_term = torch.from_numpy(np.exp(-self.alpha * self.depths)).to(device=device)
 
     def get_class_weights(self, true):
+        """
+        Computes the class weights for each node in the taxonomy based on the true label data, using inverse frequency weighting.
+        Args:
+            true (torch.Tensor): A binary tensor of shape (N_samples, N_nodes) where each row represents a sample and each column corresponds to a node in the taxonomy. An element should be 1 if the sample belongs to the class represented by the node, and 0 otherwise.
+        Returns:
+            torch.Tensor: A 1D tensor of shape (N_nodes,) containing the computed class weights.
+        """
         
         # Total number of samples
         N_samples = true.shape[0]
@@ -58,6 +96,17 @@ class WHXE_Loss(nn.Module):
         return class_weights
 
     def forward(self, logits, true, epsilon=1e-10):
+        """
+        Compute the hierarchical loss using the pseudo probabilities from masked softmaxes based on a taxonomy structure.
+        
+        Parameters:
+            logits (torch.Tensor): The raw output logits from the model for a batch.
+            true (torch.Tensor): A tensor containing the indicator values for the true class labels.
+            epsilon (float, optional): A small constant to prevent logarithm of zero; defaults to 1e-10.
+
+        Returns:
+            torch.Tensor: A scalar tensor representing the averaged hierarchical loss over the batch.
+        """
 
         #TODO: This could also be sped up....potentially.
 

@@ -12,11 +12,28 @@ from oracle.visualization import *
 class Tester:
     
     def setup_testing(self, model_dir, device):
+        """
+        Sets up the testing environment by configuring the model directory and device used for testing.
+
+        Parameters:
+            model_dir (str): The directory path where the model files are stored.
+            device (torch.device or str): The device on which the model will run (e.g., CPU or GPU).
+
+        Returns:
+            None
+        """
 
         self.model_dir = model_dir
         self.device = device
 
     def create_loss_history_plot(self):
+        """
+        Create and save a plot of the training and validation loss history.
+
+        Note:
+            - The numpy files must exist in the specified directory.
+            - The 'plot_train_val_history' function must be properly defined and accessible.
+        """
 
         # Load the train and validation loss history
         train_loss_history = np.load(f"{self.model_dir}/train_loss_history.npy")
@@ -27,6 +44,15 @@ class Tester:
         plot_train_val_history(train_loss_history, val_loss_history, file_name)
 
     def create_metric_phase_plots(self):
+        """
+        Generates phase plots for key evaluation metrics across all experimental phases.
+        This method iterates over a predefined list of metrics ('f1-score', 'precision', 'recall'),
+        retrieving the corresponding metric values across different phases by invoking the 
+        get_metric_over_all_phases method. For each metric, it then generates two types of plots:
+            1. Class-wise performance over all phases using plot_class_wise_performance_over_all_phases.
+            2. Level-averaged performance over all phases using plot_average_performance_over_all_phases.
+        The plots are saved to the directory specified by the model_dir attribute.
+        """
         
         for metric in ['f1-score','precision','recall']:
             metrics_dictionary = self.get_metric_over_all_phases(metric)
@@ -34,6 +60,20 @@ class Tester:
             plot_average_performance_over_all_phases(metric, metrics_dictionary, self.model_dir)
 
     def create_classification_report(self, y_true, y_pred, file_name=None):
+        """
+        Generates a classification report comparing true and predicted labels, and optionally writes the report to a CSV file.
+        This method first filters the input arrays to include only entries with a non-None true label. It then computes
+        the classification report using scikit-learn's classification_report function. If a file name is provided, it also
+        exports the detailed report as a CSV file.
+
+        Parameters:
+            y_true (array-like): Array of true labels. Only entries where the label is not None will be considered.
+            y_pred (array-like): Array of predicted labels, corresponding to y_true.
+            file_name (str, optional): The file path where the CSV report will be saved. If None, the CSV file is not generated.
+
+        Returns:
+            str: A text summary of the classification report.
+        """
         
         # Only keep source where a true label exists
         idx = np.where(y_true!=None)[0]
@@ -48,6 +88,18 @@ class Tester:
         return report
 
     def get_metric_over_all_phases(self, metric):
+        """
+        Calculates and aggregates the specified metric (f1-score, precision, or recall) across all non-root taxonomy depths.
+
+        Parameters:
+            metric (str): The name of the metric to process. Must be one of ['f1-score', 'precision', 'recall'].
+
+        Returns:
+            dict: A dictionary where each key is a taxonomy depth (int) and each value is a pandas DataFrame containing the day-wise aggregated metric data.
+
+        Raises:
+            AssertionError: If the provided metric is not one of the accepted values.
+        """
         
         # Make sure metric is valid
         assert metric in ['f1-score','precision','recall']
@@ -80,6 +132,19 @@ class Tester:
         return metrics_dictionary
     
     def make_embeddings_for_AD(self, test_loader, d):
+        """
+        Generate latent space embeddings for anomaly detection (AD) analysis and save the results.
+        This method processes the test dataset by running model inference, extracting latent embeddings,
+        and gathering the corresponding class labels and identifiers. It then creates a UMAP plot of the
+        embeddings and saves both the plot and a CSV file containing the combined embedding data.
+
+        Parameters:
+            test_loader (iterable): A DataLoader or iterable over the test dataset where each batch is a
+                                    dictionary with keys 'label', 'raw_label', 'id', and any tensor data
+                                    needed for embedding generation.
+            d (int or float): A parameter indicating the number of days (or a similar metric) used in naming
+                              the output files and plots.
+        """
 
         self.eval()
         nodes_by_depth = self.taxonomy.get_nodes_by_depth()
@@ -120,6 +185,18 @@ class Tester:
         combined_embeddings.to_csv(f"{self.model_dir}/embeddings/embeddings+{d}.csv", index=False)
 
     def merge_performance_tables(self, days):
+        """
+        Merge performance tables for specified days and print LaTeX formatted results.
+              
+        Parameters:
+            days (iterable): A collection (e.g., list) of identifiers representing different report days.
+
+        Returns:
+            None
+
+        Side Effects:
+            Outputs a LaTeX formatted table to standard output.
+        """
 
         levels = ['1','2']
 
@@ -142,6 +219,25 @@ class Tester:
             print(df_merged.to_latex(float_format="%.2f"))
 
     def run_all_analysis(self, test_loader, d):
+        """
+        Run analysis on the test set and generate evaluation plots and reports.
+        This method sets the model to evaluation mode and iterates over the test_loader to perform
+        inference. It aggregates the predicted class probabilities and the corresponding true labels,
+        translating them into a hierarchical format based on the taxonomy provided. For each depth level
+        (excluding the root level), it computes:
+            - The recovery of true labels for the corresponding hierarchy level.
+            - Confusion matrices for recall and precision, saving the plots as PDF files.
+            - ROC curves for the predicted probabilities, saving the plots as PDF files.
+            - A classification report that is both printed on the console and saved as a CSV file.
+
+        Parameters:
+                test_loader (iterable): An iterable (e.g., DataLoader) that yields batches of test data, where each
+                                                                batch is a dictionary containing tensors (and other values) including the key 'label'.
+                d (int): An integer representing the number of days used in the trigger, incorporated into the naming of output files.
+                
+        Returns:
+                None
+        """
 
         self.eval()
         nodes_by_depth = self.taxonomy.get_nodes_by_depth()

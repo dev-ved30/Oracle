@@ -23,12 +23,6 @@ class EarlyStopper:
         min_delta (float): Minimum change in validation loss to be considered an improvement.
         counter (int): Counts the number of consecutive epochs without sufficient improvement.
         min_validation_loss (float): The lowest validation loss observed so far.
-
-    Methods:
-        early_stop(validation_loss: float) -> bool:
-            Checks whether the current validation loss warrants early stopping.
-            Resets the counter if there is an improvement, and increments it otherwise.
-            Returns True if the counter exceeds or equals the patience threshold, otherwise False.
     """
 
     def __init__(self, patience=1, min_delta=0):
@@ -60,7 +54,7 @@ class EarlyStopper:
             
         Returns:
             bool: True if early stopping criterion is met (i.e., the counter has reached the patience limit),
-                  otherwise False.
+            otherwise False.
         """
 
         if validation_loss < self.min_validation_loss:
@@ -121,7 +115,7 @@ class Trainer:
 
         Parameters:
             train_loader (iterable): A data loader that yields batches of training data. Each batch is expected to be a
-                                     dictionary where the key 'label' is used to obtain the correct one-hot encoding.
+                dictionary where the key 'label' is used to obtain the correct one-hot encoding.
 
         Returns:
             float: The mean loss value computed over all batches during the epoch.

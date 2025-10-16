@@ -105,7 +105,7 @@ class Taxonomy(nx.DiGraph):
 
         Returns:
             list: A list where each element is the parent of the corresponding node from the level order traversal.
-                  The root node will have an empty string as its parent.
+            The root node will have an empty string as its parent.
         """
 
 
@@ -136,7 +136,7 @@ class Taxonomy(nx.DiGraph):
 
         Returns:
             List[numpy.ndarray]: A list of numpy arrays, each representing a mask for sibling nodes
-                                 corresponding to one unique parent in the taxonomy.
+            corresponding to one unique parent in the taxonomy.
         """
         
         # NOTE: Sibling nodes are nodes that share the same parent node.
@@ -179,13 +179,14 @@ class Taxonomy(nx.DiGraph):
 
         Parameters:
             labels (iterable): An iterable of labels (nodes) to be encoded. Each label must exist in the taxonomy,
-                               as verified by the level-order traversal.
+                as verified by the level-order traversal.
 
         Returns:
             numpy.ndarray: A 2D numpy array of shape (number of labels, total number of nodes in the taxonomy),
-                           where each row is the one-hot encoded vector for the corresponding label.
-                           A value of 1 indicates that a node is part of the path from the root to the label;
-                           all other positions are 0.
+            where each row is the one-hot encoded vector for the corresponding label.
+            A value of 1 indicates that a node is part of the path from the root to the label;
+            all other positions are 0.
+
         Raises:
             AssertionError: If any of the provided labels is not found within the taxonomy.
 
@@ -282,7 +283,7 @@ class Taxonomy(nx.DiGraph):
 
         Returns:
             torch.Tensor: The tensor of logits after applying conditional probability computations using masked 
-                          softmax operations, where probabilities are normalized within the sibling groups.
+            softmax operations, where probabilities are normalized within the sibling groups.
         """
 
         masks = self.get_sibling_masks()
@@ -318,8 +319,8 @@ class Taxonomy(nx.DiGraph):
 
         Returns:
             dict: A dictionary where each key (of type int) corresponds to a depth level,
-                  and the associated value is a NumPy array containing the nodes at that depth.
-                  The key -1 is used to store a NumPy array of all leaf nodes.
+            and the associated value is a NumPy array containing the nodes at that depth.
+            The key -1 is used to store a NumPy array of all leaf nodes.
 
         Note:
             - This function relies on the existence of helper methods:
@@ -360,12 +361,13 @@ class Taxonomy(nx.DiGraph):
 
         Returns:
             torch.Tensor: A tensor of the same shape as `conditional_probabilities` where each element 
-                represents the computed class probability for the corresponding node. The class probability 
-                is calculated as the product of the conditional probabilities along the path from the root 
-                to that node.
+            represents the computed class probability for the corresponding node. The class probability 
+            is calculated as the product of the conditional probabilities along the path from the root 
+            to that node.
+
         Raises:
-            AssertionError: If the number of columns in `conditional_probabilities` does not match the number of 
-                nodes in the taxonomy.
+            AssertionError: 
+                If the number of columns in `conditional_probabilities` does not match the number of nodes in the taxonomy.
         """
 
         assert conditional_probabilities.shape[1] == len(self.nodes()), 'Number of nodes in the taxonomy should match the number of columns in the conditional probabilities.'

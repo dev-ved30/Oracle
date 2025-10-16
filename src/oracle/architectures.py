@@ -40,7 +40,7 @@ class Hierarchical_classifier(nn.Module, Trainer, Tester):
 
         Parameters:
             batch (dictionary): A batch of input data to be fed into the model. The exact format and type of the batch
-                   depend on the requirements of the forward method.
+                depend on the requirements of the forward method.
 
         Returns:
             torch.tensor: A tensor representing the conditional probabilities computed from the model's logits.
@@ -82,7 +82,7 @@ class Hierarchical_classifier(nn.Module, Trainer, Tester):
 
         Returns:
             pandas.DataFrame: A DataFrame containing the predicted conditional probabilities with columns
-                              corresponding to the level-order nodes.
+            corresponding to the level-order nodes.
         """
 
         level_order_nodes = self.taxonomy.get_level_order_traversal()
@@ -95,19 +95,17 @@ class Hierarchical_classifier(nn.Module, Trainer, Tester):
         Predict class probabilities for a given batch and return the results in a DataFrame.
 
         This method performs the following steps:
-        1. Retrieves the list of taxonomy nodes ordered by level using the taxonomy's
-            `get_level_order_traversal` method.
+        1. Retrieves the list of taxonomy nodes ordered by level using the taxonomy's `get_level_order_traversal` method.
         2. Computes the class probabilities for the input batch via the `predict_class_probabilities` method.
-        3. Constructs and returns a pandas DataFrame with the computed probabilities, where each column
-            corresponds to a taxonomy node in level order.
+        3. Constructs and returns a pandas DataFrame with the computed probabilities, where each column corresponds to a taxonomy node in level order.
 
         Parameters:
              batch (dictionary): The input data batch on which to perform predictions. The expected format
-                              and type of `batch` depend on the implementation details of the prediction model.
+                and type of `batch` depend on the implementation details of the prediction model.
 
         Returns:
              pandas.DataFrame: A DataFrame with columns representing taxonomy nodes and each cell containing
-                                     the predicted class probability for the corresponding node.
+            the predicted class probability for the corresponding node.
         """
 
         level_order_nodes = self.taxonomy.get_level_order_traversal()
@@ -124,11 +122,11 @@ class Hierarchical_classifier(nn.Module, Trainer, Tester):
 
         Parameters:
             batch (dictionary): A batch of input data on which to compute the latent embeddings. The expected format and type should
-                         be defined by the implementing subclass.
+                be defined by the implementing subclass.
 
         Returns:
             Any: The latent space embeddings corresponding to the provided batch. The structure and type of the embeddings
-                 is determined by the subclass implementation.
+            is determined by the subclass implementation.
 
         Raises:
             NotImplementedError: If the method is not implemented by the subclass.
@@ -189,8 +187,8 @@ class GRU(Hierarchical_classifier):
 
         Parameters:
             batch (dict): A dictionary containing:
-                - 'ts' (torch.Tensor): Input time-series data of shape (batch_size, seq_len, n_ts_features).
-                - 'length' (torch.Tensor or list[int]): Sequence lengths indicating the valid lengths of each time-series in the batch.
+                1. 'ts' (torch.Tensor): Input time-series data of shape (batch_size, seq_len, n_ts_features).
+                2.'length' (torch.Tensor or list[int]): Sequence lengths indicating the valid lengths of each time-series in the batch.
 
         Returns:
             torch.Tensor: The latent space embeddings resulting from the network's forward pass.
@@ -305,9 +303,9 @@ class GRU_MD(Hierarchical_classifier):
 
         Parameters:
             batch (dict): A dictionary containing the following keys:
-                - 'ts' (torch.Tensor): Time series data of shape (batch_size, seq_len, n_ts_features). 
-                - 'length' (torch.Tensor): Tensor containing the true lengths for each time series in the batch (shape: (batch_size)).
-                - 'static' (torch.Tensor): Static features of shape (batch_size, n_static_features).
+                1. 'ts' (torch.Tensor): Time series data of shape (batch_size, seq_len, n_ts_features). 
+                2. 'length' (torch.Tensor): Tensor containing the true lengths for each time series in the batch (shape: (batch_size)).
+                3. 'static' (torch.Tensor): Static features of shape (batch_size, n_static_features).
 
         Returns:
             torch.Tensor: The latent space embedding computed by merging the processed time series and static features after passing them through respective dense layers and nonlinear activations. 
@@ -452,10 +450,10 @@ class GRU_MD_MM(Hierarchical_classifier):
 
         Parameters:
             batch (dict): A dictionary containing:
-                - "ts" (torch.Tensor): Time series data of shape (batch_size, seq_len, n_ts_features).
-                - "length" (torch.Tensor): Lengths of each time series in the batch (batch_size, ).
-                - "static" (torch.Tensor): Static features of shape (batch_size, n_static_features).
-                - "postage_stamp" (torch.Tensor): Postage stamp data for additional processing.
+                1. "ts" (torch.Tensor): Time series data of shape (batch_size, seq_len, n_ts_features).
+                2. "length" (torch.Tensor): Lengths of each time series in the batch (batch_size, ).
+                3. "static" (torch.Tensor): Static features of shape (batch_size, n_static_features).
+                4. "postage_stamp" (torch.Tensor): Postage stamp data for additional processing.
 
         Returns:
             torch.Tensor: The latent space embeddings computed from the combined features.

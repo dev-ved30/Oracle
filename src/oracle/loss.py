@@ -66,7 +66,7 @@ class WHXE_Loss(nn.Module):
         
         Returns:
             None
-            
+
         Side Effects:
             - Sets self.lambda_term to a PyTorch tensor of shape (N_nodes) containing the computed values.
         """
@@ -79,8 +79,10 @@ class WHXE_Loss(nn.Module):
     def get_class_weights(self, true):
         """
         Computes the class weights for each node in the taxonomy based on the true label data, using inverse frequency weighting.
-        Args:
+
+        Parameters:
             true (torch.Tensor): A binary tensor of shape (N_samples, N_nodes) where each row represents a sample and each column corresponds to a node in the taxonomy. An element should be 1 if the sample belongs to the class represented by the node, and 0 otherwise.
+        
         Returns:
             torch.Tensor: A 1D tensor of shape (N_nodes,) containing the computed class weights.
         """

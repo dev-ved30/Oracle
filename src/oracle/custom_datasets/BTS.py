@@ -249,7 +249,11 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         Exclude specified classes from the dataset.
         This method filters the dataset contained in `self.parquet_df` by removing any rows whose
         'class' value is present in the `self.excluded_classes` list.
-        Notes:
+
+        Returns:
+            None
+
+        Note:
             - Assumes that the dataframe `self.parquet_df` has a column named 'class'.
             - The method leverages the filtering function of the dataframe library (e.g., Polars).
         """
@@ -292,10 +296,12 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
                 where F0 is set to 3631.0 * 1e6 micro-Janskys (µJy).
             - "flux_err": Calculated via error propagation using both "magpsf" and "sigmapsf" columns:
                         flux_err = (0.4 * ln(10)) * F0 * 10^(-0.4 * magpsf) * sigmapsf
-        Notes:
-                - Element-wise operations are employed to map the magnitude values (and their uncertainties)
-                    to corresponding flux values across the dataframe.
-                - The resulting "flux" and "flux_err" columns are lists of floats.
+
+        Note:
+            - Element-wise operations are employed to map the magnitude values (and their uncertainties)
+                to corresponding flux values across the dataframe.
+            - The resulting "flux" and "flux_err" columns are lists of floats.
+
         Returns:
                 None. The dataframe `self.parquet_df` is modified in place.
         """
@@ -334,7 +340,6 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         Returns:
             list: A list of labels extracted from the 'class' column.
         """
-        
 
         return self.parquet_df['class'].to_list()
     
@@ -344,6 +349,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         This method identifies the class with the maximum sample count and for every other class, performs
         sampling with replacement so that each class has the same number of samples as the majority class.
         The oversampled dataframes for the minority classes are concatenated and reassigned to self.parquet_df.
+
         Side Effects:
             - Modifies self.parquet_df by oversampling minority classes.
         """
@@ -432,6 +438,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
             - Collects the limited dataframes for each class and concatenates them back into a single dataframe.
             - Prints the number of samples retained for each class.
             - Updates self.parquet_df with the concatenated, limited dataframe.
+            
         Note:
             - Assumes self.parquet_df is a Polars DataFrame.
             - Uses NumPy to determine unique class labels.
@@ -461,7 +468,8 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         Returns:
             torch.Tensor: A tensor representing the RGB image of the generated light curve plot with shape
                           (3, H, W), where H and W are the height and width of the image in pixels.
-        Notes:
+
+        Note:
             - The function uses matplotlib to create the plot and PIL to handle image conversion.
             - It iterates over wavelengths defined in the global dictionary ZTF_wavelength_to_color, plotting
               error bars for each wavelength filtered by the 'fid' feature.
@@ -563,7 +571,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
                           and H and W correspond to the height and width of the assembled image, respectively.
 
         Warning:
-            -[TODO] This function can be optimized further to avoid using matplotlib and PIL altogether. Its really slow right now...
+            - [TODO] This function can be optimized further to avoid using matplotlib and PIL altogether. Its really slow right now...
         """
 
         img_length = ztf_alert_image_dimension[0]
@@ -637,7 +645,8 @@ def truncate_BTS_light_curve_by_days_since_trigger(x_ts, x_static, d=None, add_j
         tuple: A tuple containing:
                - x_ts (numpy.ndarray): The truncated time-dependent features array.
                - x_static (numpy.ndarray): The static features array.
-    Notes:
+
+    Note:
         - The function assumes that the dataset does not contain any non-detections.
     """
 

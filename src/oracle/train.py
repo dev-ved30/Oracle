@@ -50,11 +50,41 @@ def parse_args():
     return args
 
 def save_args_to_csv(args, filepath):
+    """
+    Save command-line arguments to a CSV file.
+
+    This function converts the attributes of an object, typically parsed from command-line input, into a single-row pandas DataFrame, and saves it to a CSV file at the specified filepath.
+
+    Parameters:
+        args (object): An object containing attributes to be saved, often created using argparse.
+        filepath (str): The file path (including filename) where the CSV file will be written.
+
+    Returns:
+        None
+    """
 
     df = pd.DataFrame([vars(args)])  # Wrap in list to make a single-row DataFrame
     df.to_csv(filepath, index=False)
 
 def get_wandb_run(args):
+    """
+    Initializes and returns a Weights & Biases (wandb) run with the specified configuration.
+
+    Parameters:
+        args: An object that must contain the following attributes:
+            num_epochs (int): The number of training epochs.
+            batch_size (int): The batch size to be used.
+            lr (float): The learning rate for training.
+            max_n_per_class (int): The maximum number of samples per class.
+            alpha (float): A hyperparameter  used for controlling loss behavior.
+            gamma (float): A hyperparameter used for weighting.
+            dir (str): The directory path where the model should be saved.
+            model (str): The identifier for the chosen model architecture.
+            load_weights (str): The file path for the pretrained model weights, if any.
+
+    Returns:
+        A wandb run instance initialized with the given configuration, which logs metadata and hyperparameters.
+    """
 
     run = wandb.init(
         # Set the wandb entity where your project will be logged (generally your team name).
@@ -77,6 +107,33 @@ def get_wandb_run(args):
     return run    
 
 def run_training_loop(args):
+    """
+    Runs the training loop for the model using the specified configuration and dataset loaders.
+
+    This function performs the following steps:
+        1. Extracts training configuration parameters (e.g., number of epochs, batch size, learning rate, model choice, etc.) from the `args` argument.
+        2. Initializes the model based on the provided model choice.
+        3. Retrieves the training and validation data loaders along with their corresponding labels.
+        4. Initializes a logging run (using WandB) and sets up the directory for saving models and training arguments.
+        5. Optionally loads a pretrained model's weights if a valid path is provided.
+        6. Moves the model to the appropriate device, sets up the training configuration (including hyperparameters such as alpha and gamma), and begins model training.
+        7. After training, saves the model to WandB and finalizes the logging run.
+
+    Parameters:
+        args (argparse.Namespace): An object containing all necessary configuration parameters and hyperparameters including:
+            - num_epochs (int): Number of epochs to train the model.
+            - batch_size (int): Size of the batches used in training and validation.
+            - lr (float): Learning rate for the optimizer.
+            - max_n_per_class (int): Maximum number of samples per class for the training data.
+            - alpha (float): Hyperparameter used during training (specific purpose defined by model's setup).
+            - gamma (float): Hyperparameter used during training (specific purpose defined by model's setup).
+            - dir (str): Directory path for saving the model and other related artifacts.
+            - model (str): Identifier to select which model architecture to use.
+            - load_weights (str or None): Path to pretrained model weights. If provided, these weights are loaded into the model.
+
+    Returns:
+        None
+    """
 
     # Assign the arguments to variables
     num_epochs = args.num_epochs

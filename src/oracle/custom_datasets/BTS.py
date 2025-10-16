@@ -291,15 +291,13 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         """
         Converts magnitude measurements to flux values and computes the corresponding flux uncertainties.
         The method processes the dataframe stored in `self.parquet_df` by adding two new columns:
-            - "flux": Computed from the "magpsf" column using the relation:
-                flux = F0 * 10^(-0.4 * magpsf)
+            - "flux": Computed from the "magpsf" column using the relation: flux = F0 * 10^(-0.4 * magpsf)
                 where F0 is set to 3631.0 * 1e6 micro-Janskys (µJy).
             - "flux_err": Calculated via error propagation using both "magpsf" and "sigmapsf" columns:
                 flux_err = (0.4 * ln(10)) * F0 * 10^(-0.4 * magpsf) * sigmapsf
 
         Note:
-            - Element-wise operations are employed to map the magnitude values (and their uncertainties)
-                to corresponding flux values across the dataframe.
+            - Element-wise operations are employed to map the magnitude values (and their uncertainties)to corresponding flux values across the dataframe.
             - The resulting "flux" and "flux_err" columns are lists of floats.
 
         Returns:

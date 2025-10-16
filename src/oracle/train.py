@@ -72,15 +72,15 @@ def get_wandb_run(args):
 
     Parameters:
         args: An object that must contain the following attributes:
-            num_epochs (int): The number of training epochs.
-            batch_size (int): The batch size to be used.
-            lr (float): The learning rate for training.
-            max_n_per_class (int): The maximum number of samples per class.
-            alpha (float): A hyperparameter  used for controlling loss behavior.
-            gamma (float): A hyperparameter used for weighting.
-            dir (str): The directory path where the model should be saved.
-            model (str): The identifier for the chosen model architecture.
-            load_weights (str): The file path for the pretrained model weights, if any.
+            1. num_epochs (int): The number of training epochs.
+            2. batch_size (int): The batch size to be used.
+            3. lr (float): The learning rate for training.
+            4. max_n_per_class (int): The maximum number of samples per class.
+            5. alpha (float): A hyperparameter  used for controlling loss behavior.
+            6. gamma (float): A hyperparameter used for weighting.
+            7. dir (str): The directory path where the model should be saved.
+            8. model (str): The identifier for the chosen model architecture.
+            9. load_weights (str): The file path for the pretrained model weights, if any.
 
     Returns:
         A wandb run instance initialized with the given configuration, which logs metadata and hyperparameters.
@@ -121,15 +121,15 @@ def run_training_loop(args):
 
     Parameters:
         args (argparse.Namespace): An object containing all necessary configuration parameters and hyperparameters including:
-            - num_epochs (int): Number of epochs to train the model.
-            - batch_size (int): Size of the batches used in training and validation.
-            - lr (float): Learning rate for the optimizer.
-            - max_n_per_class (int): Maximum number of samples per class for the training data.
-            - alpha (float): Hyperparameter used during training (specific purpose defined by model's setup).
-            - gamma (float): Hyperparameter used during training (specific purpose defined by model's setup).
-            - dir (str): Directory path for saving the model and other related artifacts.
-            - model (str): Identifier to select which model architecture to use.
-            - load_weights (str or None): Path to pretrained model weights. If provided, these weights are loaded into the model.
+            1. num_epochs (int): Number of epochs to train the model.
+            2. batch_size (int): Size of the batches used in training and validation.
+            3. lr (float): Learning rate for the optimizer.
+            4. max_n_per_class (int): Maximum number of samples per class for the training data.
+            5. alpha (float): Hyperparameter used during training (specific purpose defined by model's setup).
+            6. gamma (float): Hyperparameter used during training (specific purpose defined by model's setup).
+            7. dir (str): Directory path for saving the model and other related artifacts.
+            8. model (str): Identifier to select which model architecture to use.
+            9. load_weights (str or None): Path to pretrained model weights. If provided, these weights are loaded into the model.
 
     Returns:
         None

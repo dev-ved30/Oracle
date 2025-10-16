@@ -122,7 +122,11 @@ def get_train_loader(model_choice, batch_size, max_n_per_class, excluded_classes
     class_weights = get_class_weights(train_labels)
     train_weights = torch.from_numpy(np.array([class_weights[x] for x in train_labels]))
     sampler = WeightedRandomSampler(train_weights, len(train_weights))
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn, generator=generator)
+
+    if device == "cuda":
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn, generator=generator, pin_memory=True, num_workers=8, prefetch_factor=4)
+    else:
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn, generator=generator)
 
     return train_dataloader, train_labels
 
@@ -163,7 +167,7 @@ def get_val_loader(model_choice, batch_size, val_truncation_days, excluded_class
             transform = partial(truncate_BTS_light_curve_by_days_since_trigger, d=d)
             val_dataset.append(BTS_LC_Dataset(BTS_val_parquet_path, transform=transform, excluded_classes=excluded_classes))
         concatenated_val_dataset = ConcatDataset(val_dataset)
-        val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_BTS, generator=generator)
+        collate_func = custom_collate_BTS
 
     elif model_choice == "BTS":
 
@@ -173,7 +177,7 @@ def get_val_loader(model_choice, batch_size, val_truncation_days, excluded_class
             transform = partial(truncate_BTS_light_curve_by_days_since_trigger, d=d)
             val_dataset.append(BTS_LC_Dataset(BTS_val_parquet_path, transform=transform,  excluded_classes=excluded_classes))
         concatenated_val_dataset = ConcatDataset(val_dataset)
-        val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_BTS, generator=generator)
+        collate_func = custom_collate_BTS
 
     elif model_choice == "ZTF_Sims-lite":
 
@@ -183,7 +187,7 @@ def get_val_loader(model_choice, batch_size, val_truncation_days, excluded_class
             transform = partial(truncate_ZTF_SIM_light_curve_by_days_since_trigger, d=d)
             val_dataset.append(ZTF_SIM_LC_Dataset(ZTF_sim_val_parquet_path, transform=transform, excluded_classes=excluded_classes))
         concatenated_val_dataset = ConcatDataset(val_dataset)
-        val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_ZTF_SIM, generator=generator)
+        collate_func = custom_collate_ZTF_SIM
 
     elif model_choice == "ELAsTiCC-lite":
 
@@ -193,7 +197,7 @@ def get_val_loader(model_choice, batch_size, val_truncation_days, excluded_class
             transform = partial(truncate_ELAsTiCC_light_curve_by_days_since_trigger, d=d)
             val_dataset.append(ELAsTiCC_LC_Dataset(ELAsTiCC_val_parquet_path, transform=transform, excluded_classes=excluded_classes))
         concatenated_val_dataset = ConcatDataset(val_dataset)
-        val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_ELAsTiCC, generator=generator)
+        collate_func = custom_collate_ELAsTiCC
 
     elif model_choice == "ELAsTiCC":
 
@@ -203,7 +207,12 @@ def get_val_loader(model_choice, batch_size, val_truncation_days, excluded_class
             transform = partial(truncate_ELAsTiCC_light_curve_by_days_since_trigger, d=d)
             val_dataset.append(ELAsTiCC_LC_Dataset(ELAsTiCC_val_parquet_path, transform=transform, excluded_classes=excluded_classes))
         concatenated_val_dataset = ConcatDataset(val_dataset)
-        val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=custom_collate_ELAsTiCC, generator=generator)
+        collate_func = custom_collate_ELAsTiCC
+
+    if device=='cuda':
+        val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_func, generator=generator, pin_memory=True, num_workers=8, prefetch_factor=4)
+    else:
+        val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_func, generator=generator)
 
     val_labels = val_dataset[0].get_all_labels()
     return val_dataloader, val_labels

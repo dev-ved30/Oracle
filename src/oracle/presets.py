@@ -1,3 +1,4 @@
+import os
 import torch
 
 from torch.utils.data import DataLoader, ConcatDataset, WeightedRandomSampler
@@ -10,6 +11,12 @@ from oracle.taxonomies import BTS_Taxonomy, ORACLE_Taxonomy
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 torch.set_default_device(device)
+
+# Dataloader parameters for training and validation
+num_workers = max(1, min(8, os.cpu_count() - 2))
+prefetch_factor = 4
+persistent_workers = True
+pin_memory = True
 
 def get_class_weights(labels):
     """
@@ -124,7 +131,7 @@ def get_train_loader(model_choice, batch_size, max_n_per_class, excluded_classes
     sampler = WeightedRandomSampler(train_weights, len(train_weights))
 
     if device == "cuda":
-        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn, generator=generator, pin_memory=True, num_workers=8, prefetch_factor=4)
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn, generator=generator, pin_memory=pin_memory, num_workers=num_workers, prefetch_factor=prefetch_factor, persistent_workers=persistent_workers)
     else:
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn, generator=generator)
 
@@ -210,7 +217,7 @@ def get_val_loader(model_choice, batch_size, val_truncation_days, excluded_class
         collate_func = custom_collate_ELAsTiCC
 
     if device=='cuda':
-        val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_func, generator=generator, pin_memory=True, num_workers=8, prefetch_factor=4)
+        val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_func, generator=generator, pin_memory=pin_memory, num_workers=num_workers, prefetch_factor=prefetch_factor, persistent_workers=persistent_workers)
     else:
         val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_func, generator=generator)
 

@@ -132,7 +132,65 @@ class Hierarchical_classifier(nn.Module, Trainer, Tester):
             NotImplementedError: If the method is not implemented by the subclass.
         """
 
-        raise NotImplementedError
+        raise NotImplementedError("get_latent_space_embeddings function not implemented. This is only available for specific architectures.")
+    
+    def predict_full_scores(self, table):
+
+        raise NotImplementedError("predict_full_scores function not implemented. This is only available for pretrained models.")
+
+    def score(self, table):
+        """
+        Compute hierarchical scores for the input table.
+        Predicts scores for all taxonomy nodes using self.predict_full_scores(), then
+        groups those scores by taxonomy depth and returns a mapping from depth levels
+        to DataFrames containing the corresponding node scores. 
+
+        Parameters:
+            table (astropy.table.Table): Input observations/features to be scored.
+
+        Returns:
+            dict[int, pandas.DataFrame]: A mapping from taxonomy depth level to a
+                DataFrame of predicted scores for nodes at that level. Each DataFrame
+                is a subset of the full prediction DataFrame containing only the
+                columns for the nodes at that depth.
+
+        Raises:
+            KeyError: 
+                If expected node columns (from self.taxonomy.get_nodes_by_depth()) are not present in the DataFrame returned by predict_full_scores().
+        """
+        full_df = self.predict_full_scores(table)
+        nodes_by_depth = self.taxonomy.get_nodes_by_depth()
+        scores_by_depth = {}
+
+        for level in nodes_by_depth:
+            scores_by_depth[level] = full_df[nodes_by_depth[level]]
+        
+        return scores_by_depth
+    
+    def predict(self, table):
+        """
+        Predict the label at each hierarchical level for the table.
+
+        Parameters:
+            table (astropy.table.Table): Input data containing one or more rows.
+
+        Returns:
+            dict: Mapping from hierarchical level (as returned by self.score) to the predicted class
+                label. For each level, self.score(table) is expected to return a
+                pandas.DataFrame of shape (n_samples, n_classes) with class labels as columns; the
+                predicted label is the column with the highest score for the first sample.
+
+        Raises:
+            Any exceptions raised by self.score or by numpy operations (e.g., if the score DataFrame is empty) will be propagated.
+        """
+        scores_by_depth = self.score(table)
+        preds_by_depth = {}
+
+        for level in scores_by_depth:
+            level_classes = scores_by_depth[level].columns
+            preds_by_depth[level] = level_classes[np.argmax(scores_by_depth[level].to_numpy(), axis=1)][0]
+        
+        return preds_by_depth
     
 class GRU(Hierarchical_classifier):
 

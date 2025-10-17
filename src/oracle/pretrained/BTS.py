@@ -47,8 +47,16 @@ class ORACLE1_BTS(GRU_MD):
         print(f'Loading model weights from {self.model_dir}')
         self.load_state_dict(torch.load(f'{self.model_dir}/best_model_f1.pth', map_location=device), strict=False)
 
-    def predict_full_scores(self, table):
+    def make_batch(self, table):
+        """
+        Create a batch from the input table.
 
+        Parameters:
+            table (astropy.table.Table): Input data containing one or more rows.
+
+        Returns:
+            dict: A dictionary containing the batch data.
+        """
         ts_table, static_table = augment_table(table)
 
         x_ts = np.vstack([ts_table[col] for col in ts_table.colnames]).T.astype(np.float32)
@@ -71,6 +79,29 @@ class ORACLE1_BTS(GRU_MD):
             'length': length
         }
 
+        return batch
+
+    def predict_full_scores(self, table):
+        """
+        Predict class probability scores for a single time-series table.
+
+        Prepares a single observation table for the model by calling augment_table and
+        converting time-dependent and time-independent features into torch tensors.
+        The input table must contain the columns 'magpsf', 'sigmpdf', 'fid', 'jd', and
+        'photflag'.
+
+        Parameters:
+            table (astropy.table.Table): Astropy Table containing time-series data.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing class probability scores for each class in the taxonomy.
+
+        Raises:
+            ValueError
+                If time-series columns have inconsistent lengths or if the table is empty in a way that the downstream model cannot handle.
+
+        """
+        batch = self.make_batch(table)
         return self.predict_class_probabilities_df(batch)
     
     def score(self, table):
@@ -130,7 +161,22 @@ class ORACLE1_BTS(GRU_MD):
         preds_by_depth.pop(2, None)
 
         return preds_by_depth
+    
+    def embed(self, table):
+        """
+        Embed a table into its latent space representation.
 
+        Parameters:
+            table: The input data (e.g., a table or structured data) to be embedded. The exact format
+                   is expected to be compatible with the make_batch method.
+
+        Returns:
+            numpy.ndarray: A NumPy array containing the latent space embeddings corresponding to the input table.
+        """
+
+        batch = self.make_batch(table)
+        return self.get_latent_space_embeddings(batch).detach().numpy()
+    
 if __name__=='__main__':
 
     table = Table.read('notebooks/fake_SN.ecsv')
@@ -138,3 +184,4 @@ if __name__=='__main__':
     model = ORACLE1_BTS()
     print(model.predict(table))
     print(model.score(table))
+    print(model.embed(table))

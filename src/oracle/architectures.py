@@ -138,6 +138,20 @@ class Hierarchical_classifier(nn.Module, Trainer, Tester):
 
         raise NotImplementedError("predict_full_scores function not implemented. This is only available for pretrained models.")
 
+    def embed(self, table):
+        """
+        Embeds the provided table into the model's latent space.
+        Parameters:
+            table : object
+                The table data to be embedded. The expected type and structure of this data
+                should be compatible with the model’s input requirements.
+        Raises:
+            NotImplementedError:
+                This method is not implemented by default and is intended for pretrained models only.
+        """
+        
+        raise NotImplementedError("embed function not implemented. This is only available for pretrained models.")
+
     def score(self, table):
         """
         Compute hierarchical scores for the input table.

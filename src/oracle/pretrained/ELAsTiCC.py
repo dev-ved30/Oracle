@@ -103,6 +103,36 @@ class ORACLE1_ELAsTiCC(GRU_MD):
         print(f'Loading model weights from {self.model_dir}')
         self.load_state_dict(torch.load(f'{self.model_dir}/best_model_f1.pth', map_location=device), strict=False)
 
+    def make_batch(self, table):
+        """
+        Create a batch from the input table.
+
+        Parameters:
+            table (astropy.table.Table): Input data containing one or more rows.
+
+        Returns:
+            dict: A dictionary containing the batch data.
+        """
+        table = augment_table(table)
+
+        x_ts = np.vstack([table[col] for col in table.colnames]).T.astype(np.float32)
+        x_ts = torch.from_numpy(np.expand_dims(x_ts, axis=0))
+        
+        x_static = []
+        for k in time_independent_feature_list:
+            x_static.append(table.meta[k])
+        x_static = torch.from_numpy(np.expand_dims(x_static, axis=0).astype(np.float32))
+
+        length = torch.from_numpy(np.array([len(table)]).astype(np.float32))
+
+        batch = {
+            'ts': x_ts,
+            'static': x_static,
+            'length': length
+        }
+
+        return batch
+
     def predict_full_scores(self, table):
         """
         Predict class probability scores for a single time-series table.
@@ -134,25 +164,7 @@ class ORACLE1_ELAsTiCC(GRU_MD):
             - augment_table(table) is called and its return value is used; the original
               table may be replaced by the augmented one.
         """
-
-        table = augment_table(table)
-
-        x_ts = np.vstack([table[col] for col in table.colnames]).T.astype(np.float32)
-        x_ts = torch.from_numpy(np.expand_dims(x_ts, axis=0))
-        
-        x_static = []
-        for k in time_independent_feature_list:
-            x_static.append(table.meta[k])
-        x_static = torch.from_numpy(np.expand_dims(x_static, axis=0).astype(np.float32))
-
-        length = torch.from_numpy(np.array([len(table)]).astype(np.float32))
-
-        batch = {
-            'ts': x_ts,
-            'static': x_static,
-            'length': length
-        }
-
+        batch = self.make_batch(table)
         return self.predict_class_probabilities_df(batch)
     
     def score(self, table):
@@ -214,6 +226,21 @@ class ORACLE1_ELAsTiCC(GRU_MD):
         preds_by_depth.pop(3, None)
 
         return preds_by_depth
+    
+    def embed(self, table):
+        """
+        Embed a table into its latent space representation.
+
+        Parameters:
+            table: The input data (e.g., a table or structured data) to be embedded. The exact format
+                   is expected to be compatible with the make_batch method.
+
+        Returns:
+            numpy.ndarray: A NumPy array containing the latent space embeddings corresponding to the input table.
+        """
+        batch = self.make_batch(table)
+        return self.get_latent_space_embeddings(batch).detach().numpy()
+    
 
 class ORACLE1_ELAsTiCC_lite(GRU):
     """
@@ -262,6 +289,30 @@ class ORACLE1_ELAsTiCC_lite(GRU):
         print(f'Loading model weights from {self.model_dir}')
         self.load_state_dict(torch.load(f'{self.model_dir}/best_model_f1.pth', map_location=device), strict=False)
 
+    def make_batch(self, table):
+        """
+        Create a batch from the input table.
+
+        Parameters:
+            table (astropy.table.Table): Input data containing one or more rows.
+
+        Returns:
+            dict: A dictionary containing the batch data.
+        """
+        table = augment_table(table)
+
+        x_ts = np.vstack([table[col] for col in table.colnames]).T.astype(np.float32)
+        x_ts = torch.from_numpy(np.expand_dims(x_ts, axis=0))
+    
+        length = torch.from_numpy(np.array([len(table)]).astype(np.float32))
+
+        batch = {
+            'ts': x_ts,
+            'length': length
+        }
+
+        return batch
+
     def predict_full_scores(self, table):
         """
         Predict class probability scores for a single time-series table.
@@ -287,18 +338,7 @@ class ORACLE1_ELAsTiCC_lite(GRU):
             - 'ts'     : torch.FloatTensor, shape (1, T, D)
             - 'length' : torch.FloatTensor, shape (1,)
         """
-        table = augment_table(table)
-
-        x_ts = np.vstack([table[col] for col in table.colnames]).T.astype(np.float32)
-        x_ts = torch.from_numpy(np.expand_dims(x_ts, axis=0))
-    
-        length = torch.from_numpy(np.array([len(table)]).astype(np.float32))
-
-        batch = {
-            'ts': x_ts,
-            'length': length
-        }
-
+        batch = self.make_batch(table)
         return self.predict_class_probabilities_df(batch)
     
     def score(self, table):
@@ -356,6 +396,21 @@ class ORACLE1_ELAsTiCC_lite(GRU):
         preds_by_depth.pop(3, None)
 
         return preds_by_depth
+    
+    def embed(self, table):
+        """
+        Embed a table into its latent space representation.
+
+        Parameters:
+            table: The input data (e.g., a table or structured data) to be embedded. The exact format
+                   is expected to be compatible with the make_batch method.
+
+        Returns:
+            numpy.ndarray: A NumPy array containing the latent space embeddings corresponding to the input table.
+        """
+        batch = self.make_batch(table)
+        return self.get_latent_space_embeddings(batch).detach().numpy()
+    
 
 if __name__=='__main__':
 
@@ -363,8 +418,10 @@ if __name__=='__main__':
 
     model = ORACLE1_ELAsTiCC()
     model.score(table)
+    model.predict(table)
     print(model.predict(table))
 
     model = ORACLE1_ELAsTiCC_lite()
     model.score(table)
+    model.predict(table)
     print(model.predict(table))

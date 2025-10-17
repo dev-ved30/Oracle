@@ -728,9 +728,9 @@ def custom_collate_BTS(batch):
     ztfid_array = []
     bts_array = []
 
-    lengths = np.zeros((batch_size), dtype=np.float32)
-    meta_features_tensor = torch.zeros((batch_size, n_meta_features),  dtype=torch.float32)
-    static_features_tensor = torch.zeros((batch_size, n_static_features),  dtype=torch.float32)
+    lengths = np.zeros((batch_size), dtype=np.float32,  device='cpu')
+    meta_features_tensor = torch.zeros((batch_size, n_meta_features),  dtype=torch.float32, device='cpu')
+    static_features_tensor = torch.zeros((batch_size, n_static_features),  dtype=torch.float32, device='cpu')
     lc_plot_tensor = torch.zeros((batch_size, n_channels, img_height, img_height), dtype=torch.float32)
     postage_stamps_tensor = torch.zeros((batch_size, n_channels, 63, 63), dtype=torch.float32)
 

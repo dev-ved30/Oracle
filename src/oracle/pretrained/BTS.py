@@ -25,10 +25,13 @@ def augment_table(table):
     table['jd'] -= min(table['jd'])
 
     # Reorder the columns
-    table = table[time_dependent_feature_list]
-    table['flag'] = 1
+    lc_table = table[time_dependent_feature_list]
+    lc_table['flag'] = 1
 
-    return table
+    # Get the final time-independent features
+    static_table = table[time_independent_feature_list]
+
+    return lc_table, static_table
 
 class ORACLE1_BTS(GRU_MD):
 
@@ -46,16 +49,20 @@ class ORACLE1_BTS(GRU_MD):
 
     def predict_full_scores(self, table):
 
-        table = augment_table(table)
+        ts_table, static_table = augment_table(table)
 
-        x_ts = np.vstack([table[col] for col in table.colnames]).T.astype(np.float32)
+        x_ts = np.vstack([ts_table[col] for col in ts_table.colnames]).T.astype(np.float32)
         x_ts = torch.from_numpy(np.expand_dims(x_ts, axis=0))
         
-        x_static = []
-        for k in time_independent_feature_list:
-            x_static.append(table.meta[k])
+        x_static = static_table.to_pandas().to_numpy().astype(np.float32)[-1, :]
         x_static = torch.from_numpy(np.expand_dims(x_static, axis=0).astype(np.float32))
 
+        md_list = []
+        for f in meta_data_feature_list:
+            md_list.append(ts_table.meta[f])
+        md_list = torch.from_numpy(np.expand_dims(md_list, axis=0).astype(np.float32))
+
+        x_static = torch.cat([x_static, md_list], dim=1)        
         length = torch.from_numpy(np.array([len(table)]).astype(np.float32))
 
         batch = {
@@ -95,6 +102,7 @@ class ORACLE1_BTS(GRU_MD):
 
         # Remove unused levels
         scores_by_depth.pop(0, None)
+        scores_by_depth.pop(2, None)
         
         return scores_by_depth
     
@@ -119,11 +127,14 @@ class ORACLE1_BTS(GRU_MD):
 
         # Remove unused levels
         preds_by_depth.pop(0, None)
+        preds_by_depth.pop(2, None)
 
         return preds_by_depth
 
 if __name__=='__main__':
 
-    table = Table.read('/Users/vedshah/Documents/Research/NU-Miller/Projects/Hierarchical-VT/notebooks/fake_SN.ecsv')
-    print(table)
+    table = Table.read('notebooks/fake_SN.ecsv')
+
     model = ORACLE1_BTS()
+    print(model.predict(table))
+    print(model.score(table))

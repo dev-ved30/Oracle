@@ -181,17 +181,12 @@ class ORACLE1_ELAsTiCC(GRU_MD):
             - This is very similar to the model used for the original ORACLE paper.
         """
 
-        full_df = self.predict_full_scores(table)
-        nodes_by_depth = self.taxonomy.get_nodes_by_depth()
+        scores_by_depth = super().score(table)
 
         # Remove unused levels
-        nodes_by_depth.pop(0)
-        nodes_by_depth.pop(3)
-
-        scores_by_depth = {}
-
-        for level in nodes_by_depth:
-            scores_by_depth[level] = full_df[nodes_by_depth[level]]
+        # print(scores_by_depth.keys())  # --- IGNORE ---
+        scores_by_depth.pop(0, None)
+        scores_by_depth.pop(3, None)
         
         return scores_by_depth
     
@@ -212,13 +207,12 @@ class ORACLE1_ELAsTiCC(GRU_MD):
             Any exceptions raised by self.score or by numpy operations (e.g., if the score DataFrame is empty) will be propagated.
         """
 
-        scores_by_depth = self.score(table)
-        preds_by_depth = {}
+        preds_by_depth = super().predict(table)
 
-        for level in scores_by_depth:
-            level_classes = scores_by_depth[level].columns
-            preds_by_depth[level] = level_classes[np.argmax(scores_by_depth[level].to_numpy(), axis=1)][0]
-        
+        # Remove unused levels
+        preds_by_depth.pop(0, None)
+        preds_by_depth.pop(3, None)
+
         return preds_by_depth
 
 class ORACLE1_ELAsTiCC_lite(GRU):
@@ -331,17 +325,11 @@ class ORACLE1_ELAsTiCC_lite(GRU):
         Note:
             - This is very similar to the model used for the original ORACLE paper.
         """
-        full_df = self.predict_full_scores(table)
-        nodes_by_depth = self.taxonomy.get_nodes_by_depth()
+        scores_by_depth = super().score(table)
 
         # Remove unused levels
-        nodes_by_depth.pop(0)
-        nodes_by_depth.pop(3)
-
-        scores_by_depth = {}
-
-        for level in nodes_by_depth:
-            scores_by_depth[level] = full_df[nodes_by_depth[level]]
+        scores_by_depth.pop(0, None)
+        scores_by_depth.pop(3, None)
         
         return scores_by_depth
     
@@ -361,13 +349,12 @@ class ORACLE1_ELAsTiCC_lite(GRU):
         Raises:
             Any exceptions raised by self.score or by numpy operations (e.g., if the score DataFrame is empty) will be propagated.
         """
-        scores_by_depth = self.score(table)
-        preds_by_depth = {}
+        preds_by_depth = super().predict(table)
 
-        for level in scores_by_depth:
-            level_classes = scores_by_depth[level].columns
-            preds_by_depth[level] = level_classes[np.argmax(scores_by_depth[level].to_numpy(), axis=1)][0]
-        
+        # Remove unused levels
+        preds_by_depth.pop(0, None)
+        preds_by_depth.pop(3, None)
+
         return preds_by_depth
 
 if __name__=='__main__':
@@ -376,8 +363,8 @@ if __name__=='__main__':
 
     model = ORACLE1_ELAsTiCC()
     model.score(table)
-    model.predict(table)
+    print(model.predict(table))
 
     model = ORACLE1_ELAsTiCC_lite()
     model.score(table)
-    model.predict(table)
+    print(model.predict(table))

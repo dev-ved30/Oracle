@@ -359,7 +359,7 @@ class ORACLE1_ELAsTiCC_lite(GRU):
 
 if __name__=='__main__':
 
-    table = Table.read('/Users/vedshah/Documents/Research/NU-Miller/Projects/Hierarchical-VT/notebooks/AGN_17032813.ecsv')
+    table = Table.read('notebooks/AGN_17032813.ecsv')
 
     model = ORACLE1_ELAsTiCC()
     model.score(table)

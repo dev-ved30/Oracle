@@ -40,7 +40,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">API Reference</a></li>
 </ul>
@@ -112,12 +112,9 @@
 <dd><p>Converts magnitude measurements to flux values and computes the corresponding flux uncertainties.
 The method processes the dataframe stored in <cite>self.parquet_df</cite> by adding two new columns:</p>
 <blockquote>
-<div><ul>
-<li><dl>
-<dt>“flux”: Computed from the “magpsf” column using the relation:</dt><dd><blockquote>
-<div><p>flux = F0 * 10^(-0.4 * magpsf)</p>
-</div></blockquote>
-<p>where F0 is set to 3631.0 * 1e6 micro-Janskys (µJy).</p>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>“flux”: Computed from the “magpsf” column using the relation: flux = F0 * 10^(-0.4 * magpsf)</dt><dd><p>where F0 is set to 3631.0 * 1e6 micro-Janskys (µJy).</p>
 </dd>
 </dl>
 </li>
@@ -131,11 +128,7 @@ The method processes the dataframe stored in <cite>self.parquet_df</cite> by add
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
-<li><dl class="simple">
-<dt>Element-wise operations are employed to map the magnitude values (and their uncertainties)</dt><dd><p>to corresponding flux values across the dataframe.</p>
-</dd>
-</dl>
-</li>
+<li><p>Element-wise operations are employed to map the magnitude values (and their uncertainties)to corresponding flux values across the dataframe.</p></li>
 <li><p>The resulting “flux” and “flux_err” columns are lists of floats.</p></li>
 </ul>
 </div>
@@ -177,23 +170,20 @@ This method filters the dataset contained in <cite>self.parquet_df</cite> by rem
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.custom_datasets.BTS.BTS_LC_Dataset.get_lc_plots">
 <span class="sig-name descname"><span class="pre">get_lc_plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_ts</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.BTS.BTS_LC_Dataset.get_lc_plots" title="Link to this definition"></a></dt>
-<dd><p>Generates a light curve plot image from time series data and returns it as a Torch tensor.
-:param x_ts: 2D array where each row corresponds to a time step and columns represent</p>
-<blockquote>
-<div><p>various features including ‘jd’ (Julian Date), ‘flux’ (observed flux),
+<dd><p>Generates a light curve plot image from time series data and returns it as a Torch tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x_ts</strong> (<em>numpy.ndarray</em>) – 2D array where each row corresponds to a time step and columns represent
+various features including ‘jd’ (Julian Date), ‘flux’ (observed flux),
 ‘flux_err’ (flux error), and ‘fid’ (filter identifier). The feature indices
 are determined using the global variable time_dependent_feature_list.</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt>A tensor representing the RGB image of the generated light curve plot with shape</dt><dd><p>(3, H, W), where H and W are the height and width of the image in pixels.</p>
 </dd>
-</dl>
-</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor representing the RGB image of the generated light curve plot
+with shape (3, H, W), where H and W are the height and width of the image in pixels.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>torch.Tensor</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
 </dd>
 </dl>
 <div class="admonition note">
@@ -228,11 +218,8 @@ and converted into a PyTorch tensor.</p>
 with keys formatted as ‘{filter}_reference’.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>A tensor of shape (len(ztf_filters), img_length, img_length) representing the</dt><dd><p>postage stamp images, with pixel values scaled to the range [0, 255].</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>A tensor of shape (len(ztf_filters), img_length, img_length) representing the
+postage stamp images, with pixel values scaled to the range [0, 255].</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>torch.Tensor</p>
@@ -248,21 +235,18 @@ The function assembles a canvas by arranging image sections corresponding to var
 ztf_filters) side-by-side. Each section is populated using the “{filter}_reference” key from the provided examples
 dictionary. The canvas is then plotted using matplotlib, without axis ticks or spines, and saved into a PNG image
 buffer. This image is subsequently loaded via PIL, converted to a NumPy array with channel-first ordering, and finally
-wrapped into a PyTorch tensor.
-:param examples: A dictionary containing image data. For every filter in the global variable ztf_filters, the key</p>
-<blockquote>
-<div><p>corresponding to the image is expected to be formatted as “{filter}_reference”.</p>
-</div></blockquote>
+wrapped into a PyTorch tensor.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt>The resulting image as a PyTorch tensor with shape (C, H, W), where C is the number of color channels,</dt><dd><p>and H and W correspond to the height and width of the assembled image, respectively.</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>examples</strong> (<em>dict</em>) – A dictionary containing image data. For every filter in the global variable ztf_filters, the key
+corresponding to the image is expected to be formatted as “{filter}_reference”.</p>
 </dd>
-</dl>
-</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The resulting image as a PyTorch tensor with shape (C, H, W), where C is the number of color channels,
+and H and W correspond to the height and width of the assembled image, respectively.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>torch.Tensor</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
 </dd>
 </dl>
 <div class="admonition warning">
@@ -378,14 +362,12 @@ if they are present in the sample dictionaries.
 <span class="sig-prename descclassname"><span class="pre">oracle.custom_datasets.BTS.</span></span><span class="sig-name descname"><span class="pre">show_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.BTS.show_batch" title="Link to this definition"></a></dt>
 <dd><p>Display a grid of images with corresponding labels.
 This function creates a visual representation of the first n images from the provided dataset.
-It arranges the images in a square grid and annotates each image with its corresponding label.
-:param images: Collection of images to be displayed. Each image is expected to have the shape</p>
-<blockquote>
-<div><p>(C, H, W), where C is the number of channels. For grayscale images, C should be 1.</p>
-</div></blockquote>
+It arranges the images in a square grid and annotates each image with its corresponding label.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>images</strong> (<em>Tensor</em><em> or </em><em>array-like</em>) – Collection of images to be displayed. Each image is expected to have the shape
+(C, H, W), where C is the number of channels. For grayscale images, C should be 1.</p></li>
 <li><p><strong>labels</strong> (<em>Sequence</em>) – Sequence of labels corresponding to each image.</p></li>
 <li><p><strong>n</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of images to display. The function uses the first n images from the collection.
 Defaults to 16.</p></li>
@@ -403,19 +385,22 @@ Defaults to 16.</p></li>
 <span class="sig-prename descclassname"><span class="pre">oracle.custom_datasets.BTS.</span></span><span class="sig-name descname"><span class="pre">truncate_BTS_light_curve_by_days_since_trigger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_ts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_static</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_jitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.BTS.truncate_BTS_light_curve_by_days_since_trigger" title="Link to this definition"></a></dt>
 <dd><p>Truncate the BTS light curve based on the number of days since the first trigger.
 This function selects observations from the time-series data (x_ts) that occur within a specified number of days (d) from the first detection (trigger).
-It also optionally adds jitter to the flux measurements and normalizes the flux values.
-:param x_ts: Time-dependent features array where each row represents an observation.</p>
-<blockquote>
-<div><p>Expected to contain the following features:
-- ‘jd’: Julian date of the observation.
-- ‘magpsf’: magnitude.
-- ‘sigmapsf’: Uncertainty of the magnitude.
-- ‘fid’: Filter identifier.
-- ‘photflag’: Photometric flag (added as an extra column to maintain compatibility with ZTF sims and always assumed to be 1).</p>
-</div></blockquote>
+It also optionally adds jitter to the flux measurements and normalizes the flux values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>x_ts</strong> (<em>numpy.ndarray</em>) – <p>Time-dependent features array where each row represents an observation.
+Expected to contain the following features:</p>
+<blockquote>
+<div><ul>
+<li><p>’jd’: Julian date of the observation.</p></li>
+<li><p>’magpsf’: magnitude.</p></li>
+<li><p>’sigmapsf’: Uncertainty of the magnitude.</p></li>
+<li><p>’fid’: Filter identifier.</p></li>
+<li><p>’photflag’: Photometric flag (added as an extra column to maintain compatibility with ZTF sims and always assumed to be 1).</p></li>
+</ul>
+</div></blockquote>
+</p></li>
 <li><p><strong>x_static</strong> (<em>numpy.ndarray</em>) – Corresponding static features array for each observation.</p></li>
 <li><p><strong>d</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum number of days from the trigger within which to keep observations.
 If None, a random threshold is generated using 2^(uniform(0, 11)).</p></li>

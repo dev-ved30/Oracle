@@ -40,7 +40,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">API Reference</a></li>
 </ul>
@@ -76,9 +76,120 @@
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.pretrained.BTS.</span></span><span class="sig-name descname"><span class="pre">ORACLE1_BTS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/Users/vedshah/Documents/Research/NU-Miller/Projects/Hierarchical-VT/models/BTS/lemon-spaceship-252'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.pretrained.BTS.ORACLE1_BTS" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU_MD" title="oracle.architectures.GRU_MD"><code class="xref py py-class docutils literal notranslate"><span class="pre">GRU_MD</span></code></a></p>
 <dl class="py method">
+<dt class="sig sig-object py" id="oracle.pretrained.BTS.ORACLE1_BTS.embed">
+<span class="sig-name descname"><span class="pre">embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.pretrained.BTS.ORACLE1_BTS.embed" title="Link to this definition"></a></dt>
+<dd><p>Embed a table into its latent space representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>table</strong> – The input data (e.g., a table or structured data) to be embedded. The exact format
+is expected to be compatible with the make_batch method.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A NumPy array containing the latent space embeddings corresponding to the input table.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.pretrained.BTS.ORACLE1_BTS.make_batch">
+<span class="sig-name descname"><span class="pre">make_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.pretrained.BTS.ORACLE1_BTS.make_batch" title="Link to this definition"></a></dt>
+<dd><p>Create a batch from the input table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>table</strong> (<em>astropy.table.Table</em>) – Input data containing one or more rows.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary containing the batch data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.pretrained.BTS.ORACLE1_BTS.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.pretrained.BTS.ORACLE1_BTS.predict" title="Link to this definition"></a></dt>
+<dd><p>Predict the label at each hierarchical level for the table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>table</strong> (<em>astropy.table.Table</em>) – Input data containing one or more rows.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Mapping from hierarchical level (as returned by self.score) to the predicted class
+label. For each level, self.score(table) is expected to return a
+pandas.DataFrame of shape (n_samples, n_classes) with class labels as columns; the
+predicted label is the column with the highest score for the first sample.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Any exceptions raised by self.score</strong><strong> or </strong><strong>by numpy operations</strong><strong> (</strong><strong>e.g.</strong><strong>, </strong><strong>if the score DataFrame is empty</strong><strong>) </strong><strong>will be propagated.</strong> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="oracle.pretrained.BTS.ORACLE1_BTS.predict_full_scores">
 <span class="sig-name descname"><span class="pre">predict_full_scores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.pretrained.BTS.ORACLE1_BTS.predict_full_scores" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Predict class probability scores for a single time-series table.</p>
+<p>Prepares a single observation table for the model by calling augment_table and
+converting time-dependent and time-independent features into torch tensors.
+The input table must contain the columns ‘magpsf’, ‘sigmpdf’, ‘fid’, ‘jd’, and
+‘photflag’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>table</strong> (<em>astropy.table.Table</em>) – Astropy Table containing time-series data.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A DataFrame containing class probability scores for each class in the taxonomy.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If time-series columns have inconsistent lengths or if the table is empty in a way that the downstream model cannot handle.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.pretrained.BTS.ORACLE1_BTS.score">
+<span class="sig-name descname"><span class="pre">score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.pretrained.BTS.ORACLE1_BTS.score" title="Link to this definition"></a></dt>
+<dd><p>Compute hierarchical scores for the input table.
+Predicts scores for all taxonomy nodes using self.predict_full_scores(), then
+groups those scores by taxonomy depth and returns a mapping from depth levels
+to DataFrames containing the corresponding node scores. Taxonomy levels 0 are
+removed because they are irrelevant in the current taxonomy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>table</strong> (<em>astropy.table.Table</em>) – Input observations/features to be scored.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A mapping from taxonomy depth level to a
+DataFrame of predicted scores for nodes at that level. Each DataFrame
+is a subset of the full prediction DataFrame containing only the
+columns for the nodes at that depth.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[int, pandas.DataFrame]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>KeyError</strong> – If expected node columns (from self.taxonomy.get_nodes_by_depth())
+    are not present in the DataFrame returned by predict_full_scores().</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>This is very similar to the model used for the original ORACLE paper.</p></li>
+</ul>
+</div>
+</dd></dl>
 
 </dd></dl>
 

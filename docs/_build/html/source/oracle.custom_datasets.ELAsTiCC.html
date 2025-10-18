@@ -40,7 +40,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">API Reference</a></li>
 </ul>
@@ -127,8 +127,12 @@
 <dd><p>Exclude classes specified in self.excluded_classes from the dataset.
 This method filters the records in self.parquet_df, removing any rows where the “class”
 column matches an entry in self.excluded_classes. It concatenates the remaining dataframes
-per class and updates self.parquet_df with the result.
-:returns: None</p>
+per class and updates self.parquet_df with the result.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
 <dl class="simple">
 <dt>Side Effects:</dt><dd><ul class="simple">
 <li><p>Modifies self.parquet_df by excluding rows of unwanted classes.</p></li>
@@ -140,31 +144,34 @@ per class and updates self.parquet_df with the result.
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.get_all_labels">
 <span class="sig-name descname"><span class="pre">get_all_labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.get_all_labels" title="Link to this definition"></a></dt>
-<dd><p>Retrieves all labels from the parquet dataframe’s ‘class’ column.
-:returns: A list of labels extracted from the ‘class’ column.
-:rtype: list</p>
+<dd><p>Retrieves all labels from the parquet dataframe’s ‘class’ column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of labels extracted from the ‘class’ column.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.get_lc_plots">
 <span class="sig-name descname"><span class="pre">get_lc_plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_ts</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ELAsTiCC.ELAsTiCC_LC_Dataset.get_lc_plots" title="Link to this definition"></a></dt>
-<dd><p>Generates a light curve plot image from time series data and returns it as a Torch tensor.
-:param x_ts: 2D array where each row corresponds to a time step and columns represent</p>
-<blockquote>
-<div><p>various features including ‘jd’ (Julian Date), ‘flux’ (observed flux),
+<dd><p>Generates a light curve plot image from time series data and returns it as a Torch tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x_ts</strong> (<em>numpy.ndarray</em>) – 2D array where each row corresponds to a time step and columns represent
+various features including ‘jd’ (Julian Date), ‘flux’ (observed flux),
 ‘flux_err’ (flux error), and ‘fid’ (filter identifier). The feature indices
 are determined using the global variable time_dependent_feature_list.</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt>A tensor representing the RGB image of the generated light curve plot with shape</dt><dd><p>(3, H, W), where H and W are the height and width of the image in pixels.</p>
 </dd>
-</dl>
-</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor representing the RGB image of the generated light curve plot with shape
+(3, H, W), where H and W are the height and width of the image in pixels.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>torch.Tensor</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
 </dd>
 </dl>
 <div class="admonition note">
@@ -212,8 +219,12 @@ This method processes the DataFrame contained in the instance attribute <cite>se
 <dd><p>Maps ELAsTiCC classes to astrophysical classes by replacing the values in the
 ‘ELASTICC_class’ column of the DataFrame with the corresponding astrophysical
 class names. The transformation is done in-place on self.parquet_df by creating
-a new column named ‘class’.
-:returns: None</p>
+a new column named ‘class’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
 <dl class="simple">
 <dt>Side Effects:</dt><dd><ul class="simple">
 <li><p>Modifies self.parquet_df by adding/updating the ‘class’ column.</p></li>
@@ -230,32 +241,18 @@ a new column named ‘class’.
 <dd><p>Custom collation function for processing a batch of ELAsTiCC dataset samples.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>batch</strong> (<em>list</em>) – A list of dictionaries, each representing a sample with the following keys:
-- ‘ts’ (Tensor): A tensor containing the time series data.
-- ‘label’ (array-like): An array-like label associated with the sample.
-- ‘ELASTICC_class’ (array-like): An array-like raw ELAsTiCC class label.
-- ‘SNID’ (numeric): The unique identifier for the sample.
-- ‘static’ (Tensor): A tensor of static features with shape (n_static_features,).
-- ‘lc_plot’ (optional, Tensor): A tensor representing the light curve plot with shape (n_channels, img_height, img_width).</p>
+<dd class="field-odd"><p><strong>batch</strong> (<em>list</em>) – A list of dictionaries, each representing a sample.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><dl class="simple">
 <dt>A dictionary containing the collated batch with the following keys:</dt><dd><ul class="simple">
-<li><dl class="simple">
-<dt>’ts’: A padded tensor of time series data with shape (batch_size, max_length, …),</dt><dd><p>where padding is applied using the predefined flag_value.</p>
-</dd>
-</dl>
-</li>
+<li><p>’ts’: A padded tensor of time series data with shape (batch_size, max_length, …), where padding is applied using the predefined flag_value.</p></li>
 <li><p>’static’: A tensor of static features with shape (batch_size, n_static_features).</p></li>
 <li><p>’length’: A tensor containing the lengths of each time series in the batch.</p></li>
 <li><p>’label’: A numpy array of labels for the batch (array-like).</p></li>
 <li><p>’raw_label’: A numpy array of raw ELAsTiCC class labels (array-like).</p></li>
 <li><p>’id’: A numpy array of SNIDs corresponding to each sample.</p></li>
-<li><dl class="simple">
-<dt>’lc_plot’ (if present in the input samples): A tensor of light curve plots with shape</dt><dd><p>(batch_size, n_channels, img_height, img_width).</p>
-</dd>
-</dl>
-</li>
+<li><p>’lc_plot’ (if present in the input samples): A tensor of light curve plots with shape (batch_size, n_channels, img_height, img_width).</p></li>
 </ul>
 </dd>
 </dl>
@@ -272,14 +269,12 @@ a new column named ‘class’.
 <span class="sig-prename descclassname"><span class="pre">oracle.custom_datasets.ELAsTiCC.</span></span><span class="sig-name descname"><span class="pre">show_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ELAsTiCC.show_batch" title="Link to this definition"></a></dt>
 <dd><p>Display a grid of images with corresponding labels.
 This function creates a visual representation of the first n images from the provided dataset.
-It arranges the images in a square grid and annotates each image with its corresponding label.
-:param images: Collection of images to be displayed. Each image is expected to have the shape</p>
-<blockquote>
-<div><p>(C, H, W), where C is the number of channels. For grayscale images, C should be 1.</p>
-</div></blockquote>
+It arranges the images in a square grid and annotates each image with its corresponding label.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>images</strong> (<em>Tensor</em><em> or </em><em>array-like</em>) – Collection of images to be displayed. Each image is expected to have the shape
+(C, H, W), where C is the number of channels. For grayscale images, C should be 1.</p></li>
 <li><p><strong>labels</strong> (<em>Sequence</em>) – Sequence of labels corresponding to each image.</p></li>
 <li><p><strong>n</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of images to display. The function uses the first n images from the collection.
 Defaults to 16.</p></li>
@@ -326,22 +321,19 @@ Defaults to 16.</p></li>
 <dd><p>Truncate an ELAstiCC light curve by a fractional amount.
 This function reduces the number of observations in the light curve array based on
 a specified fraction. If no fraction is provided, a random fraction between 0.1 and 1.0
-is chosen. The truncation ensures that at least one observation remains.
-:param x_ts: A 2D array representing the light curve data, where each row</p>
-<blockquote>
-<div><p>corresponds to an observation and the columns represent different features.</p>
-</div></blockquote>
+is chosen. The truncation ensures that at least one observation remains.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>f</strong> (<em>float</em><em>, </em><em>optional</em>) – A fraction between 0.0 and 1.0 to determine the portion of the
-light curve to retain. If None, a random fraction in the range [0.1, 1.0] is used.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_ts</strong> (<em>numpy.ndarray</em>) – A 2D array representing the light curve data, where each row
+corresponds to an observation and the columns represent different features.</p></li>
+<li><p><strong>f</strong> (<em>float</em><em>, </em><em>optional</em>) – A fraction between 0.0 and 1.0 to determine the portion of the
+light curve to retain. If None, a random fraction in the range [0.1, 1.0] is used.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>The truncated light curve, containing only the first portion of the</dt><dd><p>observations as determined by the fraction.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>The truncated light curve, containing only the first portion of the
+observations as determined by the fraction.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>numpy.ndarray</p>

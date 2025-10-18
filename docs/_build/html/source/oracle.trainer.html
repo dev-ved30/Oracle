@@ -40,7 +40,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">API Reference</a></li>
 </ul>
@@ -121,15 +121,6 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">early_stop(validation_loss</span></span></dt>
-<dd><p>float) -&gt; bool:
-Checks whether the current validation loss warrants early stopping.
-Resets the counter if there is an improvement, and increments it otherwise.
-Returns True if the counter exceeds or equals the patience threshold, otherwise False.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="oracle.trainer.EarlyStopper.early_stop">
 <span class="sig-name descname"><span class="pre">early_stop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">validation_loss</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.trainer.EarlyStopper.early_stop" title="Link to this definition"></a></dt>
 <dd><p>Checks if training should be stopped early based on the current validation loss.
@@ -146,11 +137,8 @@ This method compares the provided validation loss against the minimum validation
 <dd class="field-odd"><p><strong>validation_loss</strong> (<em>float</em>) – The current validation loss from the evaluation phase.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>True if early stopping criterion is met (i.e., the counter has reached the patience limit),</dt><dd><p>otherwise False.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>True if early stopping criterion is met (i.e., the counter has reached the patience limit),
+otherwise False.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>

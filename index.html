@@ -1,0 +1,223 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Oracle Documentation &mdash; oracle 1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=29a6c3e3"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="api.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            oracle
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">oracle</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Oracle Documentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="oracle-documentation">
+<h1>Oracle Documentation<a class="headerlink" href="#oracle-documentation" title="Link to this heading"></a></h1>
+<p><strong>Oracle</strong> is a modular and extensible framework for hierarchical classification of astronomical transients.
+It provides a set of tools for model training, evaluation, and inference on large-scale time-domain survey data.</p>
+<a class="reference internal image-reference" href="_images/logo.jpeg"><img alt="Oracle Project Banner" class="align-center" src="_images/logo.jpeg" style="width: 80%;" />
+</a>
+<section id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/oracle.html">oracle</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>Time-domain astronomy is entering an era of unprecedented data volumes from surveys such as
+the <strong>Legacy Survey of Space and Time (LSST)</strong>. Rapid, accurate, and hierarchical classification
+of transients is critical for triggering timely follow-up observations.</p>
+<p><strong>Oracle</strong> is designed to:</p>
+<ul class="simple">
+<li><p>Perform <strong>hierarchical transient classification</strong> across multiple taxonomic levels.</p></li>
+<li><p>Ingest light curve data from major surveys with minimal preprocessing.</p></li>
+<li><p>Support pre-trained models for immediate inference.</p></li>
+<li><p>Allow researchers to retrain or extend models with custom data.</p></li>
+<li><p>Provide clear visualization and evaluation utilities.</p></li>
+</ul>
+<p>—</p>
+</section>
+<section id="installation">
+<h2>1) Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
+<p>Installation can be done via cloning the repository:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/dev-ved30/Hierarchical-VT.git
+<span class="nb">cd</span><span class="w"> </span>Hierarchical-VT
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</pre></div>
+</div>
+<section id="dependencies">
+<h3>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading"></a></h3>
+<p>The package relies on common scientific Python libraries such as:
+<cite>numpy</cite>, <cite>scipy</cite>, <cite>torch</cite>, <cite>astropy</cite>, and <cite>matplotlib</cite>.
+A full list can be found in <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code>.</p>
+<p>—</p>
+</section>
+</section>
+<section id="quick-start">
+<h2>2) Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading"></a></h2>
+<p>Once installed, you can classify light curves using a pretrained model:</p>
+<p><strong>For LSST (via ELAsTiCC)</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">oracle.pretrained.ELAsTiCC</span><span class="w"> </span><span class="kn">import</span> <span class="n">ORACLE1_ELAsTiCC</span><span class="p">,</span> <span class="n">ORACLE1_ELAsTiCC_lite</span>
+
+<span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;notebooks/AGN_17032813.ecsv&#39;</span><span class="p">)</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">ORACLE1_ELAsTiCC</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">ORACLE1_ELAsTiCC_lite</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>For BTS</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">oracle.pretrained.BTS</span><span class="w"> </span><span class="kn">import</span> <span class="n">ORACLE1_BTS</span>
+
+<span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;notebooks/fake_SN.ecsv&#39;</span><span class="p">)</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">ORACLE1_BTS</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">embed</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The output is a hierarchical class probability distribution for each level of the taxonomy.</p>
+<p>For more examples, see the <code class="docutils literal notranslate"><span class="pre">notebooks</span></code> directory in the repository.</p>
+<p>—</p>
+</section>
+<section id="references">
+<h2>3) References<a class="headerlink" href="#references" title="Link to this heading"></a></h2>
+<p>If you use this software in your research, please cite:</p>
+<ul class="simple">
+<li><p>Shah et al. (2025)
+<em>Hierarchical Classification of Astronomical Transients with Oracle</em>
+<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2025arXiv250101496S/abstract">ADS Link</a></p></li>
+</ul>
+<section id="github-repository">
+<h3>GitHub Repository:<a class="headerlink" href="#github-repository" title="Link to this heading"></a></h3>
+<p><a class="reference external" href="https://github.com/dev-ved30/Hierarchical-VT">https://github.com/dev-ved30/Hierarchical-VT</a></p>
+<p>—</p>
+</section>
+</section>
+<section id="license-disclosure">
+<h2>License &amp; Disclosure<a class="headerlink" href="#license-disclosure" title="Link to this heading"></a></h2>
+<p>This software is made available for <strong>research purposes only</strong>.
+By using this software, you agree to cite the above paper in any publications that make use of it.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The docstrings for this project were generated, in part, with the help of Large Language Models (LLMs)
+and vetted by the developer(s). While efforts have been made to ensure accuracy,
+if you find any discrepancies or errors, please report them via the
+<a class="reference external" href="https://github.com/dev-ved30/Hierarchical-VT/issues">GitHub issue tracker</a>.</p>
+</div>
+<p>—</p>
+</section>
+<section id="acknowledgments">
+<h2>Acknowledgments<a class="headerlink" href="#acknowledgments" title="Link to this heading"></a></h2>
+<p>Oracle is developed as part of ongoing research in time-domain astronomy.
+We thank the transient astronomy community for providing open datasets and tools that
+make projects like this possible.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="api.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Ved Shah.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

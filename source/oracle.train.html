@@ -1,0 +1,191 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>oracle.train module &mdash; oracle 1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=29a6c3e3"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            oracle
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">oracle</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">oracle.train module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/source/oracle.train.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-oracle.train">
+<span id="oracle-train-module"></span><h1>oracle.train module<a class="headerlink" href="#module-oracle.train" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="oracle.train.get_wandb_run">
+<span class="sig-prename descclassname"><span class="pre">oracle.train.</span></span><span class="sig-name descname"><span class="pre">get_wandb_run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.train.get_wandb_run" title="Link to this definition"></a></dt>
+<dd><p>Initializes and returns a Weights &amp; Biases (wandb) run with the specified configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>args</strong> – An object that must contain the following attributes:
+1. num_epochs (int): The number of training epochs.
+2. batch_size (int): The batch size to be used.
+3. lr (float): The learning rate for training.
+4. max_n_per_class (int): The maximum number of samples per class.
+5. alpha (float): A hyperparameter  used for controlling loss behavior.
+6. gamma (float): A hyperparameter used for weighting.
+7. dir (str): The directory path where the model should be saved.
+8. model (str): The identifier for the chosen model architecture.
+9. load_weights (str): The file path for the pretrained model weights, if any.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A wandb run instance initialized with the given configuration, which logs metadata and hyperparameters.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="oracle.train.main">
+<span class="sig-prename descclassname"><span class="pre">oracle.train.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.train.main" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="oracle.train.parse_args">
+<span class="sig-prename descclassname"><span class="pre">oracle.train.</span></span><span class="sig-name descname"><span class="pre">parse_args</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.train.parse_args" title="Link to this definition"></a></dt>
+<dd><p>Get commandline options</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="oracle.train.run_training_loop">
+<span class="sig-prename descclassname"><span class="pre">oracle.train.</span></span><span class="sig-name descname"><span class="pre">run_training_loop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.train.run_training_loop" title="Link to this definition"></a></dt>
+<dd><p>Runs the training loop for the model using the specified configuration and dataset loaders.</p>
+<dl class="simple">
+<dt>This function performs the following steps:</dt><dd><ol class="arabic simple">
+<li><p>Extracts training configuration parameters (e.g., number of epochs, batch size, learning rate, model choice, etc.) from the <cite>args</cite> argument.</p></li>
+<li><p>Initializes the model based on the provided model choice.</p></li>
+<li><p>Retrieves the training and validation data loaders along with their corresponding labels.</p></li>
+<li><p>Initializes a logging run (using WandB) and sets up the directory for saving models and training arguments.</p></li>
+<li><p>Optionally loads a pretrained model’s weights if a valid path is provided.</p></li>
+<li><p>Moves the model to the appropriate device, sets up the training configuration (including hyperparameters such as alpha and gamma), and begins model training.</p></li>
+<li><p>After training, saves the model to WandB and finalizes the logging run.</p></li>
+</ol>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>args</strong> (<em>argparse.Namespace</em>) – An object containing all necessary configuration parameters and hyperparameters including:
+1. num_epochs (int): Number of epochs to train the model.
+2. batch_size (int): Size of the batches used in training and validation.
+3. lr (float): Learning rate for the optimizer.
+4. max_n_per_class (int): Maximum number of samples per class for the training data.
+5. alpha (float): Hyperparameter used during training (specific purpose defined by model’s setup).
+6. gamma (float): Hyperparameter used during training (specific purpose defined by model’s setup).
+7. dir (str): Directory path for saving the model and other related artifacts.
+8. model (str): Identifier to select which model architecture to use.
+9. load_weights (str or None): Path to pretrained model weights. If provided, these weights are loaded into the model.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="oracle.train.save_args_to_csv">
+<span class="sig-prename descclassname"><span class="pre">oracle.train.</span></span><span class="sig-name descname"><span class="pre">save_args_to_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.train.save_args_to_csv" title="Link to this definition"></a></dt>
+<dd><p>Save command-line arguments to a CSV file.</p>
+<p>This function converts the attributes of an object, typically parsed from command-line input, into a single-row pandas DataFrame, and saves it to a CSV file at the specified filepath.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<em>object</em>) – An object containing attributes to be saved, often created using argparse.</p></li>
+<li><p><strong>filepath</strong> (<em>str</em>) – The file path (including filename) where the CSV file will be written.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Ved Shah.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

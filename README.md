@@ -1,12 +1,12 @@
 # ORACLE
 
+[![DOI](https://img.shields.io/badge/astro.IM-2501.01496-b31b1b?logo=arxiv&logoColor=red)](https://arxiv.org/abs/2501.01496) [![DOI](https://zenodo.org/badge/doi/10.48550/arXiv.2501.01496.svg)](https://ui.adsabs.harvard.edu/abs/2025arXiv250101496S/abstract) [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.15099699.svg)](https://zenodo.org/records/15099699)
+
 > [!NOTE]  
 > This is a complete rewrite of the original Oracle codebase using PyTorch, and is meant to supersede it. If you are looking for the original repository, you can find it [here](https://github.com/uiucsn/Astro-ORACLE/tree/main).
 
 <!-- > [!WARNING]  
 > ⚠️ This is a warning banner. Be careful! -->
-
-[![DOI](https://img.shields.io/badge/astro.IM-2501.01496-b31b1b?logo=arxiv&logoColor=red)](https://arxiv.org/abs/2501.01496) [![DOI](https://zenodo.org/badge/doi/10.48550/arXiv.2501.01496.svg)](https://ui.adsabs.harvard.edu/abs/2025arXiv250101496S/abstract) [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.15099699.svg)](https://zenodo.org/records/15099699)
 
 <p align="center">
   <img src="figures/logo.jpeg" width="500" />
@@ -62,15 +62,7 @@ archivePrefix = {arXiv},
 
 ## Installation:
 
-### Developer Installation:
-
-Oracle is a pip installable package and was developed on `python 3.11`. I recommend creating a new environment for every project. If you are using conda, you can do this using
-
-`conda create --name oracle2 python=3.11`
-
-`conda activate oracle2`
-
-`pip install -e .`
+Please refer to the documentation [here](https://dev-ved30.github.io/Hierarchical-VT/) for installation instructions.
 
 # Classification Taxonomy
 

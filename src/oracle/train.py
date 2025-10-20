@@ -1,3 +1,6 @@
+"""
+Interface for training models in the ORACLE framework.
+"""
 import torch
 import wandb
 import argparse
@@ -180,5 +183,5 @@ def main():
     run_training_loop(args)
 
 if __name__=='__main__':
-    
+
     main()

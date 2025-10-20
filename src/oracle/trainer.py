@@ -1,3 +1,5 @@
+"""
+Module for training hierarchical models in the ORACLE framework."""
 import time
 import torch
 import wandb
@@ -67,7 +69,9 @@ class EarlyStopper:
         return False
 
 class Trainer:
-    
+    """
+    Top-level class providing training functionalities for hierarchical classification models."""
+
     def setup_training(self, alpha, gamma, lr, train_labels, val_labels, model_dir, device, wandb_run):
         """
         Set up the training components for the model.

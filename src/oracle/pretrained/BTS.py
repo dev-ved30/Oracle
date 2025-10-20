@@ -1,3 +1,4 @@
+"""Pretrained model(s) for the BTS dataset."""
 import torch
 
 from pathlib import Path
@@ -15,6 +16,25 @@ default_oracle1_BTS_model_path = str(here.parent.parent.parent / "models" / 'BTS
 
 
 def augment_table(table):
+    """
+    Augments a table by modifying its time-related and feature-specific values, and splitting it into two separate tables.
+    This function performs the following modifications:
+        - Converts filter IDs ('fid') to their corresponding mean wavelengths using the mapping `ZTF_fid_to_wavelengths`.
+        - Normalizes the 'jd' column by subtracting the minimum ``jd`` value to set the starting time at zero.
+        - Reorders the columns based on a predefined list ``time_dependent_feature_list`` to create a time-dependent table,
+            and adds a constant column 'flag' with a value of 1.
+        - Extracts a time-independent table based on a predefined list ``time_independent_feature_list``.
+    Parameters:
+            table (pandas.DataFrame): The input table containing astronomical observations with at least 'fid' and 'jd' columns.
+    Returns:
+            tuple: A tuple containing two pandas DataFrames:
+                - lc_table: The time-dependent table with re-ordered columns and an additional 'flag' column.
+                - static_table: The table containing the time-independent features.
+    Notes:
+            - The function assumes that the variables ``time_dependent_feature_list``, ``time_independent_feature_list``, and
+                ``ZTF_fid_to_wavelengths`` are defined in the global scope.
+            - Raises a KeyError if the required columns ('fid' or 'jd') are missing from the input table.
+    """
 
     table = table.copy()
 
@@ -34,6 +54,17 @@ def augment_table(table):
     return lc_table, static_table
 
 class ORACLE1_BTS(GRU_MD):
+    """
+    ORACLE1_BTS is a model class that inherits from GRU_MD designed to load a pre-trained
+    BTS model and perform predictions on time series data augmented with static features.
+    The model uses a hierarchical taxonomy to output predictions at multiple levels of granularity.
+
+    Attributes:
+        taxonomy (ORACLE_Taxonomy): An instance of the taxonomy used to structure the class labels.
+        ts_feature_dim (int): Dimensionality of the time series input features.
+        static_feature_dim (int): Dimensionality of the static input features.
+        model_dir (str): Directory path where the model weights are stored.
+    """
 
     def __init__(self, model_dir=default_oracle1_BTS_model_path):
 

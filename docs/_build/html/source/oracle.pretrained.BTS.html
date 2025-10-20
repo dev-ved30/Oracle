@@ -71,10 +71,58 @@
              
   <section id="module-oracle.pretrained.BTS">
 <span id="oracle-pretrained-bts-module"></span><h1>oracle.pretrained.BTS module<a class="headerlink" href="#module-oracle.pretrained.BTS" title="Link to this heading"></a></h1>
+<p>Pretrained model(s) for the BTS dataset.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="oracle.pretrained.BTS.ORACLE1_BTS">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.pretrained.BTS.</span></span><span class="sig-name descname"><span class="pre">ORACLE1_BTS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/Users/vedshah/Documents/Research/NU-Miller/Projects/Hierarchical-VT/models/BTS/lemon-spaceship-252'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.pretrained.BTS.ORACLE1_BTS" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU_MD" title="oracle.architectures.GRU_MD"><code class="xref py py-class docutils literal notranslate"><span class="pre">GRU_MD</span></code></a></p>
+<p>ORACLE1_BTS is a model class that inherits from GRU_MD designed to load a pre-trained
+BTS model and perform predictions on time series data augmented with static features.
+The model uses a hierarchical taxonomy to output predictions at multiple levels of granularity.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="oracle.pretrained.BTS.ORACLE1_BTS.taxonomy">
+<span class="sig-name descname"><span class="pre">taxonomy</span></span><a class="headerlink" href="#oracle.pretrained.BTS.ORACLE1_BTS.taxonomy" title="Link to this definition"></a></dt>
+<dd><p>An instance of the taxonomy used to structure the class labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="oracle.taxonomies.html#oracle.taxonomies.ORACLE_Taxonomy" title="oracle.taxonomies.ORACLE_Taxonomy">ORACLE_Taxonomy</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="oracle.pretrained.BTS.ORACLE1_BTS.ts_feature_dim">
+<span class="sig-name descname"><span class="pre">ts_feature_dim</span></span><a class="headerlink" href="#oracle.pretrained.BTS.ORACLE1_BTS.ts_feature_dim" title="Link to this definition"></a></dt>
+<dd><p>Dimensionality of the time series input features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="oracle.pretrained.BTS.ORACLE1_BTS.static_feature_dim">
+<span class="sig-name descname"><span class="pre">static_feature_dim</span></span><a class="headerlink" href="#oracle.pretrained.BTS.ORACLE1_BTS.static_feature_dim" title="Link to this definition"></a></dt>
+<dd><p>Dimensionality of the static input features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="oracle.pretrained.BTS.ORACLE1_BTS.model_dir">
+<span class="sig-name descname"><span class="pre">model_dir</span></span><a class="headerlink" href="#oracle.pretrained.BTS.ORACLE1_BTS.model_dir" title="Link to this definition"></a></dt>
+<dd><p>Directory path where the model weights are stored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.pretrained.BTS.ORACLE1_BTS.embed">
 <span class="sig-name descname"><span class="pre">embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.pretrained.BTS.ORACLE1_BTS.embed" title="Link to this definition"></a></dt>
@@ -196,7 +244,48 @@ columns for the nodes at that depth.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="oracle.pretrained.BTS.augment_table">
 <span class="sig-prename descclassname"><span class="pre">oracle.pretrained.BTS.</span></span><span class="sig-name descname"><span class="pre">augment_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.pretrained.BTS.augment_table" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Augments a table by modifying its time-related and feature-specific values, and splitting it into two separate tables.
+This function performs the following modifications:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Converts filter IDs (‘fid’) to their corresponding mean wavelengths using the mapping <cite>ZTF_fid_to_wavelengths</cite>.</p></li>
+<li><p>Normalizes the ‘jd’ column by subtracting the minimum <code class="docutils literal notranslate"><span class="pre">jd</span></code> value to set the starting time at zero.</p></li>
+<li><dl class="simple">
+<dt>Reorders the columns based on a predefined list <code class="docutils literal notranslate"><span class="pre">time_dependent_feature_list</span></code> to create a time-dependent table,</dt><dd><p>and adds a constant column ‘flag’ with a value of 1.</p>
+</dd>
+</dl>
+</li>
+<li><p>Extracts a time-independent table based on a predefined list <code class="docutils literal notranslate"><span class="pre">time_independent_feature_list</span></code>.</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>table</strong> (<em>pandas.DataFrame</em>) – The input table containing astronomical observations with at least ‘fid’ and ‘jd’ columns.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tuple containing two pandas DataFrames:</dt><dd><ul class="simple">
+<li><p>lc_table: The time-dependent table with re-ordered columns and an additional ‘flag’ column.</p></li>
+<li><p>static_table: The table containing the time-independent features.</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>The function assumes that the variables <code class="docutils literal notranslate"><span class="pre">time_dependent_feature_list</span></code>, <code class="docutils literal notranslate"><span class="pre">time_independent_feature_list</span></code>, and</dt><dd><p><code class="docutils literal notranslate"><span class="pre">ZTF_fid_to_wavelengths</span></code> are defined in the global scope.</p>
+</dd>
+</dl>
+</li>
+<li><p>Raises a KeyError if the required columns (‘fid’ or ‘jd’) are missing from the input table.</p></li>
+</ul>
+</dd></dl>
 
 </section>
 

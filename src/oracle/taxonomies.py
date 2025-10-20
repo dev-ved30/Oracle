@@ -1,3 +1,6 @@
+"""
+Top level module for defining taxonomies used in hierarchical classification tasks."""
+
 import torch
 import numpy as np
 import networkx as nx

@@ -1,3 +1,6 @@
+"""
+Module for testing hierarchical models in the ORACLE framework."""
+
 import torch
 
 import numpy as np
@@ -10,6 +13,8 @@ from functools import reduce
 
 from oracle.visualization import *
 class Tester:
+    """
+    Top-level class providing testing functionalities for hierarchical classification models."""
     
     def setup_testing(self, model_dir, device):
         """
@@ -234,7 +239,7 @@ class Tester:
                 test_loader (iterable): An iterable (e.g., DataLoader) that yields batches of test data, where each
                                                                 batch is a dictionary containing tensors (and other values) including the key 'label'.
                 d (int): An integer representing the number of days used in the trigger, incorporated into the naming of output files.
-                
+
         Returns:
                 None
         """

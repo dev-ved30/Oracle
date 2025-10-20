@@ -1,3 +1,4 @@
+"""Pretrained model(s) for the ELAsTiCC dataset."""
 import torch
 
 from pathlib import Path

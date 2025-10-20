@@ -1,3 +1,6 @@
+"""
+Top-level module for defining presets and utility functions for model selection,
+data loading, and training configurations in the ORACLE project."""
 import os
 import torch
 

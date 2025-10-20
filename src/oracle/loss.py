@@ -1,3 +1,6 @@
+"""
+Top level module for defining the Weighted Hierarchical Cross Entropy Loss function for hierarchical classification tasks.
+"""
 import torch
 
 import torch.nn as nn
@@ -9,6 +12,8 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Implementation of Weighted Hierarchical Cross Entropy loss function by Villar et. al. 2023 (https://arxiv.org/abs/2312.02266) based on the Hierarchical Cross Entropy loss function by Bertinetto et. al. 2019 (https://arxiv.org/abs/1912.09393)
 class WHXE_Loss(nn.Module):
+    """
+    Implementation of the Weighted Hierarchical Cross Entropy Loss function."""
 
     def __init__(self, taxonomy:Taxonomy, labels, alpha=0.5, beta=1):
         """

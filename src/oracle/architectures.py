@@ -1,3 +1,6 @@
+"""
+Top-level module for defining various neural network architectures for hierarchical classification.
+"""
 import torch
 
 import torch.nn as nn
@@ -15,6 +18,8 @@ swin_v2_b_output_dim = 1000
 
 # Template for the Hierarchical Classifier
 class Hierarchical_classifier(nn.Module, Trainer, Tester):
+    """
+    Base class for hierarchical classification architectures."""
 
     def __init__(self, taxonomy: Taxonomy):
         """
@@ -207,6 +212,7 @@ class Hierarchical_classifier(nn.Module, Trainer, Tester):
         return preds_by_depth
     
 class GRU(Hierarchical_classifier):
+    """GRU-based neural network architecture for hierarchical classification."""
 
     def __init__(self, taxonomy: Taxonomy, ts_feature_dim=5):
         """
@@ -315,6 +321,7 @@ class GRU(Hierarchical_classifier):
         return logits
     
 class GRU_MD(Hierarchical_classifier):
+    """GRU-based neural network architecture with multi-dimensional static features for hierarchical classification."""
 
     def __init__(self, taxonomy: Taxonomy, ts_feature_dim=5, static_feature_dim=30):
         """
@@ -445,7 +452,8 @@ class GRU_MD(Hierarchical_classifier):
         return logits
     
 class GRU_MD_MM(Hierarchical_classifier):
-
+    """GRU-based neural network architecture with multi-dimensional static features and multi-modal inputs for hierarchical classification."""
+    
     def __init__(self, output_dim, ts_feature_dim=5, static_feature_dim=18):
         """
         Initialize the GRU_MD_MM model architecture.

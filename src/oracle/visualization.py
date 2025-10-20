@@ -1,3 +1,6 @@
+"""
+Module for visualization functions in the ORACLE framework.
+"""
 import umap
 
 import networkx as nx
@@ -99,7 +102,7 @@ def plot_plain_cf(y_true, y_pred, labels, normalize='true', title=None, img_file
                                    Defaults to 'true'.
         title (str, optional): Title of the plot. (Currently not utilized in the function.)
         img_file (str, optional): If provided, the plot is saved to this file path.
-        
+
     Returns:
         None
     """

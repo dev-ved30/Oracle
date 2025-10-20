@@ -1,6 +1,6 @@
 # ORACLE
 
-[![DOI](https://img.shields.io/badge/astro.IM-2501.01496-b31b1b?logo=arxiv&logoColor=red)](https://arxiv.org/abs/2501.01496) [![DOI](https://zenodo.org/badge/doi/10.48550/arXiv.2501.01496.svg)](https://ui.adsabs.harvard.edu/abs/2025arXiv250101496S/abstract) [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.15099699.svg)](https://zenodo.org/records/15099699)
+[![DOI](https://img.shields.io/badge/astro.IM-2501.01496-b31b1b?logo=arxiv&logoColor=red)](https://arxiv.org/abs/2501.01496) [![Docs](https://img.shields.io/badge/docs-available-brightgreen.svg)](https://dev-ved30.github.io/Hierarchical-VT/) [![DOI](https://zenodo.org/badge/doi/10.48550/arXiv.2501.01496.svg)](https://ui.adsabs.harvard.edu/abs/2025arXiv250101496S/abstract) [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.15099699.svg)](https://zenodo.org/records/15099699)
 
 > [!NOTE]  
 > This is a complete rewrite of the original Oracle codebase using PyTorch, and is meant to supersede it. If you are looking for the original repository, you can find it [here](https://github.com/uiucsn/Astro-ORACLE/tree/main).
@@ -48,11 +48,35 @@ We appreciate any support in the form of bug reports in order to provide the bes
 # Contributing
 If you like what we're doing and want to contribute to the project, please start by reaching out to the developer. We are happy to accept suggestions in the Issues tab. 
 
+# Some cool results:
+
+Overall model performance:
+
+
+![](figures/f1-performance.jpg)
+
+First at the root,
+
+![](figures/level_1_cf_days.gif)
+![](figures/level_1_roc_days.gif)
+
+At the next level in the hierarchy
+
+![](figures/level_2_cf_days.gif)
+![](figures/level_2_roc_days.gif)
+
+And finally, at the leaf...
+
+![](figures/leaf_cf_days.gif)
+![](figures/leaf_roc_days.gif)
+
+
 <!-- # Some cool results:
 
 Overall model performance:
 
 ![](models/lsst_alpha_0.5/f1-performance.jpg)
+![](figures/f1-performance.jpg)
 
 First at the root,
 

@@ -129,6 +129,8 @@ License & Disclosure
 
 This software is made available for **research purposes only**.  
 By using this software, you agree to cite the above paper in any publications that make use of it.
+Please see the `LICENSE <https://github.com/dev-ved30/Hierarchical-VT/blob/main/LICENSE>`_ file for more details.
+
 
 .. warning::
    The docstrings for this project were generated, in part, with the help of Large Language Models (LLMs)

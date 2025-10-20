@@ -173,10 +173,12 @@
 </section>
 <section id="module-oracle.architectures">
 <span id="oracle-architectures-module"></span><h2>oracle.architectures module<a class="headerlink" href="#module-oracle.architectures" title="Link to this heading"></a></h2>
+<p>Top-level module for defining various neural network architectures for hierarchical classification.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="oracle.architectures.GRU">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.architectures.</span></span><span class="sig-name descname"><span class="pre">GRU</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taxonomy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="source/oracle.taxonomies.html#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><span class="pre">Taxonomy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts_feature_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="source/oracle.architectures.html#oracle.architectures.Hierarchical_classifier" title="oracle.architectures.Hierarchical_classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hierarchical_classifier</span></code></a></p>
+<p>GRU-based neural network architecture for hierarchical classification.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.architectures.GRU.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU.forward" title="Link to this definition"></a></dt>
@@ -222,6 +224,7 @@ connected output layer.</p>
 <dt class="sig sig-object py" id="oracle.architectures.GRU_MD">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.architectures.</span></span><span class="sig-name descname"><span class="pre">GRU_MD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taxonomy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="source/oracle.taxonomies.html#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><span class="pre">Taxonomy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts_feature_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_feature_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MD" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="source/oracle.architectures.html#oracle.architectures.Hierarchical_classifier" title="oracle.architectures.Hierarchical_classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hierarchical_classifier</span></code></a></p>
+<p>GRU-based neural network architecture with multi-dimensional static features for hierarchical classification.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.architectures.GRU_MD.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MD.forward" title="Link to this definition"></a></dt>
@@ -273,6 +276,7 @@ This method performs the following steps:</p>
 <dt class="sig sig-object py" id="oracle.architectures.GRU_MD_MM">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.architectures.</span></span><span class="sig-name descname"><span class="pre">GRU_MD_MM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts_feature_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_feature_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">18</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MD_MM" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="source/oracle.architectures.html#oracle.architectures.Hierarchical_classifier" title="oracle.architectures.Hierarchical_classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hierarchical_classifier</span></code></a></p>
+<p>GRU-based neural network architecture with multi-dimensional static features and multi-modal inputs for hierarchical classification.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.architectures.GRU_MD_MM.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MD_MM.forward" title="Link to this definition"></a></dt>
@@ -330,6 +334,7 @@ The function performs the following steps:</p>
 <dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.architectures.</span></span><span class="sig-name descname"><span class="pre">Hierarchical_classifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taxonomy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="source/oracle.taxonomies.html#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><span class="pre">Taxonomy</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <a class="reference internal" href="source/oracle.trainer.html#oracle.trainer.Trainer" title="oracle.trainer.Trainer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trainer</span></code></a>, <a class="reference internal" href="source/oracle.tester.html#oracle.tester.Tester" title="oracle.tester.Tester"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tester</span></code></a></p>
+<p>Base class for hierarchical classification architectures.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier.embed">
 <span class="sig-name descname"><span class="pre">embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier.embed" title="Link to this definition"></a></dt>
@@ -523,13 +528,16 @@ columns for the nodes at that depth.</p>
 </section>
 <section id="module-oracle.constants">
 <span id="oracle-constants-module"></span><h2>oracle.constants module<a class="headerlink" href="#module-oracle.constants" title="Link to this heading"></a></h2>
+<p>Module containing constant mappings and configurations for the ORACLE project.</p>
 </section>
 <section id="module-oracle.loss">
 <span id="oracle-loss-module"></span><h2>oracle.loss module<a class="headerlink" href="#module-oracle.loss" title="Link to this heading"></a></h2>
+<p>Top level module for defining the Weighted Hierarchical Cross Entropy Loss function for hierarchical classification tasks.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="oracle.loss.WHXE_Loss">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.loss.</span></span><span class="sig-name descname"><span class="pre">WHXE_Loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taxonomy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="source/oracle.taxonomies.html#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><span class="pre">Taxonomy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.loss.WHXE_Loss" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Implementation of the Weighted Hierarchical Cross Entropy Loss function.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.loss.WHXE_Loss.compute_lambda_term">
 <span class="sig-name descname"><span class="pre">compute_lambda_term</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.loss.WHXE_Loss.compute_lambda_term" title="Link to this definition"></a></dt>
@@ -593,6 +601,8 @@ levels of the tree according to their depth.</p>
 </section>
 <section id="module-oracle.presets">
 <span id="oracle-presets-module"></span><h2>oracle.presets module<a class="headerlink" href="#module-oracle.presets" title="Link to this heading"></a></h2>
+<p>Top-level module for defining presets and utility functions for model selection,
+data loading, and training configurations in the ORACLE project.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="oracle.presets.get_class_weights">
 <span class="sig-prename descclassname"><span class="pre">oracle.presets.</span></span><span class="sig-name descname"><span class="pre">get_class_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.presets.get_class_weights" title="Link to this definition"></a></dt>
@@ -738,6 +748,7 @@ applied to the dataset.</p></li>
 </section>
 <section id="module-oracle.taxonomies">
 <span id="oracle-taxonomies-module"></span><h2>oracle.taxonomies module<a class="headerlink" href="#module-oracle.taxonomies" title="Link to this heading"></a></h2>
+<p>Top level module for defining taxonomies used in hierarchical classification tasks.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="oracle.taxonomies.BTS_Taxonomy">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.taxonomies.</span></span><span class="sig-name descname"><span class="pre">BTS_Taxonomy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.taxonomies.BTS_Taxonomy" title="Link to this definition"></a></dt>
@@ -1029,6 +1040,7 @@ custom styling. Finally, it displays the plot using Matplotlib.</p>
 </section>
 <section id="module-oracle.test">
 <span id="oracle-test-module"></span><h2>oracle.test module<a class="headerlink" href="#module-oracle.test" title="Link to this heading"></a></h2>
+<p>Interface for testing saved models in the ORACLE framework.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="oracle.test.main">
 <span class="sig-prename descclassname"><span class="pre">oracle.test.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.test.main" title="Link to this definition"></a></dt>
@@ -1080,10 +1092,12 @@ merge_performance_tables) are defined elsewhere in the codebase.</p>
 </section>
 <section id="module-oracle.tester">
 <span id="oracle-tester-module"></span><h2>oracle.tester module<a class="headerlink" href="#module-oracle.tester" title="Link to this heading"></a></h2>
+<p>Module for testing hierarchical models in the ORACLE framework.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="oracle.tester.Tester">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.tester.</span></span><span class="sig-name descname"><span class="pre">Tester</span></span><a class="headerlink" href="#oracle.tester.Tester" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Top-level class providing testing functionalities for hierarchical classification models.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.tester.Tester.create_classification_report">
 <span class="sig-name descname"><span class="pre">create_classification_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.tester.Tester.create_classification_report" title="Link to this definition"></a></dt>
@@ -1247,6 +1261,7 @@ batch is a dictionary containing tensors (and other values) including the key �
 </section>
 <section id="module-oracle.train">
 <span id="oracle-train-module"></span><h2>oracle.train module<a class="headerlink" href="#module-oracle.train" title="Link to this heading"></a></h2>
+<p>Interface for training models in the ORACLE framework.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="oracle.train.get_wandb_run">
 <span class="sig-prename descclassname"><span class="pre">oracle.train.</span></span><span class="sig-name descname"><span class="pre">get_wandb_run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.train.get_wandb_run" title="Link to this definition"></a></dt>
@@ -1337,6 +1352,7 @@ batch is a dictionary containing tensors (and other values) including the key �
 </section>
 <section id="module-oracle.trainer">
 <span id="oracle-trainer-module"></span><h2>oracle.trainer module<a class="headerlink" href="#module-oracle.trainer" title="Link to this heading"></a></h2>
+<p>Module for training hierarchical models in the ORACLE framework.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="oracle.trainer.EarlyStopper">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.trainer.</span></span><span class="sig-name descname"><span class="pre">EarlyStopper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.trainer.EarlyStopper" title="Link to this definition"></a></dt>
@@ -1418,6 +1434,7 @@ otherwise False.</p>
 <dt class="sig sig-object py" id="oracle.trainer.Trainer">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.trainer.</span></span><span class="sig-name descname"><span class="pre">Trainer</span></span><a class="headerlink" href="#oracle.trainer.Trainer" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Top-level class providing training functionalities for hierarchical classification models.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.trainer.Trainer.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.trainer.Trainer.fit" title="Link to this definition"></a></dt>
@@ -1578,6 +1595,7 @@ moved to the device.</p>
 </section>
 <section id="module-oracle.visualization">
 <span id="oracle-visualization-module"></span><h2>oracle.visualization module<a class="headerlink" href="#module-oracle.visualization" title="Link to this heading"></a></h2>
+<p>Module for visualization functions in the ORACLE framework.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="oracle.visualization.plot_average_performance_over_all_phases">
 <span class="sig-prename descclassname"><span class="pre">oracle.visualization.</span></span><span class="sig-name descname"><span class="pre">plot_average_performance_over_all_phases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics_dictionary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.visualization.plot_average_performance_over_all_phases" title="Link to this definition"></a></dt>

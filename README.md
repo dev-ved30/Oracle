@@ -17,8 +17,7 @@ We present ORACLE, the first hierarchical deep-learning model for real-time, con
 
 For more information, please read the our paper - https://ui.adsabs.harvard.edu/abs/2025arXiv250101496S/abstract
 
-If you use any of this code in your own work, please cite the associated paper and software using the following 
-
+If you use any of this code in your own work, please cite the associated paper and software using the references in the [CITATION.cff](CITATION.cff) file.
 
 
 ## Installation:

@@ -11,6 +11,7 @@ Documentation
    :align: center
    :width: 80%
 
+
 **Oracle** is a modular and extensible framework for hierarchical classification of astronomical transients.  
 It provides a set of tools for model training, evaluation, and inference on large-scale time-domain survey data.
 
@@ -111,13 +112,12 @@ For more examples, see the ``notebooks`` directory in the repository.
 If you use this software in your research, please cite:
 
 - Shah et al. (2025)  
-  *ORACLE: A Real-Time, Hierarchical, Deep-Learning Photometric Classifier for the LSST*  
-  `ADS Link <https://ui.adsabs.harvard.edu/abs/2025arXiv250101496S/abstract>`_
-
+  *ORACLE: A Real-Time, Hierarchical, Deep-Learning Photometric Classifier for the LSST.*  
+  `[ADS Link] <https://ui.adsabs.harvard.edu/abs/2025arXiv250101496S/abstract>`_
 - Shah et al. (2025)
-   *ORACLE- A family of real-time, hierarchical classifiers for transient and variable phenomena in LSST alert streams.*
-   `Zenodo Link <https://doi.org/10.5281/zenodo.15328166>`_
-   
+  *ORACLE: A family of real-time, hierarchical classifiers for transient and variable phenomena in LSST alert streams.*
+  `[Zenodo Link] <https://doi.org/10.5281/zenodo.15328166>`_
+
 GitHub Repository:
 ~~~~~~~~~~~~~~~~~~
 `https://github.com/dev-ved30/Hierarchical-VT <https://github.com/dev-ved30/Hierarchical-VT>`_
@@ -137,11 +137,3 @@ By using this software, you agree to cite the above paper in any publications th
    `GitHub issue tracker <https://github.com/dev-ved30/Hierarchical-VT/issues>`_.
 
 ---
-
-Acknowledgments
----------------
-
-Oracle is developed as part of ongoing research in time-domain astronomy.
-We thank the transient astronomy community for providing open datasets and tools that
-make projects like this possible.
-

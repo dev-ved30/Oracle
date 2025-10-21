@@ -11,3 +11,4 @@ src/oracle/*/__pycache__/
 models/*/plots
 models/*/reports
 models/.DS_Store
+wandb/

@@ -40,22 +40,28 @@ If you are using conda, you can do this using
 
 .. code-block:: bash
 
-   conda create --name oracle2 python=3.11
-   conda activate oracle2
+   conda create --name oracle python=3.11
+   conda activate oracle
 
-Then, install Oracle via pip:
+Then, install Oracle via pip: [Not available yet]
 
 .. code-block:: bash
 
-   pip install
+   pip install astro-oracle
+
+If you would like to install the version of the repository up on git, please use:
+
+.. code-block:: bash
+
+   pip install git+https://github.com/dev-ved30/Oracle.git
 
 If you intend to develop or modify the code, clone the repository and 
 install in editable mode:
 
 .. code-block:: bash
 
-   git clone https://github.com/dev-ved30/Hierarchical-VT.git
-   cd Hierarchical-VT
+   git clone https://github.com/dev-ved30/Oracle.git
+   cd Oracle
    pip install -e .
 
 This should install all required dependencies.
@@ -76,15 +82,17 @@ Once installed, you can classify light curves using a pretrained model:
 
    table = Table.read('notebooks/AGN_17032813.ecsv')
 
+   # If you have access to the both the light curve and contextual features.
    model = ORACLE1_ELAsTiCC()
-   model.score(table)
-   model.predict(table)
-   model.predict(table)
+   model.score(table) # This provides the scores at each level of the hierarchy
+   model.predict(table) # This provides the predicted class for each level of the hierarchy
+   model.predict(table)  # This provide the latent space embeddings for each source
 
+   # If you only have access to the light curve features, use the lite version instead. 
    model = ORACLE1_ELAsTiCC_lite()
-   model.score(table)
-   model.predict(table)
-   model.predict(table)
+   model.score(table) 
+   model.predict(table) 
+   model.embed(table)
 
 **For BTS**
 
@@ -95,15 +103,73 @@ Once installed, you can classify light curves using a pretrained model:
 
    table = Table.read('notebooks/fake_SN.ecsv')
 
-   model = ORACLE1_BTS()
-   model.predict(table)
-   model.score(table)
-   model.embed(table)
-
-The output is a hierarchical class probability distribution for each level of the taxonomy.
+ # If you have access to the both the light curve and contextual features.
+   model = ORACLE1_BTS() 
+   model.predict(table) # This provides the scores at each level of the hierarchy
+   model.score(table) # This provides the predicted class for each level of the hierarchy
+   model.embed(table)  # This provide the latent space embeddings for each source
 
 For more examples, see the ``notebooks`` directory in the repository.
 
+If you wish to train models from scratch, you can use the `oracle-train` CLI tool.
+
+.. code-block:: bash
+
+   $ oracle-train -h
+
+This will display the help message:
+
+.. code-block:: none
+
+   Using cpu device
+   usage: oracle-train [-h] [--num_epochs NUM_EPOCHS] [--batch_size BATCH_SIZE] [--lr LR] [--max_n_per_class MAX_N_PER_CLASS] [--alpha ALPHA] [--gamma GAMMA] [--dir DIR]
+                     [--load_weights LOAD_WEIGHTS]
+                     {BTS-lite,BTS,ZTF_Sims-lite,ELAsTiCC,ELAsTiCC-lite}
+
+   positional arguments:
+   {BTS-lite,BTS,ZTF_Sims-lite,ELAsTiCC,ELAsTiCC-lite}
+                           Type of model to train.
+
+   options:
+   -h, --help            show this help message and exit
+   --num_epochs NUM_EPOCHS
+                           Number of epochs to train the model for.
+   --batch_size BATCH_SIZE
+                           Batch size used for training.
+   --lr LR               Learning rate used for training.
+   --max_n_per_class MAX_N_PER_CLASS
+                           Maximum number of samples for any class. This allows for balancing of datasets.
+   --alpha ALPHA         Alpha value used for the loss function. See Villar et al. (2024) for more information. [https://arxiv.org/abs/2312.02266]
+   --gamma GAMMA         Exponent for the training weights.
+   --dir DIR             Directory for saving the models and best model during training.
+   --load_weights LOAD_WEIGHTS
+                           Path to model which should be loaded before training stars.
+
+Then, to test the model, you can use the `oracle-test` CLI tool.
+
+.. code-block:: bash
+
+   $ oracle-test -h
+
+This will display the help message:
+
+.. code-block:: none
+
+   Using cpu device
+   usage: oracle-test [-h] [--batch_size BATCH_SIZE] [--max_n_per_class MAX_N_PER_CLASS] dir
+
+   positional arguments:
+   dir                   Directory for saved model.
+
+   options:
+   -h, --help            show this help message and exit
+   --batch_size BATCH_SIZE
+                           Batch size used for test.
+   --max_n_per_class MAX_N_PER_CLASS
+                           Maximum number of samples for any class. This allows for balancing of datasets.
+
+If you wish to add your own models, I recommend adding to the functions implemented in 'src/oracle/presets.py'. 
+The training code is flexible enough to accommodate new model architectures and training procedures.
 ---
 
 3) References
@@ -120,20 +186,20 @@ If you use this software in your research, please cite:
 
 GitHub Repository:
 ~~~~~~~~~~~~~~~~~~
-`https://github.com/dev-ved30/Hierarchical-VT <https://github.com/dev-ved30/Hierarchical-VT>`_
+`https://github.com/dev-ved30/Oracle# <https://github.com/dev-ved30/Oracle#>`_
 
 ---
 
 License & Disclosure
 --------------------
 
-Please see the `LICENSE <https://github.com/dev-ved30/Hierarchical-VT/blob/main/LICENSE>`_ file for more details.
+Please see the `LICENSE <https://github.com/dev-ved30/Oracle/blob/main/LICENSE>`_ file for more details.
 
 
 .. warning::
    The docstrings for this project were generated, in part, with the help of Large Language Models (LLMs)
    and vetted by the developer(s). While efforts have been made to ensure accuracy,
    if you find any discrepancies or errors, please report them via the
-   `GitHub issue tracker <https://github.com/dev-ved30/Hierarchical-VT/issues>`_.
+   `GitHub issue tracker <https://github.com/dev-ved30/Oracle/issues>`_.
 
 ---

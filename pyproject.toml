@@ -24,7 +24,6 @@ dependencies = [
     "plotly==6.3.0",
     "scikit-learn==1.6.1",
     "umap-learn==0.5.8"
-    ""
 ]
 
 [build-system]

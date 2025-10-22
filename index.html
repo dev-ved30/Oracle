@@ -128,7 +128,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 <span class="n">model</span> <span class="o">=</span> <span class="n">ORACLE1_ELAsTiCC</span><span class="p">()</span>
 <span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="c1"># This provides the scores at each level of the hierarchy</span>
 <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="c1"># This provides the predicted class for each level of the hierarchy</span>
-<span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>  <span class="c1"># This provide the latent space embeddings for each source</span>
+<span class="n">model</span><span class="o">.</span><span class="n">embed</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>  <span class="c1"># This provide the latent space embeddings for each source</span>
 
 <span class="c1"># If you only have access to the light curve features, use the lite version instead.</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">ORACLE1_ELAsTiCC_lite</span><span class="p">()</span>

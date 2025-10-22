@@ -366,7 +366,7 @@ def plot_average_performance_over_all_phases(metric, metrics_dictionary, model_d
 
     plt.close()
 
-def plot_umap(embeddings, classes, bts_classes, d, model_dir=None):
+def plot_umap(embeddings, classes, bts_classes, id, d, model_dir=None):
     """
     Plot UMAP projection of embeddings.
     This function computes a 2D UMAP projection from high-dimensional embeddings and generates both a 
@@ -377,6 +377,7 @@ def plot_umap(embeddings, classes, bts_classes, d, model_dir=None):
     Parameters:
         embeddings (array-like): High-dimensional feature data (e.g., a numpy array) with shape (n_samples, n_features).
         classes (array-like): Class labels for each embedding, used for color-coding the points in the plot.
+        id (array-like): Unique identifiers for each source, used for hover information in the interactive plot.
         bts_classes (array-like): Additional class information for tooltips in the interactive plot.
         d (int or str): Identifier (e.g., number of days or a delay parameter) used in the plot title and file names.
         model_dir (str, optional): Directory where the plots will be saved. If None, the static plot is shown instead.
@@ -422,7 +423,8 @@ def plot_umap(embeddings, classes, bts_classes, d, model_dir=None):
     df = pd.DataFrame(umap_embedding, columns=['umap1','umap2'])
     df['class'] = classes
     df['raw_class'] = bts_classes
-    fig = px.scatter(df, x='umap1', y='umap2', color=f"class", hover_data=['class', 'raw_class'])#, cmap='viridis', marker=markers[i])
+    df['id'] = id
+    fig = px.scatter(df, x='umap1', y='umap2', color=f"class", hover_data=['class', 'raw_class', 'id'])#, cmap='viridis', marker=markers[i])
     fig.write_html(f"{model_dir}/plots/umap/umap_trigger+{d}.html")
 
         

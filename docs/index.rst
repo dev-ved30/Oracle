@@ -86,7 +86,7 @@ Once installed, you can classify light curves using a pretrained model:
    model = ORACLE1_ELAsTiCC()
    model.score(table) # This provides the scores at each level of the hierarchy
    model.predict(table) # This provides the predicted class for each level of the hierarchy
-   model.predict(table)  # This provide the latent space embeddings for each source
+   model.embed(table)  # This provide the latent space embeddings for each source
 
    # If you only have access to the light curve features, use the lite version instead. 
    model = ORACLE1_ELAsTiCC_lite()

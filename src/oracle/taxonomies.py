@@ -1,3 +1,6 @@
+"""
+Top level module for defining taxonomies used in hierarchical classification tasks."""
+
 import torch
 import numpy as np
 import networkx as nx
@@ -22,16 +25,27 @@ class Taxonomy(nx.DiGraph):
     """
 
     def __init__(self, directed=True, **attr):
+        """
+        Initialize a taxonomy instance.
+
+        Parameters:
+            directed (bool): Indicates whether the graph is directed. Defaults to True.
+            **attr: Additional keyword arguments to pass to the parent initializer.
+
+        Note:
+            The variable 'root_label' must be defined in the enclosing scope prior to instantiation.
+        """
 
         super().__init__(directed=directed, **attr)
         self.root_label = root_label
 
     def plot_taxonomy(self):
         """
-        Plot the taxonomy using networkx and matplotlib.
+        Plots the taxonomy graph.
 
-        returns:
-            None
+        This method computes the layout of the taxonomy graph using Graphviz's 'dot' algorithm, 
+        then draws the network using NetworkX's drawing functionalities with labels, arrows, and 
+        custom styling. Finally, it displays the plot using Matplotlib.
         """
 
         # Plot the taxonomy.
@@ -41,8 +55,25 @@ class Taxonomy(nx.DiGraph):
 
     def plot_colored_taxonomy(self, probabilities):
         """
-        Plot the taxonomy, colored by values in 
+        Plot the hierarchical taxonomy with colors corresponding to node probabilities.
+
+        This method computes a level-order traversal of the taxonomy,
+        maps each node to its corresponding probability value for coloring,
+        and then plots the taxonomy using Graphviz to determine node positions.
+        The nodes are drawn with colors derived from the provided probabilities,
+        and the plot is displayed using Matplotlib.
+
+        Parameters:
+            probabilities (array-like): An array-like object (e.g., list, NumPy array, or tensor)
+                containing probability values corresponding to each node in the taxonomy.
+                The order of probabilities should match the order obtained from the level-order traversal.
+
+        Note:
+            - The method uses NetworkX for graph handling and drawing.
+            - The Graphviz layout algorithm ('dot') is used to determine node positions.
+            - Matplotlib functions are used to adjust layout and display the final plot.
         """
+
 
         level_order_traversal = self.get_level_order_traversal()
 
@@ -57,10 +88,14 @@ class Taxonomy(nx.DiGraph):
 
     def get_level_order_traversal(self):
         """
-        Get the level order traversal of the taxonomy.
+        Perform a level order traversal of the tree and return an ordering of its nodes.
 
-        returns:
-            level_order_nodes: list of nodes in the taxonomy ordered by level order traversal.
+        This method initiates breadth-first search (BFS) starting from the root of the tree, using the
+        networkx breadth-first search tree function. The traversal produces an iterable of nodes in the
+        order they are visited.
+
+        Returns:
+            An iterable of node labels in level order starting from the root.
         """
 
         # Do a level order traversal of the tree to get an ordering of the nodes.
@@ -69,11 +104,13 @@ class Taxonomy(nx.DiGraph):
     
     def get_parent_nodes(self):
         """
-        Get the parent nodes for each node in the taxonomy, ordered by level order traversal.
+        Retrieves the parent node for each node in the taxonomy following a level order traversal.
 
-        returns:
-            parents: list of parent nodes for each node in the taxonomy, ordered by level order traversal.
+        Returns:
+            list: A list where each element is the parent of the corresponding node from the level order traversal.
+            The root node will have an empty string as its parent.
         """
+
 
         # Get the parent nodes for each node in the taxonomy, ordered by level order traversal.
         level_order_nodes = self.get_level_order_traversal()
@@ -94,12 +131,17 @@ class Taxonomy(nx.DiGraph):
     
     def get_sibling_masks(self):
         """
-        Get the sibling masks for each node in the taxonomy, ordered by level order traversal.
+        Get the sibling masks for each node in the taxonomy using level order traversal.
 
-        returns:
-            masks: list of numpy arrays of sibling mask indices for the taxonomy.
+        Sibling masks indicate which nodes share the same parent. For each unique parent,
+        a numpy array is created where each element is set to 1 if the corresponding node in the
+        level order traversal has that parent, and 0 otherwise.
+
+        Returns:
+            List[numpy.ndarray]: A list of numpy arrays, each representing a mask for sibling nodes
+            corresponding to one unique parent in the taxonomy.
         """
-
+        
         # NOTE: Sibling nodes are nodes that share the same parent node.
 
         # Get a list of all parents for all nodes in the taxonomy, ordered by level order traversal.
@@ -118,26 +160,43 @@ class Taxonomy(nx.DiGraph):
     
     def get_leaf_nodes(self):
         """
-        Get the leaf nodes in the taxonomy.
+        Return the leaf nodes in the taxonomy.
+        This method identifies leaf nodes as those nodes with no outgoing edges
+        (out_degree equals 0) and exactly one incoming edge (in_degree equals 1).
 
-        returns:
-            leaf_nodes: list of leaf nodes in the taxonomy.
+        Returns:
+            list: A list containing all nodes that meet the criteria for being a leaf node.
         """
 
         # Get the leaf nodes in the taxonomy
-        leaf_nodes = [x for x in self.nodes() if self.out_degree(x)==0 and self.in_degree(x)==1]
+        leaf_nodes = [x for x in self.nodes if self.out_degree(x)==0 and self.in_degree(x)==1]
         return leaf_nodes
     
     def get_hierarchical_one_hot_encoding(self, labels):
-
         """
-        Get the hierarchical one-hot encoding for the labels.
-        
-        args:
-            labels: list of labels to encode (n_samples). 
+        Compute the hierarchical one-hot encoding for a set of taxonomy labels.
+        This function creates a one-hot encoded representation for each label in the provided list,
+        where each encoding corresponds to the nodes along the unique shortest path—from the root node
+        to the label—in the taxonomy graph. The positions in the encoding vector are determined 
+        by a level-order traversal of the taxonomy.
 
-        returns:
-            all_encodings: 2D numpy array of hierarchical one-hot encodings (n_samples, n_nodes).
+        Parameters:
+            labels (iterable): An iterable of labels (nodes) to be encoded. Each label must exist in the taxonomy,
+                as verified by the level-order traversal.
+
+        Returns:
+            numpy.ndarray: A 2D numpy array of shape (number of labels, total number of nodes in the taxonomy),
+            where each row is the one-hot encoded vector for the corresponding label.
+            A value of 1 indicates that a node is part of the path from the root to the label;
+            all other positions are 0.
+
+        Raises:
+            AssertionError: If any of the provided labels is not found within the taxonomy.
+
+        Note:
+            - The function assumes the taxonomy is represented as a graph and relies on NetworkX's shortest path
+              algorithm to determine the unique path from the root node to each label.
+            - The ordering of the encoding vector is based on the level-order traversal of the taxonomy nodes.
         """
         level_order_nodes = self.get_level_order_traversal()
 
@@ -167,13 +226,19 @@ class Taxonomy(nx.DiGraph):
     
     def get_paths(self, labels):
         """
-        Get the paths from the root to the labels.
+        Construct hierarchical paths from the given labels.
 
-        args:
-            labels: list of labels to compute paths for (n_samples). Each label should be a leaf node in the taxonomy.
+        Parameters:
+            labels (iterable): A collection of labels for which hierarchical paths are to be generated. The expected format should be
+                               compatible with the one-hot encoding produced by `get_hierarchical_one_hot_encoding`.
 
-        returns:
-            paths: list of paths from the root to the labels.
+        Returns:
+            list of list:
+                A list where each element is a list representing the path (in level order) extracted from the hierarchy for the corresponding label.
+        
+        Note:
+            - This method relies on `get_hierarchical_one_hot_encoding` to obtain the binary encoded representation of the labels.
+            - The ordering of nodes is determined by `get_level_order_traversal`, whose output is used to map encoded indexes to actual nodes.
         """
 
         encodings = self.get_hierarchical_one_hot_encoding(labels)
@@ -189,10 +254,13 @@ class Taxonomy(nx.DiGraph):
     
     def get_depths(self):
         """
-        Get the depths of the nodes in the taxonomy, ordered by level order traversal.
+        Compute the depths (number of edges from the root) for all nodes in the tree.
+        This method performs a level-order traversal of the tree (using get_level_order_traversal)
+        and calculates the depth of each node by finding the shortest path from the root node to the
+        current node using networkx's shortest_path function.
 
-        returns:
-            depths: list of depths of the nodes in the taxonomy, ordered by level order traversal.
+        Returns:
+            numpy.ndarray: An array where each element represents the depth of a node in the tree.
         """
     
         path_lengths = []
@@ -206,14 +274,20 @@ class Taxonomy(nx.DiGraph):
     
     def get_conditional_probabilities(self, logits, epsilon=1e-10):
         """
-        Get the conditional probabilities from the logits, after applying the softmax function to sets of sibling nodes.
-        
-        args:
-            logits: 2D torch tensor of logits (n_samples, n_nodes).
-            epsilon: small value to avoid numerical problems with floating point numbers.
-            
-        returns:
-            conditional_probabilities: 2D torch tensor of conditional probabilities (n_samples, n_nodes)."""
+        Compute conditional probabilities over sibling groups of logits using masked softmax normalization.
+        This function iterates over a set of binary masks corresponding to sibling groups and, for each mask, applies
+        a softmax operation.This allows the function to compute conditional probabilities within each sibling group sequentially.
+
+        Parameters:
+            logits (torch.Tensor): A tensor of logits of shape (batch_size, num_classes) on which to apply the 
+                                     masked softmax operations.
+            epsilon (float, optional): A small constant added to the denominator to avoid division by zero
+                                       during normalization. Default is 1e-10.
+
+        Returns:
+            torch.Tensor: The tensor of logits after applying conditional probability computations using masked 
+            softmax operations, where probabilities are normalized within the sibling groups.
+        """
 
         masks = self.get_sibling_masks()
 
@@ -240,10 +314,22 @@ class Taxonomy(nx.DiGraph):
     
     def get_nodes_by_depth(self):
         """
-        Get the nodes in the taxonomy grouped by their depth.
+        Return a dictionary mapping depths to nodes in the hierarchy.
+        For each unique depth obtained from the hierarchy (via get_depths), this function:
+            - Extracts the nodes corresponding to that depth from the level order traversal.
+            - Stores them in a dictionary where keys are the depth levels.
+            - Additionally, assigns the leaf nodes (from get_leaf_nodes) to the key -1.
 
-        returns:
-            nodes_by_depth: dictionary where keys are depths and values are lists of nodes at that depth.
+        Returns:
+            dict: A dictionary where each key (of type int) corresponds to a depth level,
+            and the associated value is a NumPy array containing the nodes at that depth.
+            The key -1 is used to store a NumPy array of all leaf nodes.
+
+        Note:
+            - This function relies on the existence of helper methods:
+                - get_depths(): to obtain the depth of each node.
+                - get_level_order_traversal(): to obtain the nodes in level order.
+                - get_leaf_nodes(): to obtain the list of leaf nodes.
         """
 
         depths = self.get_depths()
@@ -266,13 +352,25 @@ class Taxonomy(nx.DiGraph):
             
     def get_class_probabilities(self, conditional_probabilities):
         """
-        Get the class probabilities from the conditional probabilities.
+        Compute the class probabilities for each node in the taxonomy using the given conditional probabilities.
+        The method takes a tensor of conditional probabilities (the output of a model),
+        and, for each node in the taxonomy (except the root), computes its class probability
+        as the product of the conditional probabilities along the unique path from the root to that node.
 
-        args:
-            conditional_probabilities: 2D numpy array of conditional probabilities (n_samples, n_nodes).
+        Parameters:
+            conditional_probabilities (torch.Tensor): A tensor of shape (N, M) where N is the 
+                number of samples and M is the number of nodes in the taxonomy. Each element represents 
+                the conditional probability of a node given its parent node.
 
-        returns:
-            class_probabilities: 2D numpy array of class probabilities (n_samples, n_nodes).
+        Returns:
+            torch.Tensor: A tensor of the same shape as `conditional_probabilities` where each element 
+            represents the computed class probability for the corresponding node. The class probability 
+            is calculated as the product of the conditional probabilities along the path from the root 
+            to that node.
+
+        Raises:
+            AssertionError: 
+                If the number of columns in `conditional_probabilities` does not match the number of nodes in the taxonomy.
         """
 
         assert conditional_probabilities.shape[1] == len(self.nodes()), 'Number of nodes in the taxonomy should match the number of columns in the conditional probabilities.'
@@ -302,6 +400,7 @@ class Taxonomy(nx.DiGraph):
         return class_probabilities
 
 class BTS_Taxonomy(Taxonomy):
+    """Class to represent the BTS taxonomy as a directed graph."""
 
     def __init__(self, **attr):
 
@@ -312,17 +411,18 @@ class BTS_Taxonomy(Taxonomy):
         self.add_nodes_from(level_1_nodes)
         self.add_edges_from([(root_label, node) for node in level_1_nodes])
 
-        level_2a_nodes = ['AGN','CV','Persistent-Other']
+        level_2a_nodes = ['AGN','CV']
         self.add_nodes_from(level_2a_nodes)
         self.add_edges_from([('Persistent', node) for node in level_2a_nodes])
 
         # Level 2b nodes for SN-like events
-        level_2b_nodes = ['SN-Ia','SN-II','SN-Ib/c','SLSN','Transient-Other']
+        level_2b_nodes = ['SN-Ia','SN-II','SN-Ib/c','SLSN']
         self.add_nodes_from(level_2b_nodes)
         self.add_edges_from([('Transient', node) for node in level_2b_nodes])
 
 
 class ORACLE_Taxonomy(Taxonomy):
+    """Class to represent the ORACLE ELAsTiCC taxonomy as a directed graph."""
 
     def __init__(self, **attr):
 
@@ -372,10 +472,12 @@ if __name__=='__main__':
     taxonomy.plot_taxonomy()
 
     all_classes = list(BTS_to_Astrophysical_mappings.values())
-    taxonomy.get_hierarchical_one_hot_encoding(all_classes)
+    #taxonomy.get_hierarchical_one_hot_encoding(all_classes)
     taxonomy.plot_colored_taxonomy(taxonomy.get_hierarchical_one_hot_encoding(['SN-II'])[0])
 
     print(taxonomy.get_nodes_by_depth())
+    print(taxonomy.get_leaf_nodes())
+    print(taxonomy.get_level_order_traversal())
 
 
     # Create a taxonomy object

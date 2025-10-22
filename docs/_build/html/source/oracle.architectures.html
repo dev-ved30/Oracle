@@ -1,0 +1,456 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>oracle.architectures module &mdash; oracle 1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=29a6c3e3"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            oracle
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">oracle</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">oracle.architectures module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/source/oracle.architectures.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-oracle.architectures">
+<span id="oracle-architectures-module"></span><h1>oracle.architectures module<a class="headerlink" href="#module-oracle.architectures" title="Link to this heading"></a></h1>
+<p>Top-level module for defining various neural network architectures for hierarchical classification.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="oracle.architectures.GRU">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.architectures.</span></span><span class="sig-name descname"><span class="pre">GRU</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taxonomy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="oracle.taxonomies.html#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><span class="pre">Taxonomy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts_feature_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oracle.architectures.Hierarchical_classifier" title="oracle.architectures.Hierarchical_classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hierarchical_classifier</span></code></a></p>
+<p>GRU-based neural network architecture for hierarchical classification.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.GRU.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU.forward" title="Link to this definition"></a></dt>
+<dd><p>Compute the logits for a given input batch through the model.</p>
+<p>This method processes the input batch by first obtaining its latent space embeddings,
+applying a ReLU activation, and then projecting the result to logits using a fully
+connected output layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch</strong> (<em>dict</em>) – Input data batch.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed output logits after the final linear transformation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>logits(torch.Tensor)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.GRU.get_latent_space_embeddings">
+<span class="sig-name descname"><span class="pre">get_latent_space_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU.get_latent_space_embeddings" title="Link to this definition"></a></dt>
+<dd><p>Compute latent space embeddings for a batch of time-series data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch</strong> (<em>dict</em>) – A dictionary containing:
+1. ‘ts’ (torch.Tensor): Input time-series data of shape (batch_size, seq_len, n_ts_features).
+2.’length’ (torch.Tensor or list[int]): Sequence lengths indicating the valid lengths of each time-series in the batch.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The latent space embeddings resulting from the network’s forward pass.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="oracle.architectures.GRU_MD">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.architectures.</span></span><span class="sig-name descname"><span class="pre">GRU_MD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taxonomy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="oracle.taxonomies.html#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><span class="pre">Taxonomy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts_feature_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_feature_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MD" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oracle.architectures.Hierarchical_classifier" title="oracle.architectures.Hierarchical_classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hierarchical_classifier</span></code></a></p>
+<p>GRU-based neural network architecture with multi-dimensional static features for hierarchical classification.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.GRU_MD.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MD.forward" title="Link to this definition"></a></dt>
+<dd><p>Computes the forward pass through the network module.
+This method performs the following steps:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Extracts latent space embeddings from the input batch using self.get_latent_space_embeddings.</p></li>
+<li><p>Applies a ReLU activation to the latent embeddings.</p></li>
+<li><p>Computes the logits by passing the activated embeddings through a fully connected layer (self.fc_out).</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch</strong> – Input data (e.g., tensors or other data structures) used to compute the latent embeddings.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Logits produced by the network.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.GRU_MD.get_latent_space_embeddings">
+<span class="sig-name descname"><span class="pre">get_latent_space_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MD.get_latent_space_embeddings" title="Link to this definition"></a></dt>
+<dd><p>Generates the latent space embedding for a given batch of data by processing both time series and static features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch</strong> (<em>dict</em>) – A dictionary containing the following keys:
+1. ‘ts’ (torch.Tensor): Time series data of shape (batch_size, seq_len, n_ts_features).
+2. ‘length’ (torch.Tensor): Tensor containing the true lengths for each time series in the batch (shape: (batch_size)).
+3. ‘static’ (torch.Tensor): Static features of shape (batch_size, n_static_features).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The latent space embedding computed by merging the processed time series and static features after passing them through respective dense layers and nonlinear activations.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="oracle.architectures.GRU_MD_MM">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.architectures.</span></span><span class="sig-name descname"><span class="pre">GRU_MD_MM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts_feature_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_feature_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">18</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MD_MM" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oracle.architectures.Hierarchical_classifier" title="oracle.architectures.Hierarchical_classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hierarchical_classifier</span></code></a></p>
+<p>GRU-based neural network architecture with multi-dimensional static features and multi-modal inputs for hierarchical classification.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.GRU_MD_MM.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MD_MM.forward" title="Link to this definition"></a></dt>
+<dd><p>Compute the network’s output logits from an input batch.
+This method first extracts latent space embeddings from the batch, applies a ReLU activation to introduce non-linearity, and then computes the final logits using a fully connected output layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch</strong> – The input data batch from which latent embeddings are derived.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed logits after processing the latent embeddings through the ReLU activation and linear layer.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.GRU_MD_MM.get_latent_space_embeddings">
+<span class="sig-name descname"><span class="pre">get_latent_space_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MD_MM.get_latent_space_embeddings" title="Link to this definition"></a></dt>
+<dd><p>Compute latent space embeddings from the given batch of inputs.</p>
+<p>Processes time-series, static, and postage stamp inputs to produce a latent representation.
+The function performs the following steps:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Packs the padded time-series data using the sequence lengths provided.</p></li>
+<li><p>Processes the time-series data with a bidirectional GRU and extracts its last hidden state.</p></li>
+<li><p>Processes the postage stamp data through a Swin-based module and a fully connected layer.</p></li>
+<li><p>Transforms the GRU and static features through separate dense layers with non-linear activation.</p></li>
+<li><p>Concatenates the processed time-series, static, and postage stamp features.</p></li>
+<li><p>Passes the merged representation through additional dense layers with activation functions to yield the final latent space embedding.</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch</strong> (<em>dict</em>) – A dictionary containing:
+1. “ts” (torch.Tensor): Time series data of shape (batch_size, seq_len, n_ts_features).
+2. “length” (torch.Tensor): Lengths of each time series in the batch (batch_size, ).
+3. “static” (torch.Tensor): Static features of shape (batch_size, n_static_features).
+4. “postage_stamp” (torch.Tensor): Postage stamp data for additional processing.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The latent space embeddings computed from the combined features.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.architectures.</span></span><span class="sig-name descname"><span class="pre">Hierarchical_classifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taxonomy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="oracle.taxonomies.html#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><span class="pre">Taxonomy</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <a class="reference internal" href="oracle.trainer.html#oracle.trainer.Trainer" title="oracle.trainer.Trainer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trainer</span></code></a>, <a class="reference internal" href="oracle.tester.html#oracle.tester.Tester" title="oracle.tester.Tester"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tester</span></code></a></p>
+<p>Base class for hierarchical classification architectures.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier.embed">
+<span class="sig-name descname"><span class="pre">embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier.embed" title="Link to this definition"></a></dt>
+<dd><p>Embeds the provided table into the model’s latent space.
+:param table: object</p>
+<blockquote>
+<div><p>The table data to be embedded. The expected type and structure of this data
+should be compatible with the model’s input requirements.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>NotImplementedError</strong> – This method is not implemented by default and is intended for pretrained models only.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier.get_latent_space_embeddings">
+<span class="sig-name descname"><span class="pre">get_latent_space_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier.get_latent_space_embeddings" title="Link to this definition"></a></dt>
+<dd><p>Compute the latent space embeddings for a given batch of data.</p>
+<p>This method should be implemented by subclasses to transform the input batch into a latent representation.
+The exact nature of the embedding (e.g., dimensionality, transformation mechanism) depends on the specific architecture.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch</strong> (<em>dictionary</em>) – A batch of input data on which to compute the latent embeddings. The expected format and type should
+be defined by the implementing subclass.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The latent space embeddings corresponding to the provided batch. The structure and type of the embeddings
+is determined by the subclass implementation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – If the method is not implemented by the subclass.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier.predict" title="Link to this definition"></a></dt>
+<dd><p>Predict the label at each hierarchical level for the table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>table</strong> (<em>astropy.table.Table</em>) – Input data containing one or more rows.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Mapping from hierarchical level (as returned by self.score) to the predicted class</dt><dd><p>label. For each level, self.score(table) is expected to return a
+pandas.DataFrame of shape (n_samples, n_classes) with class labels as columns; the
+predicted label is the column with the highest score for the first sample.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Any exceptions raised by self.score</strong><strong> or </strong><strong>by numpy operations</strong><strong> (</strong><strong>e.g.</strong><strong>, </strong><strong>if the score DataFrame is empty</strong><strong>) </strong><strong>will be propagated.</strong> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier.predict_class_probabilities">
+<span class="sig-name descname"><span class="pre">predict_class_probabilities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier.predict_class_probabilities" title="Link to this definition"></a></dt>
+<dd><p>Predicts the class probabilities for a given batch of data.
+This method first computes the conditional probabilities for the batch using
+the ‘predict_conditional_probabilities’ method. It then leverages the taxonomy to
+convert these conditional probabilities into final class probabilities.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch</strong> (<em>dictionary</em>) – The input data batch for which class probabilities are to be predicted.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed class probabilities derived from the input batch.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier.predict_class_probabilities_df">
+<span class="sig-name descname"><span class="pre">predict_class_probabilities_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier.predict_class_probabilities_df" title="Link to this definition"></a></dt>
+<dd><p>Predict class probabilities for a given batch and return the results in a DataFrame.</p>
+<p>This method performs the following steps:
+1. Retrieves the list of taxonomy nodes ordered by level using the taxonomy’s <cite>get_level_order_traversal</cite> method.
+2. Computes the class probabilities for the input batch via the <cite>predict_class_probabilities</cite> method.
+3. Constructs and returns a pandas DataFrame with the computed probabilities, where each column corresponds to a taxonomy node in level order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch</strong> (<em>dictionary</em>) – The input data batch on which to perform predictions. The expected format
+and type of <cite>batch</cite> depend on the implementation details of the prediction model.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A DataFrame with columns representing taxonomy nodes and each cell containing</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><p>pandas.DataFrame</p>
+<p>the predicted class probability for the corresponding node.</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier.predict_conditional_probabilities">
+<span class="sig-name descname"><span class="pre">predict_conditional_probabilities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier.predict_conditional_probabilities" title="Link to this definition"></a></dt>
+<dd><p>Compute conditional probabilities from the model’s output.
+This method performs a forward pass using the given batch of inputs to obtain the logits.
+It then utilizes the taxonomy’s get_conditional_probabilities method to convert these logits
+into conditional probabilities. The resulting tensor is detached from the computation graph
+and returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch</strong> (<em>dictionary</em>) – A batch of input data to be fed into the model. The exact format and type of the batch
+depend on the requirements of the forward method.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor representing the conditional probabilities computed from the model’s logits.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier.predict_conditional_probabilities_df">
+<span class="sig-name descname"><span class="pre">predict_conditional_probabilities_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier.predict_conditional_probabilities_df" title="Link to this definition"></a></dt>
+<dd><p>Predict conditional probabilities for a batch and return them as a pandas DataFrame.</p>
+<p>This method retrieves a level-order traversal of nodes from the taxonomy, computes the conditional
+probabilities for the given batch using the predict_conditional_probabilities method, and then
+constructs a pandas DataFrame with the probabilities. The DataFrame’s columns are named using the
+node order from the taxonomy’s level-order traversal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch</strong> (<em>dictionary</em>) – The input data batch for which the conditional probabilities are to be predicted.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A DataFrame containing the predicted conditional probabilities with columns
+corresponding to the level-order nodes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier.predict_full_scores">
+<span class="sig-name descname"><span class="pre">predict_full_scores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier.predict_full_scores" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier.score">
+<span class="sig-name descname"><span class="pre">score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier.score" title="Link to this definition"></a></dt>
+<dd><p>Compute hierarchical scores for the input table.
+Predicts scores for all taxonomy nodes using self.predict_full_scores(), then
+groups those scores by taxonomy depth and returns a mapping from depth levels
+to DataFrames containing the corresponding node scores.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>table</strong> (<em>astropy.table.Table</em>) – Input observations/features to be scored.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A mapping from taxonomy depth level to a</dt><dd><p>DataFrame of predicted scores for nodes at that level. Each DataFrame
+is a subset of the full prediction DataFrame containing only the
+columns for the nodes at that depth.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[int, pandas.DataFrame]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>KeyError</strong> – If expected node columns (from self.taxonomy.get_nodes_by_depth()) are not present in the DataFrame returned by predict_full_scores().</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Ved Shah.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

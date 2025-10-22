@@ -1,3 +1,4 @@
+"""Custom dataset class for the ZTF Bright Transient Survey light curve dataset."""
 import io
 import torch
 
@@ -5,12 +6,14 @@ import polars as pl
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import astropy.units as u
 
 from functools import partial
 from pathlib import Path
 from PIL import Image
 from tqdm import tqdm
 from torch.nn.utils.rnn import pad_sequence
+from astropy.coordinates import SkyCoord
 
 from oracle.constants import ztf_filters, ztf_alert_image_order, ztf_alert_image_dimension, ztf_filter_to_fid, BTS_to_Astrophysical_mappings
 
@@ -18,9 +21,9 @@ from oracle.constants import ztf_filters, ztf_alert_image_order, ztf_alert_image
 here = Path(__file__).resolve().parent
 
 # Go up to the root, then into data/ and then get the parquet file
-BTS_train_parquet_path = str(here.parent.parent.parent / "data" / 'BTS' / 'train.parquet')
-BTS_test_parquet_path = str(here.parent.parent.parent / "data" / 'BTS' / 'test.parquet')
-BTS_val_parquet_path = str(here.parent.parent.parent / "data" / 'BTS' / 'val.parquet')
+BTS_train_parquet_path = str(here.parent.parent.parent / "data" / 'BTS_new' / 'train.parquet')
+BTS_test_parquet_path = str(here.parent.parent.parent / "data" / 'BTS_new' / 'test.parquet')
+BTS_val_parquet_path = str(here.parent.parent.parent / "data" / 'BTS_new' / 'val.parquet')
 
 # <----- constant for the dataset ----->
 
@@ -59,34 +62,78 @@ ZTF_wavelength_to_color = {
 flag_value = -9
 
 images_list = ['g_reference', 'g_science', 'g_difference', 'r_reference', 'r_science', 'r_difference', 'i_reference', 'i_science', 'i_difference']
-time_dependent_feature_list = ['jd', 'flux', 'flux_err', 'fid']
+time_dependent_feature_list = ['jd', 'magpsf', 'sigmapsf', 'fid']
+time_independent_feature_list = ['l', 'b', 'W1mag', 'W2mag', 'W3mag', 'W4mag','W1_minus_W3','W2_minus_W3']
+meta_data_feature_list = ['sky', 'sgscore1', 'sgscore2', 'distpsnr1', 'distpsnr2', 'fwhm', 'diffmaglim', 'ndethist', 'nmtchps', 'drb', 'ncovhist', 'chinr', 'sharpnr', 'scorr', 'sgmag1', 'srmag1','simag1','szmag1', 'sgmag2', 'srmag2','simag2','szmag2']
 book_keeping_feature_list = ['ZTFID', 'bts_class']
 features_to_transform = ['magpsf', 'sigmapsf']
 
 n_images = len(images_list)
 n_ts_features = len(time_dependent_feature_list)
+n_meta_features = len(meta_data_feature_list)
+n_static_features = len(time_independent_feature_list)
 n_book_keeping_features = len(book_keeping_feature_list)
 
 class BTS_LC_Dataset(torch.utils.data.Dataset):
+    """
+    A custom PyTorch Dataset class for handling BTS light curve data stored in a parquet file."""    
 
-    def __init__(self, parquet_file_path,  max_n_per_class=None, include_postage_stamps=False, include_lc_plots=False, transform=None, over_sample=False):
+    def __init__(self, 
+                 parquet_file_path, 
+                 mapper=None,
+                 max_n_per_class=None, 
+                 include_postage_stamps=False, 
+                 include_lc_plots=False, 
+                 transform=None, 
+                 over_sample=False, 
+                 excluded_classes=[]):
+        """
+        Initializes a BTS_LC_Dataset instance by loading data from a specified parquet file and performing a series of preprocessing steps.
+        Parameters:
+            parquet_file_path (str): The file path to the parquet dataset to be loaded.
+            mapper (dictionary, optional): A mapping dictionary used to convert dataset values. 
+                If None, defaults to BTS_to_Astrophysical_mappings.
+            max_n_per_class (int, optional): Maximum number of samples to include per class. If set, limits dataset samples per class.
+            include_postage_stamps (bool, optional): Flag indicating whether to include postage stamp images in the batch. Defaults to False.
+            include_lc_plots (bool, optional): Flag indicating whether to include light curve plots in the batch. Defaults to False.
+            transform (callable, optional): A transformation function to be applied to the dataset samples.
+            over_sample (bool, optional): Flag indicating whether to apply oversampling to minority classes.
+            excluded_classes (list, optional): A list of classes to be excluded from the dataset. Defaults to an empty list.
+        Functionality:
+            - Loads the dataset from the specified parquet file.
+            - Retrieves the schema (columns and dtypes) from the dataset.
+            - Prints the composition of the dataset.
+            - Converts magnitudes to flux values.
+            - Cleans up the dataset by handling missing or invalid values.
+            - Excludes specified classes from the dataset.
+            - Applies a maximum sample per class restriction if specified.
+            - Performs oversampling on minority classes if enabled.
+        """
         super(BTS_LC_Dataset, self).__init__()
 
-        # Columns to be read from the parquet file
         self.parquet_file_path = parquet_file_path
         self.transform = transform
         self.include_lc_plots = include_lc_plots
         self.include_postage_stamps = include_postage_stamps
         self.max_n_per_class = max_n_per_class
         self.over_sample = over_sample
+        self.excluded_classes = excluded_classes
+
+        if mapper == None:
+            self.mapper = BTS_to_Astrophysical_mappings
+        else:
+            self.mapper = mapper
 
         print(f'Loading dataset from {self.parquet_file_path}\n')
         self.parquet_df = pl.read_parquet(self.parquet_file_path)
+
+        # Columns to be read from the parquet file
         self.columns_dtypes = self.parquet_df.schema
 
         self.print_dataset_composition()
         self.convert_mags_to_flux()
         self.clean_up_dataset()
+        self.exclude_classes()
 
         if self.max_n_per_class != None:
             self.limit_max_samples_per_class()
@@ -96,15 +143,49 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
 
                
     def __len__(self):
-
+        """
+        Return the number of entries in the dataset.
+        This method returns the length of the underlying DataFrame by utilizing its shape attribute. It specifically retrieves the number of rows, which represents the total number of entries in the dataset.
+        Returns:
+            int: The total number of rows in the parquet DataFrame.
+        """
+        
         return self.parquet_df.shape[0]
 
     def __getitem__(self, index):
+        """
+        Retrieve and process a single data entry from the dataset based on the provided index.
+        Parameters:
+            index (int): Index of the data entry to retrieve from the underlying dataframe.
+        Returns:
+            dict: A dictionary containing:
+                - 'ts': torch.Tensor
+                    Time series data with an additional photflag column; the tensor is shaped 
+                    based on the number of time-dependent features plus one. photflag is only added to maintain compatibility with ZTF sims.
+                - 'meta': torch.Tensor
+                    Meta data features tensor constructed from the provided meta feature list. 
+                    NaN or placeholder values (e.g., -999) are replaced with a specified flag value.
+                - 'static': torch.Tensor
+                    Static feature tensor constructed from the time-independent feature list and metadata,
+                    with NaN values replaced by a flag value.
+                - 'label': The astrophysical class label extracted from the data row.
+                - 'bts_class': The BTS class label extracted from the data row.
+                - 'ZTFID': The unique identifier for the entry.
+                Additionally, if enabled:
+                - 'postage_stamp': Processed postage stamp images for each filter and image type,
+                    obtained by reshaping the data and applying a further processing function if postage_stamp is enabled.
+                - 'lc_plot': A light curve plot generated from the time series data if lc plots inclusion is enabled.
+        Side Effects:
+            - Applies an optional transformation to the time series and meta data if a transform function is provided.
+            - Performs computationally intensive operations when including postage stamps and light curve plots.
+        """
+
 
         row = self.parquet_df.row(index, named=True) 
 
         ztfid = row['ZTFID']
         astrophysical_class = row['class']
+        bts_class = row['bts_class']
 
         lc_length = len(row['jd'])
 
@@ -114,12 +195,30 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
             time_series_data[:,i] = np.array(row[feature], dtype=np.float32)
         time_series_data = torch.from_numpy(time_series_data)
 
+        meta_data = np.ones((lc_length, n_meta_features), dtype=np.float32)
+        for i, feature in enumerate(meta_data_feature_list):
+            d = np.asarray(row[feature], dtype=np.float32)
+            meta_data[: ,i] = d
+        meta_data = np.where(np.isnan(meta_data), np.float32(flag_value), meta_data)
+        meta_data = np.where(meta_data==-999, np.float32(flag_value), meta_data)
+        meta_data = torch.from_numpy(meta_data)
+
+        static_features = np.ones(n_static_features, dtype=np.float32)
+        for i, feature in enumerate(time_independent_feature_list):
+            d = row[feature]
+            static_features[i] = d
+        static_features = np.where(np.isnan(static_features), np.float32(flag_value), static_features)
+        static_features = torch.from_numpy(static_features)
+
         if self.transform != None:
-            time_series_data = self.transform(time_series_data)
+            time_series_data, meta_data = self.transform(time_series_data, meta_data)
 
         dictionary = {
             'ts': time_series_data,
+            'meta': meta_data,
+            'static': static_features,
             'label': astrophysical_class,
+            'bts_class': bts_class,
             'ZTFID': ztfid,
         }
 
@@ -136,7 +235,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
                         postage_stamps[f"{f}_{img_type}"] = np.zeros(ztf_alert_image_dimension)
                     else:
                         postage_stamps[f"{f}_{img_type}"] = np.reshape(img_data, ztf_alert_image_dimension)
-            postage_stamps = self.get_postage_stamp_plot(postage_stamps)
+            postage_stamps = self.get_postage_stamp(postage_stamps)
             dictionary['postage_stamp'] = postage_stamps
 
         # This operation is costly. Only do it if include_lc_plots stamps is true
@@ -146,7 +245,40 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         
         return dictionary
     
+    def exclude_classes(self):
+        """
+        Exclude specified classes from the dataset.
+        This method filters the dataset contained in `self.parquet_df` by removing any rows whose
+        'class' value is present in the `self.excluded_classes` list.
+
+        Returns:
+            None
+
+        Note:
+            - Assumes that the dataframe `self.parquet_df` has a column named 'class'.
+            - The method leverages the filtering function of the dataframe library (e.g., Polars).
+        """
+
+        print(f"Excluding {self.excluded_classes} from the dataset...")
+
+        class_dfs = []
+        unique_classes = np.unique(self.parquet_df['class'])
+
+        for c in unique_classes:
+
+            if c not in self.excluded_classes:
+                class_df = self.parquet_df.filter(pl.col("class") == c)
+                class_dfs.append(class_df)
+
+        self.parquet_df = pl.concat(class_dfs)
+
     def print_dataset_composition(self):
+        """
+        Prints a summary of the dataset composition before any transformations or mappings are applied.
+        This method extracts the unique classes and their respective counts from the 'bts_class'
+        column of the dataframe stored in self.parquet_df, constructs a dictionary with this information,
+        and then prints it as a formatted table.
+        """
         
         print("Before transforms and mappings, the dataset contains...")
         classes, count = np.unique(self.parquet_df['bts_class'], return_counts=True)
@@ -157,6 +289,22 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         print(pd.DataFrame(d).to_string())
 
     def convert_mags_to_flux(self):
+        """
+        Converts magnitude measurements to flux values and computes the corresponding flux uncertainties.
+        The method processes the dataframe stored in `self.parquet_df` by adding two new columns:
+            - "flux": Computed from the "magpsf" column using the relation: flux = F0 * 10^(-0.4 * magpsf)
+                where F0 is set to 3631.0 * 1e6 micro-Janskys (µJy).
+            - "flux_err": Calculated via error propagation using both "magpsf" and "sigmapsf" columns:
+                flux_err = (0.4 * ln(10)) * F0 * 10^(-0.4 * magpsf) * sigmapsf
+
+        Note:
+            - Element-wise operations are employed to map the magnitude values (and their uncertainties)to corresponding flux values across the dataframe.
+            - The resulting "flux" and "flux_err" columns are lists of floats.
+
+        Returns:
+                None. The dataframe `self.parquet_df` is modified in place.
+        """
+        
 
         F0_uJy = 3631.0 * 1e6
         factor  = 0.4 * np.log(10)
@@ -186,10 +334,24 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
 
     
     def get_all_labels(self):
+        """
+        Retrieves all labels from the parquet dataframe's 'class' column.
+        Returns:
+            list: A list of labels extracted from the 'class' column.
+        """
 
         return self.parquet_df['class'].to_list()
     
     def over_sample_minority_classes(self):
+        """
+        Oversamples the minority classes in the dataset contained in self.parquet_df.
+        This method identifies the class with the maximum sample count and for every other class, performs
+        sampling with replacement so that each class has the same number of samples as the majority class.
+        The oversampled dataframes for the minority classes are concatenated and reassigned to self.parquet_df.
+
+        Side Effects:
+            - Modifies self.parquet_df by oversampling minority classes.
+        """
         
         print("Oversampling minority classes...")
         unique_classes, unique_counts = np.unique(self.parquet_df['class'], return_counts=True)
@@ -206,6 +368,19 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         self.parquet_df = pl.concat(class_dfs)
 
     def clean_up_dataset(self):
+        """
+        Clean up the dataset by executing a series of transformations:
+            - Adjusts the observation times by subtracting the time of the first observation from each 'jd' entry.
+            - Converts band labels in the 'fid' column to their corresponding mean wavelengths based on a predefined mapping.
+            - Maps BTS sample explorer classes from the 'bts_class' column to astrophysical classes using a provided mapper.
+            - Computes new WISE color indices:
+                - 'W1_minus_W3' as the difference between 'W1mag' and 'W3mag'.
+                - 'W2_minus_W3' as the difference between 'W2mag' and 'W3mag'.
+            - Transforms celestial coordinates:
+                - Converts the right ascension ('ra') and declination ('dec') into galactic longitude ('l').
+                - Converts the right ascension ('ra') and declination ('dec') into galactic latitude ('b') using the SkyCoord library.
+        Prints status messages at each step to indicate progress.
+        """
 
         print("Starting Dataset Transformations:")
             
@@ -223,12 +398,50 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
 
         print("Mapping BTS samples explorer classes to astrophysical classes...")
         self.parquet_df = self.parquet_df.with_columns(
-            pl.col("bts_class").replace(BTS_to_Astrophysical_mappings, return_dtype=pl.String).alias("class")
+            pl.col("bts_class").replace(self.mapper, return_dtype=pl.String).alias("class")
         )
+
+        print("Adding wise colors...")
+        self.parquet_df = self.parquet_df.with_columns([
+            (pl.col("W1mag") - pl.col("W3mag")).alias("W1_minus_W3"),
+            (pl.col("W2mag") - pl.col("W3mag")).alias("W2_minus_W3"),
+        ])
+
+        print("Converting RA and Dec to l and b...")
+        self.parquet_df = self.parquet_df.with_columns([
+
+            pl.struct(["ra", "dec"])
+            .map_elements(
+                lambda row: SkyCoord(ra=row['ra'][0], dec=row['dec'][0], unit=(u.deg, u.deg)).galactic.l.deg,
+                return_dtype=pl.Float64,
+            )
+            .alias("l"),
+
+            pl.struct(["ra", "dec"])
+            .map_elements(
+                lambda row: SkyCoord(ra=row['ra'][0], dec=row['dec'][0], unit=(u.deg, u.deg)).galactic.b.deg,
+                return_dtype=pl.Float64,
+            )
+            .alias("b"),
+        ])
 
         print('Done!\n')
 
     def limit_max_samples_per_class(self):
+        """
+        Limits the number of samples for each class in the dataset to a maximum specified by self.max_n_per_class.
+        This method performs the following steps:
+            - Prints a message indicating that the dataset is being limited to self.max_n_per_class samples per class.
+            - Retrieves the unique class labels from the 'class' column of self.parquet_df.
+            - For each unique class, it filters the dataframe to include only entries belonging to that class and slices the result to retain only the first self.max_n_per_class rows.
+            - Collects the limited dataframes for each class and concatenates them back into a single dataframe.
+            - Prints the number of samples retained for each class.
+            - Updates self.parquet_df with the concatenated, limited dataframe.
+            
+        Note:
+            - Assumes self.parquet_df is a Polars DataFrame.
+            - Uses NumPy to determine unique class labels.
+        """
 
         print(f"Limiting the number of samples to a maximum of {self.max_n_per_class} per class.")
 
@@ -244,6 +457,29 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         self.parquet_df = pl.concat(class_dfs)
 
     def get_lc_plots(self, x_ts):
+        """
+        Generates a light curve plot image from time series data and returns it as a Torch tensor.
+
+        Parameters:
+            x_ts (numpy.ndarray): 2D array where each row corresponds to a time step and columns represent
+                various features including 'jd' (Julian Date), 'flux' (observed flux),
+                'flux_err' (flux error), and 'fid' (filter identifier). The feature indices
+                are determined using the global variable time_dependent_feature_list.
+
+        Returns:
+            torch.Tensor: A tensor representing the RGB image of the generated light curve plot 
+            with shape (3, H, W), where H and W are the height and width of the image in pixels.
+
+        Note:
+            - The function uses matplotlib to create the plot and PIL to handle image conversion.
+            - It iterates over wavelengths defined in the global dictionary ZTF_wavelength_to_color, plotting
+              error bars for each wavelength filtered by the 'fid' feature.
+            - The output image is saved to an in-memory buffer at 100 dpi, then converted from a PIL Image to a
+              NumPy array and finally to a Torch tensor.
+
+        Warning:
+            - [TODO] This function can be optimized further to avoid using matplotlib and PIL altogether. Its really slow right now...
+        """
 
         # Get the light curve data
         jd = x_ts[:,time_dependent_feature_list.index('jd')]
@@ -295,7 +531,52 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
 
         return img_arr
     
+    def get_postage_stamp(self, examples):
+        """
+        Generates a postage stamp image tensor for the provided source.
+        This function iterates over a set of predefined filters (ztf_filters) and extracts
+        the corresponding reference images from the 'examples' dictionary. Each extracted image
+        is stored in a canvas array, which is then scaled from a range [0, 1] to [0, 255]
+        and converted into a PyTorch tensor.
+
+        Parameters:
+            examples (dict): A dictionary containing image data corresponding to each filter reference,
+                with keys formatted as '{filter}_reference'.
+
+        Returns:
+            torch.Tensor: A tensor of shape (len(ztf_filters), img_length, img_length) representing the
+            postage stamp images, with pixel values scaled to the range [0, 255].
+        """
+
+        img_length = ztf_alert_image_dimension[0]
+        canvas = np.zeros((len(ztf_filters), img_length, img_length)) 
+
+        # Loop through all of the filters
+        for j, f in enumerate(ztf_filters):
+            canvas[j,:,:] = examples[f"{f}_reference"]
+        canvas = torch.from_numpy(canvas*255)
+        return canvas
+
     def get_postage_stamp_plot(self, examples):
+        """
+        Generates a postage stamp plot from the given image examples and returns it as a PyTorch tensor.
+        The function assembles a canvas by arranging image sections corresponding to various filters (defined in the global
+        ztf_filters) side-by-side. Each section is populated using the "{filter}_reference" key from the provided examples
+        dictionary. The canvas is then plotted using matplotlib, without axis ticks or spines, and saved into a PNG image
+        buffer. This image is subsequently loaded via PIL, converted to a NumPy array with channel-first ordering, and finally
+        wrapped into a PyTorch tensor.
+
+        Parameters:
+            examples (dict): A dictionary containing image data. For every filter in the global variable ztf_filters, the key
+                corresponding to the image is expected to be formatted as "{filter}_reference".
+
+        Returns:
+            torch.Tensor: The resulting image as a PyTorch tensor with shape (C, H, W), where C is the number of color channels,
+            and H and W correspond to the height and width of the assembled image, respectively.
+
+        Warning:
+            - [TODO] This function can be optimized further to avoid using matplotlib and PIL altogether. Its really slow right now...
+        """
 
         img_length = ztf_alert_image_dimension[0]
 
@@ -345,60 +626,125 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         buf.close()
         
         return im
+
+def truncate_BTS_light_curve_by_days_since_trigger(x_ts, x_static, d=None, add_jitter=False, normalize_flux=False):
+    """
+    Truncate the BTS light curve based on the number of days since the first trigger.
+    This function selects observations from the time-series data (x_ts) that occur within a specified number of days (d) from the first detection (trigger).
+    It also optionally adds jitter to the flux measurements and normalizes the flux values.
     
-def truncate_BTS_light_curve_fractionally(x_ts, f=None):
+    Parameters:
+        x_ts (numpy.ndarray): Time-dependent features array where each row represents an observation. 
+            Expected to contain the following features:
+                - 'jd': Julian date of the observation.
+                - 'magpsf': magnitude.
+                - 'sigmapsf': Uncertainty of the magnitude.
+                - 'fid': Filter identifier.
+                - 'photflag': Photometric flag (added as an extra column to maintain compatibility with ZTF sims and always assumed to be 1).
+        x_static (numpy.ndarray): Corresponding static features array for each observation.
+        d (float, optional): Maximum number of days from the trigger within which to keep observations.
+                             If None, a random threshold is generated using 2^(uniform(0, 11)).
+        add_jitter (bool, optional): If True, adds Gaussian noise to the flux by using flux error as 1 sigma values.
+        normalize_flux (bool, optional): If True, normalizes the flux ('magpsf') using its mean and standard deviation.
+    Returns:
+        tuple: A tuple containing:
+            - x_ts (numpy.ndarray): The truncated time-dependent features array.
+            - x_static (numpy.ndarray): The static features array.
 
-    if f == None:
-        # Get a random fraction between 0.1 and 1
-        f = np.random.uniform(0.01, 1.0)
-    
-    original_obs_count = x_ts.shape[0]
-
-    # Find the new length of the light curve
-    new_obs_count = int(original_obs_count * f)
-    if new_obs_count < 1:
-        new_obs_count = 1
-
-    # Truncate the light curve
-    x_ts = x_ts[:new_obs_count, :]
-
-    return x_ts
-
-def truncate_BTS_light_curve_by_days_since_trigger(x_ts, d):
+    Note:
+        - The function assumes that the dataset does not contain any non-detections.
+    """
 
     # NOTE: For BTS we are making the assumption that the data set does not contain any non detections. This is not the case with ELAsTiCC
+    if d == None:
+        d = 2**np.random.uniform(0, 11)
 
     # Get the days data
     jd_index = time_dependent_feature_list.index('jd')
+    flux_index = time_dependent_feature_list.index('magpsf')
+    flux_err_index = time_dependent_feature_list.index('sigmapsf')
+
     jd = x_ts[:, jd_index]
 
+    if add_jitter:
+
+        x_ts[:, flux_index] = x_ts[:, flux_index] + np.random.normal([0]*x_ts.shape[0],  x_ts[:, flux_err_index])
+        x_ts[:, flux_err_index] = x_ts[:, flux_err_index] + np.random.normal([0]*x_ts.shape[0],  0.01)
+
     # Get indices of observations within d days of the first detection (trigger)
-    idx = np.where(jd < d)[0]
+    idx = np.where(jd <= d)[0]
 
     # Truncate the light curve
     x_ts = x_ts[idx, :]
+    x_static = x_static[idx, :]
 
-    return x_ts
+    # Normalize the time series
+    if normalize_flux:
+
+        mean = torch.mean(x_ts[:, flux_index])
+        std = torch.std(x_ts[:, flux_index])
+        
+        if std > 0: 
+            x_ts[:, flux_index] = (x_ts[:, flux_index] - mean) / std
+        else:
+            x_ts[:, flux_index] = (x_ts[:, flux_index] - mean)
+
+    return x_ts, x_static
 
 def custom_collate_BTS(batch):
+    """
+    Collate function for batching BTS dataset samples.
+    This function takes a list of sample dictionaries and collates them into a single batch
+    dictionary suitable for training or inference. It pads the time-series data, concatenates
+    static and meta features, and properly stacks optional image data (postage_stamp and lc_plot)
+    if they are present in the sample dictionaries.
+    Parameters:
+        batch (list of dict): A list where each element is a dictionary containing the following keys:
+            Required keys:
+                - 'ts' (numpy.ndarray): Time-series data for the sample.
+                - 'label': Label corresponding to the sample.
+                - 'ZTFID': Identifier for the sample.
+                - 'bts_class': Raw label or class of the sample.
+                - 'meta' (numpy.ndarray): Meta features array from which the last row is used.
+                - 'static' (numpy.ndarray): Static features for the sample.
+            Optional keys:
+                - 'postage_stamp': Tensor representing the postage stamp image.
+                - 'lc_plot': Tensor representing the light curve plot image.
+    Returns:
+        dict: A dictionary with the following entries:
+            - 'ts' (Tensor): Padded time-series data tensor with shape (batch_size, max_seq_length, ...).
+            - 'static' (Tensor): Concatenated tensor of static and meta features.
+            - 'length' (Tensor): Tensor containing the original lengths of each time-series sample.
+            - 'label' (numpy.ndarray): Array of sample labels.
+            - 'raw_label' (numpy.ndarray): Array of BTS raw labels.
+            - 'id' (numpy.ndarray): Array of sample identifiers.
+            - 'postage_stamp' (Tensor, optional): Stacked tensor of postage stamp images, if available.
+            - 'lc_plot' (Tensor, optional): Stacked tensor of light curve plot images, if available.
+    """
 
     batch_size = len(batch)
 
     ts_array = []
     label_array = []
     ztfid_array = []
+    bts_array = []
 
-    lengths = np.zeros((batch_size), dtype=np.float32)
-    lc_plot_tensor = torch.zeros((batch_size, n_channels, img_height, img_width), dtype=torch.float32)
-    postage_stamps_tensor = torch.zeros((batch_size, n_channels, img_height, img_width), dtype=torch.float32)
+    lengths = np.zeros((batch_size), dtype=np.float32,  device='cpu')
+    meta_features_tensor = torch.zeros((batch_size, n_meta_features),  dtype=torch.float32, device='cpu')
+    static_features_tensor = torch.zeros((batch_size, n_static_features),  dtype=torch.float32, device='cpu')
+    lc_plot_tensor = torch.zeros((batch_size, n_channels, img_height, img_height), dtype=torch.float32)
+    postage_stamps_tensor = torch.zeros((batch_size, n_channels, 63, 63), dtype=torch.float32)
 
     for i, sample in enumerate(batch):
 
         ts_array.append(sample['ts'])
         label_array.append(sample['label'])
         ztfid_array.append(sample['ZTFID'])
-
+        bts_array.append(sample['bts_class'])
+        
         lengths[i] = sample['ts'].shape[0]
+        meta_features_tensor[i, :] = sample['meta'][-1, :]
+        static_features_tensor[i, :] = sample['static']
 
         if 'postage_stamp' in sample.keys():
             postage_stamps_tensor[i,:,:,:] = sample['postage_stamp']        
@@ -408,15 +754,21 @@ def custom_collate_BTS(batch):
 
     lengths = torch.from_numpy(lengths)
     label_array = np.array(label_array)
+    bts_array = np.array(bts_array)
     ztfid_array = np.array(ztfid_array)
 
     ts_tensor = pad_sequence(ts_array, batch_first=True, padding_value=flag_value)
+    
+    # Combine the static and meta features
+    static_features_tensor = torch.cat((static_features_tensor, meta_features_tensor), dim=1)
 
     d = {
         'ts': ts_tensor,
+        'static': static_features_tensor,
         'length': lengths,
         'label': label_array,
-        'ZTFID': ztfid_array,
+        'raw_label': bts_array, 
+        'id': ztfid_array,
     }
 
     if 'postage_stamp' in sample.keys():
@@ -428,6 +780,22 @@ def custom_collate_BTS(batch):
     return d
 
 def show_batch(images, labels, n=16):
+    """
+    Display a grid of images with corresponding labels.
+    This function creates a visual representation of the first n images from the provided dataset.
+    It arranges the images in a square grid and annotates each image with its corresponding label.
+
+    Parameters:
+        images (Tensor or array-like): Collection of images to be displayed. Each image is expected to have the shape
+            (C, H, W), where C is the number of channels. For grayscale images, C should be 1.
+        labels (Sequence): Sequence of labels corresponding to each image.
+        n (int, optional): The number of images to display. The function uses the first n images from the collection.
+            Defaults to 16.
+
+    Displays:
+        A matplotlib figure containing a grid of images, each annotated with its respective label.
+    """
+    
 
     # Get the first n images
     images = images[:n]
@@ -457,7 +825,7 @@ if __name__=='__main__':
     
     # <--- Example usage of the dataset --->
 
-    dataset = BTS_LC_Dataset(BTS_train_parquet_path, include_postage_stamps=True, include_lc_plots=True, transform=truncate_BTS_light_curve_fractionally, max_n_per_class=1000)
+    dataset = BTS_LC_Dataset(BTS_train_parquet_path, include_postage_stamps=False, include_lc_plots=False, transform=truncate_BTS_light_curve_fractionally, max_n_per_class=1000)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, collate_fn=custom_collate_BTS, shuffle=True)
 
     for batch in tqdm(dataloader):
@@ -467,11 +835,11 @@ if __name__=='__main__':
         for k in (batch.keys()):
             print(f"{k}: \t{batch[k].shape}")
 
-        if 'postage_stamp' in batch.keys():
-            show_batch(batch['postage_stamp'], batch['label'])
+        # if 'postage_stamp' in batch.keys():
+        #     show_batch(batch['postage_stamp'], batch['label'])
         
-        if 'lc_plot' in batch.keys():
-            show_batch(batch['lc_plot'], batch['label'])
+        # if 'lc_plot' in batch.keys():
+        #     show_batch(batch['lc_plot'], batch['label'])
 
     # imgs = []
     # lc_d = []

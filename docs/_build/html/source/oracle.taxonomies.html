@@ -1,0 +1,393 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>oracle.taxonomies module &mdash; oracle 1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=29a6c3e3"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            oracle
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">oracle</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">oracle.taxonomies module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/source/oracle.taxonomies.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-oracle.taxonomies">
+<span id="oracle-taxonomies-module"></span><h1>oracle.taxonomies module<a class="headerlink" href="#module-oracle.taxonomies" title="Link to this heading"></a></h1>
+<p>Top level module for defining taxonomies used in hierarchical classification tasks.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="oracle.taxonomies.BTS_Taxonomy">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.taxonomies.</span></span><span class="sig-name descname"><span class="pre">BTS_Taxonomy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.taxonomies.BTS_Taxonomy" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Taxonomy</span></code></a></p>
+<p>Class to represent the BTS taxonomy as a directed graph.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="oracle.taxonomies.ORACLE_Taxonomy">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.taxonomies.</span></span><span class="sig-name descname"><span class="pre">ORACLE_Taxonomy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.taxonomies.ORACLE_Taxonomy" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Taxonomy</span></code></a></p>
+<p>Class to represent the ORACLE ELAsTiCC taxonomy as a directed graph.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="oracle.taxonomies.Taxonomy">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.taxonomies.</span></span><span class="sig-name descname"><span class="pre">Taxonomy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.taxonomies.Taxonomy" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">DiGraph</span></code></p>
+<p>Class to represent a taxonomy as a directed graph.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.taxonomies.Taxonomy.get_class_probabilities">
+<span class="sig-name descname"><span class="pre">get_class_probabilities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conditional_probabilities</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.taxonomies.Taxonomy.get_class_probabilities" title="Link to this definition"></a></dt>
+<dd><p>Compute the class probabilities for each node in the taxonomy using the given conditional probabilities.
+The method takes a tensor of conditional probabilities (the output of a model),
+and, for each node in the taxonomy (except the root), computes its class probability
+as the product of the conditional probabilities along the unique path from the root to that node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>conditional_probabilities</strong> (<em>torch.Tensor</em>) – A tensor of shape (N, M) where N is the
+number of samples and M is the number of nodes in the taxonomy. Each element represents
+the conditional probability of a node given its parent node.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor of the same shape as <cite>conditional_probabilities</cite> where each element
+represents the computed class probability for the corresponding node. The class probability
+is calculated as the product of the conditional probabilities along the path from the root
+to that node.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – If the number of columns in <cite>conditional_probabilities</cite> does not match the number of nodes in the taxonomy.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.taxonomies.Taxonomy.get_conditional_probabilities">
+<span class="sig-name descname"><span class="pre">get_conditional_probabilities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.taxonomies.Taxonomy.get_conditional_probabilities" title="Link to this definition"></a></dt>
+<dd><p>Compute conditional probabilities over sibling groups of logits using masked softmax normalization.
+This function iterates over a set of binary masks corresponding to sibling groups and, for each mask, applies
+a softmax operation.This allows the function to compute conditional probabilities within each sibling group sequentially.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>logits</strong> (<em>torch.Tensor</em>) – A tensor of logits of shape (batch_size, num_classes) on which to apply the
+masked softmax operations.</p></li>
+<li><p><strong>epsilon</strong> (<em>float</em><em>, </em><em>optional</em>) – A small constant added to the denominator to avoid division by zero
+during normalization. Default is 1e-10.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The tensor of logits after applying conditional probability computations using masked
+softmax operations, where probabilities are normalized within the sibling groups.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.taxonomies.Taxonomy.get_depths">
+<span class="sig-name descname"><span class="pre">get_depths</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.taxonomies.Taxonomy.get_depths" title="Link to this definition"></a></dt>
+<dd><p>Compute the depths (number of edges from the root) for all nodes in the tree.
+This method performs a level-order traversal of the tree (using get_level_order_traversal)
+and calculates the depth of each node by finding the shortest path from the root node to the
+current node using networkx’s shortest_path function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An array where each element represents the depth of a node in the tree.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.taxonomies.Taxonomy.get_hierarchical_one_hot_encoding">
+<span class="sig-name descname"><span class="pre">get_hierarchical_one_hot_encoding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.taxonomies.Taxonomy.get_hierarchical_one_hot_encoding" title="Link to this definition"></a></dt>
+<dd><p>Compute the hierarchical one-hot encoding for a set of taxonomy labels.
+This function creates a one-hot encoded representation for each label in the provided list,
+where each encoding corresponds to the nodes along the unique shortest path—from the root node
+to the label—in the taxonomy graph. The positions in the encoding vector are determined
+by a level-order traversal of the taxonomy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>labels</strong> (<em>iterable</em>) – An iterable of labels (nodes) to be encoded. Each label must exist in the taxonomy,
+as verified by the level-order traversal.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A 2D numpy array of shape (number of labels, total number of nodes in the taxonomy),
+where each row is the one-hot encoded vector for the corresponding label.
+A value of 1 indicates that a node is part of the path from the root to the label;
+all other positions are 0.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – If any of the provided labels is not found within the taxonomy.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>The function assumes the taxonomy is represented as a graph and relies on NetworkX’s shortest path
+algorithm to determine the unique path from the root node to each label.</p></li>
+<li><p>The ordering of the encoding vector is based on the level-order traversal of the taxonomy nodes.</p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.taxonomies.Taxonomy.get_leaf_nodes">
+<span class="sig-name descname"><span class="pre">get_leaf_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.taxonomies.Taxonomy.get_leaf_nodes" title="Link to this definition"></a></dt>
+<dd><p>Return the leaf nodes in the taxonomy.
+This method identifies leaf nodes as those nodes with no outgoing edges
+(out_degree equals 0) and exactly one incoming edge (in_degree equals 1).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list containing all nodes that meet the criteria for being a leaf node.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.taxonomies.Taxonomy.get_level_order_traversal">
+<span class="sig-name descname"><span class="pre">get_level_order_traversal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.taxonomies.Taxonomy.get_level_order_traversal" title="Link to this definition"></a></dt>
+<dd><p>Perform a level order traversal of the tree and return an ordering of its nodes.</p>
+<p>This method initiates breadth-first search (BFS) starting from the root of the tree, using the
+networkx breadth-first search tree function. The traversal produces an iterable of nodes in the
+order they are visited.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An iterable of node labels in level order starting from the root.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.taxonomies.Taxonomy.get_nodes_by_depth">
+<span class="sig-name descname"><span class="pre">get_nodes_by_depth</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.taxonomies.Taxonomy.get_nodes_by_depth" title="Link to this definition"></a></dt>
+<dd><p>Return a dictionary mapping depths to nodes in the hierarchy.
+For each unique depth obtained from the hierarchy (via get_depths), this function:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Extracts the nodes corresponding to that depth from the level order traversal.</p></li>
+<li><p>Stores them in a dictionary where keys are the depth levels.</p></li>
+<li><p>Additionally, assigns the leaf nodes (from get_leaf_nodes) to the key -1.</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A dictionary where each key (of type int) corresponds to a depth level,
+and the associated value is a NumPy array containing the nodes at that depth.
+The key -1 is used to store a NumPy array of all leaf nodes.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>This function relies on the existence of helper methods:</dt><dd><ul>
+<li><p>get_depths(): to obtain the depth of each node.</p></li>
+<li><p>get_level_order_traversal(): to obtain the nodes in level order.</p></li>
+<li><p>get_leaf_nodes(): to obtain the list of leaf nodes.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.taxonomies.Taxonomy.get_parent_nodes">
+<span class="sig-name descname"><span class="pre">get_parent_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.taxonomies.Taxonomy.get_parent_nodes" title="Link to this definition"></a></dt>
+<dd><p>Retrieves the parent node for each node in the taxonomy following a level order traversal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list where each element is the parent of the corresponding node from the level order traversal.
+The root node will have an empty string as its parent.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.taxonomies.Taxonomy.get_paths">
+<span class="sig-name descname"><span class="pre">get_paths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.taxonomies.Taxonomy.get_paths" title="Link to this definition"></a></dt>
+<dd><p>Construct hierarchical paths from the given labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>labels</strong> (<em>iterable</em>) – A collection of labels for which hierarchical paths are to be generated. The expected format should be
+compatible with the one-hot encoding produced by <cite>get_hierarchical_one_hot_encoding</cite>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list where each element is a list representing the path (in level order) extracted from the hierarchy for the corresponding label.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list of list</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>This method relies on <cite>get_hierarchical_one_hot_encoding</cite> to obtain the binary encoded representation of the labels.</p></li>
+<li><p>The ordering of nodes is determined by <cite>get_level_order_traversal</cite>, whose output is used to map encoded indexes to actual nodes.</p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.taxonomies.Taxonomy.get_sibling_masks">
+<span class="sig-name descname"><span class="pre">get_sibling_masks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.taxonomies.Taxonomy.get_sibling_masks" title="Link to this definition"></a></dt>
+<dd><p>Get the sibling masks for each node in the taxonomy using level order traversal.</p>
+<p>Sibling masks indicate which nodes share the same parent. For each unique parent,
+a numpy array is created where each element is set to 1 if the corresponding node in the
+level order traversal has that parent, and 0 otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of numpy arrays, each representing a mask for sibling nodes
+corresponding to one unique parent in the taxonomy.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[numpy.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.taxonomies.Taxonomy.plot_colored_taxonomy">
+<span class="sig-name descname"><span class="pre">plot_colored_taxonomy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probabilities</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.taxonomies.Taxonomy.plot_colored_taxonomy" title="Link to this definition"></a></dt>
+<dd><p>Plot the hierarchical taxonomy with colors corresponding to node probabilities.</p>
+<p>This method computes a level-order traversal of the taxonomy,
+maps each node to its corresponding probability value for coloring,
+and then plots the taxonomy using Graphviz to determine node positions.
+The nodes are drawn with colors derived from the provided probabilities,
+and the plot is displayed using Matplotlib.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>probabilities</strong> (<em>array-like</em>) – An array-like object (e.g., list, NumPy array, or tensor)
+containing probability values corresponding to each node in the taxonomy.
+The order of probabilities should match the order obtained from the level-order traversal.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>The method uses NetworkX for graph handling and drawing.</p></li>
+<li><p>The Graphviz layout algorithm (‘dot’) is used to determine node positions.</p></li>
+<li><p>Matplotlib functions are used to adjust layout and display the final plot.</p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.taxonomies.Taxonomy.plot_taxonomy">
+<span class="sig-name descname"><span class="pre">plot_taxonomy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.taxonomies.Taxonomy.plot_taxonomy" title="Link to this definition"></a></dt>
+<dd><p>Plots the taxonomy graph.</p>
+<p>This method computes the layout of the taxonomy graph using Graphviz’s ‘dot’ algorithm,
+then draws the network using NetworkX’s drawing functionalities with labels, arrows, and
+custom styling. Finally, it displays the plot using Matplotlib.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Ved Shah.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

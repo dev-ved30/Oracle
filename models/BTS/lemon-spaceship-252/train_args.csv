@@ -1,0 +1,2 @@
+model,num_epochs,batch_size,lr,max_n_per_class,alpha,beta,dir,load_weights
+BTS,2000,128,0.001,,0.5,0.5,,

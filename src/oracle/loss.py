@@ -56,8 +56,6 @@ class WHXE_Loss(nn.Module):
         true_encodings = self.taxonomy.get_hierarchical_one_hot_encoding(labels)
         self.class_weights = self.get_class_weights(torch.from_numpy(true_encodings).to(device))**self.beta
 
-        print(self.taxonomy.get_level_order_traversal(), self.class_weights)
-
         # Pre-compute additional terms used in the loss function
         self.compute_lambda_term()
 

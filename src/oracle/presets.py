@@ -15,14 +15,6 @@ from oracle.taxonomies import BTS_Taxonomy, ORACLE_Taxonomy
 device = "cuda" if torch.cuda.is_available() else "cpu"
 # torch.set_default_device(device)
 
-def worker_init_fn(worker_id):
-    """Ensure proper random seeding in each worker process."""
-    import numpy as np
-    import random
-    worker_seed = torch.initial_seed() % 2**32
-    np.random.seed(worker_seed)
-    random.seed(worker_seed)
-
 # Dataloader parameters for training and validation
 shuffle = True
 num_workers = 4
@@ -30,6 +22,13 @@ pin_memory = False
 prefetch_factor = 2
 persistent_workers = False
 
+def worker_init_fn(worker_id):
+    """Ensure proper random seeding in each worker process."""
+    import numpy as np
+    import random
+    worker_seed = torch.initial_seed() % 2**32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
 
 def get_class_weights(labels):
     """
@@ -143,12 +142,8 @@ def get_train_loader(model_choice, batch_size, max_n_per_class, excluded_classes
     class_weights = get_class_weights(train_labels)
     train_weights = torch.from_numpy(np.array([class_weights[x] for x in train_labels]))
     sampler = WeightedRandomSampler(train_weights, len(train_weights))
-
-    if True:
-        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn, generator=generator, pin_memory=pin_memory, num_workers=num_workers, prefetch_factor=prefetch_factor, persistent_workers=persistent_workers, worker_init_fn=worker_init_fn)
-    else:
-        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn, generator=generator)
-
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn, generator=generator, pin_memory=pin_memory, num_workers=num_workers, prefetch_factor=prefetch_factor, persistent_workers=persistent_workers, worker_init_fn=worker_init_fn)
+    
     return train_dataloader, train_labels
 
 def get_val_loader(model_choice, batch_size, val_truncation_days, max_n_per_class, excluded_classes=[]):
@@ -233,11 +228,7 @@ def get_val_loader(model_choice, batch_size, val_truncation_days, max_n_per_clas
         concatenated_val_dataset = ConcatDataset(val_dataset)
         collate_func = custom_collate_ELAsTiCC
 
-    if True:
-        val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_func, generator=generator, pin_memory=pin_memory, num_workers=num_workers, prefetch_factor=prefetch_factor, persistent_workers=persistent_workers, worker_init_fn=worker_init_fn)
-    else:
-        val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_func, generator=generator)
-
+    val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_func, generator=generator, pin_memory=pin_memory, num_workers=num_workers, prefetch_factor=prefetch_factor, persistent_workers=persistent_workers, worker_init_fn=worker_init_fn)
     val_labels = val_dataset[0].get_all_labels()
     return val_dataloader, val_labels
 

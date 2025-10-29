@@ -6,17 +6,27 @@ from torch.utils.data import DataLoader, ConcatDataset, WeightedRandomSampler
 from oracle.architectures import *
 from oracle.custom_datasets.BTS import *
 from oracle.custom_datasets.ZTF_sims import *
-from oracle.custom_datasets.ELAsTiCC import *
+from oracle.custom_datasets.ELAsTiCC import *  
 from oracle.taxonomies import BTS_Taxonomy, ORACLE_Taxonomy
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-torch.set_default_device(device)
+# torch.set_default_device(device)
+
+def worker_init_fn(worker_id):
+    """Ensure proper random seeding in each worker process."""
+    import numpy as np
+    import random
+    worker_seed = torch.initial_seed() % 2**32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
 
 # Dataloader parameters for training and validation
-num_workers = max(1, min(8, os.cpu_count() - 2))
-prefetch_factor = 4
-persistent_workers = True
-pin_memory = True
+shuffle = True
+num_workers = 4
+pin_memory = False
+prefetch_factor = 2
+persistent_workers = False
+
 
 def get_class_weights(labels):
     """
@@ -90,7 +100,8 @@ def get_train_loader(model_choice, batch_size, max_n_per_class, excluded_classes
     """
 
     # Keep generator on the CPU
-    generator = torch.Generator(device=device)
+    torch.set_default_device('cpu')
+    generator = torch.Generator(device='cpu')
 
     if model_choice == "BTS-lite":
 
@@ -130,14 +141,14 @@ def get_train_loader(model_choice, batch_size, max_n_per_class, excluded_classes
     train_weights = torch.from_numpy(np.array([class_weights[x] for x in train_labels]))
     sampler = WeightedRandomSampler(train_weights, len(train_weights))
 
-    if device == "cuda":
-        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn, generator=generator, pin_memory=pin_memory, num_workers=num_workers, prefetch_factor=prefetch_factor, persistent_workers=persistent_workers)
+    if True:
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn, generator=generator, pin_memory=pin_memory, num_workers=num_workers, prefetch_factor=prefetch_factor, persistent_workers=persistent_workers, worker_init_fn=worker_init_fn)
     else:
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn, generator=generator)
 
     return train_dataloader, train_labels
 
-def get_val_loader(model_choice, batch_size, val_truncation_days, excluded_classes=[]):
+def get_val_loader(model_choice, batch_size, val_truncation_days, max_n_per_class, excluded_classes=[]):
     """
     Creates a DataLoader for the validation dataset along with its corresponding labels based on the specified model choice.
 
@@ -154,6 +165,8 @@ def get_val_loader(model_choice, batch_size, val_truncation_days, excluded_class
         val_truncation_days (list):
             A list of days used to truncate the light curves; each day corresponds to a transformation
             applied to the dataset.
+        max_n_per_class (int): 
+            The maximum number of samples to include per class in the dataset.
         excluded_classes (list, optional):
             A list of classes to be excluded from the dataset. Defaults to an empty list.
 
@@ -164,7 +177,8 @@ def get_val_loader(model_choice, batch_size, val_truncation_days, excluded_class
     """
 
     # Keep generator on the CPU
-    generator = torch.Generator(device=device)
+    torch.set_default_device('cpu')
+    generator = torch.Generator(device='cpu')
 
     if model_choice == "BTS-lite":
 
@@ -202,7 +216,7 @@ def get_val_loader(model_choice, batch_size, val_truncation_days, excluded_class
         val_dataset = []
         for d in val_truncation_days:
             transform = partial(truncate_ELAsTiCC_light_curve_by_days_since_trigger, d=d)
-            val_dataset.append(ELAsTiCC_LC_Dataset(ELAsTiCC_val_parquet_path, transform=transform, excluded_classes=excluded_classes))
+            val_dataset.append(ELAsTiCC_LC_Dataset(ELAsTiCC_val_parquet_path, max_n_per_class, transform=transform, excluded_classes=excluded_classes))
         concatenated_val_dataset = ConcatDataset(val_dataset)
         collate_func = custom_collate_ELAsTiCC
 
@@ -212,12 +226,12 @@ def get_val_loader(model_choice, batch_size, val_truncation_days, excluded_class
         val_dataset = []
         for d in val_truncation_days:
             transform = partial(truncate_ELAsTiCC_light_curve_by_days_since_trigger, d=d)
-            val_dataset.append(ELAsTiCC_LC_Dataset(ELAsTiCC_val_parquet_path, transform=transform, excluded_classes=excluded_classes))
+            val_dataset.append(ELAsTiCC_LC_Dataset(ELAsTiCC_val_parquet_path, max_n_per_class, transform=transform, excluded_classes=excluded_classes))
         concatenated_val_dataset = ConcatDataset(val_dataset)
         collate_func = custom_collate_ELAsTiCC
 
-    if device=='cuda':
-        val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_func, generator=generator, pin_memory=pin_memory, num_workers=num_workers, prefetch_factor=prefetch_factor, persistent_workers=persistent_workers)
+    if True:
+        val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_func, generator=generator, pin_memory=pin_memory, num_workers=num_workers, prefetch_factor=prefetch_factor, persistent_workers=persistent_workers, worker_init_fn=worker_init_fn)
     else:
         val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_func, generator=generator)
 
@@ -247,7 +261,8 @@ def get_test_loaders(model_choice, batch_size, max_n_per_class, days_list, exclu
     """
 
     # Keep generator on the CPU
-    generator = torch.Generator(device=device)
+    torch.set_default_device('cpu')
+    generator = torch.Generator(device='cpu')
 
     test_loaders = []
 

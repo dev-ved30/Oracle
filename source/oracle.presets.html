@@ -183,7 +183,7 @@ Defaults to an empty list.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="oracle.presets.get_val_loader">
-<span class="sig-prename descclassname"><span class="pre">oracle.presets.</span></span><span class="sig-name descname"><span class="pre">get_val_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_choice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_truncation_days</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excluded_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.presets.get_val_loader" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">oracle.presets.</span></span><span class="sig-name descname"><span class="pre">get_val_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_choice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_truncation_days</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_per_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excluded_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.presets.get_val_loader" title="Link to this definition"></a></dt>
 <dd><p>Creates a DataLoader for the validation dataset along with its corresponding labels based on the specified model choice.</p>
 <p>This function selects a dataset and transformation based on the model_choice provided and then concatenates
 the datasets (one for each truncation day specified in val_truncation_days). It returns a DataLoader constructed
@@ -196,6 +196,7 @@ with the concatenated dataset and the set of all labels retrieved from the first
 <li><p><strong>batch_size</strong> (<em>int</em>) – The number of samples per batch in the returned DataLoader.</p></li>
 <li><p><strong>val_truncation_days</strong> (<em>list</em>) – A list of days used to truncate the light curves; each day corresponds to a transformation
 applied to the dataset.</p></li>
+<li><p><strong>max_n_per_class</strong> (<em>int</em>) – The maximum number of samples to include per class in the dataset.</p></li>
 <li><p><strong>excluded_classes</strong> (<em>list</em><em>, </em><em>optional</em>) – A list of classes to be excluded from the dataset. Defaults to an empty list.</p></li>
 </ul>
 </dd>
@@ -213,6 +214,12 @@ applied to the dataset.</p></li>
 <dd class="field-odd"><p>tuple</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="oracle.presets.worker_init_fn">
+<span class="sig-prename descclassname"><span class="pre">oracle.presets.</span></span><span class="sig-name descname"><span class="pre">worker_init_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">worker_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.presets.worker_init_fn" title="Link to this definition"></a></dt>
+<dd><p>Ensure proper random seeding in each worker process.</p>
 </dd></dl>
 
 </section>

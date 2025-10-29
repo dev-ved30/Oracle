@@ -1,0 +1,2 @@
+model,num_epochs,batch_size,lr,max_n_per_class,alpha,dir,load_weights
+ORACLE1-lite_BTS,2000,512,0.002,1500,0.5,,models/ORACLE1-lite_ZTFSims/best_model.pth

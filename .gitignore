@@ -1,5 +1,4 @@
 data/
-.DS_Store
 temp.py
 __pycache__
 
@@ -8,8 +7,5 @@ src/oracle.egg-info
 src/oracle/__pycache__/
 src/oracle/*/__pycache__/
 
-models/*/*/plots
-models/*/*/reports
-models/*/*/embeddings
-models/.DS_Store
-wandb/
+models/*/plots
+models/*/reports

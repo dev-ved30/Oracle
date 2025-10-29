@@ -40,7 +40,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
 </ul>
@@ -76,22 +76,25 @@
 </section>
 <section id="module-oracle.pretrained.ELAsTiCC">
 <span id="oracle-pretrained-elasticc-module"></span><h2>oracle.pretrained.ELAsTiCC module<a class="headerlink" href="#module-oracle.pretrained.ELAsTiCC" title="Link to this heading"></a></h2>
+<p>Pretrained model(s) for the ELAsTiCC dataset.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.pretrained.ELAsTiCC.</span></span><span class="sig-name descname"><span class="pre">ORACLE1_ELAsTiCC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/Users/vedshah/Documents/Research/NU-Miller/Projects/Hierarchical-VT/models/ELAsTiCC/vocal-bird-160'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="source/oracle.architectures.html#oracle.architectures.GRU_MD" title="oracle.architectures.GRU_MD"><code class="xref py py-class docutils literal notranslate"><span class="pre">GRU_MD</span></code></a></p>
 <p>ORACLE1_ELAsTiCC is a model class that inherits from GRU_MD designed to load a pre-trained
 ELAsTiCC model and perform predictions on time series data augmented with static features.
-The model uses a hierarchical taxonomy to output predictions at multiple levels of granularity.
-.. attribute:: taxonomy</p>
-<blockquote>
-<div><p>An instance of the taxonomy used to structure the class labels.</p>
+The model uses a hierarchical taxonomy to output predictions at multiple levels of granularity.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC.taxonomy">
+<span class="sig-name descname"><span class="pre">taxonomy</span></span><a class="headerlink" href="#oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC.taxonomy" title="Link to this definition"></a></dt>
+<dd><p>An instance of the taxonomy used to structure the class labels.</p>
 <dl class="field-list simple">
-<dt class="field-odd">type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ORACLE_Taxonomy</p>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="source/oracle.taxonomies.html#oracle.taxonomies.ORACLE_Taxonomy" title="oracle.taxonomies.ORACLE_Taxonomy">ORACLE_Taxonomy</a></p>
 </dd>
 </dl>
-</div></blockquote>
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC.ts_feature_dim">
 <span class="sig-name descname"><span class="pre">ts_feature_dim</span></span><a class="headerlink" href="#oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC.ts_feature_dim" title="Link to this definition"></a></dt>
@@ -126,30 +129,59 @@ The model uses a hierarchical taxonomy to output predictions at multiple levels 
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC.embed">
+<span class="sig-name descname"><span class="pre">embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC.embed" title="Link to this definition"></a></dt>
+<dd><p>Embed a table into its latent space representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>table</strong> – The input data (e.g., a table or structured data) to be embedded. The exact format
+is expected to be compatible with the make_batch method.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A NumPy array containing the latent space embeddings corresponding to the input table.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC.make_batch">
+<span class="sig-name descname"><span class="pre">make_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC.make_batch" title="Link to this definition"></a></dt>
+<dd><p>Create a batch from the input table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>table</strong> (<em>astropy.table.Table</em>) – Input data containing one or more rows.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary containing the batch data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC.predict">
 <span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC.predict" title="Link to this definition"></a></dt>
 <dd><p>Predict the label at each hierarchical level for the table.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>table</strong> (<em>pandas.DataFrame</em><em> or </em><em>array-like</em>) – Input data containing one or more rows.</p>
+<dd class="field-odd"><p><strong>table</strong> (<em>astropy.table.Table</em>) – Input data containing one or more rows.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>Mapping from hierarchical level (as returned by self.score) to the predicted class</dt><dd><p>label. For each level, self.score(table) is expected to return a
+<dd class="field-even"><p>Mapping from hierarchical level (as returned by self.score) to the predicted class
+label. For each level, self.score(table) is expected to return a
 pandas.DataFrame of shape (n_samples, n_classes) with class labels as columns; the
 predicted label is the column with the highest score for the first sample.</p>
-</dd>
-</dl>
-</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>Any exceptions raised by self.score</strong><strong> or </strong><strong>by numpy operations</strong><strong> (</strong><strong>e.g.</strong><strong>, </strong><strong>if the score DataFrame</strong> – </p></li>
-<li><p><strong>is empty</strong><strong>) </strong><strong>will be propagated.</strong> – </p></li>
-</ul>
+<dd class="field-even"><p><strong>Any exceptions raised by self.score</strong><strong> or </strong><strong>by numpy operations</strong><strong> (</strong><strong>e.g.</strong><strong>, </strong><strong>if the score DataFrame is empty</strong><strong>) </strong><strong>will be propagated.</strong> – </p>
 </dd>
 </dl>
 </dd></dl>
@@ -165,24 +197,18 @@ The input table must contain the columns ‘FLUX’, ‘FLUXERR’, ‘BAND’, 
 time_independent_feature_list.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>table</strong> (<em>-</em>) – Astropy Table containing time-series data and metadata.</p>
+<dd class="field-odd"><p><strong>table</strong> (<em>astropy.table.Table</em>) – Astropy Table containing time-series data and metadata.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A DataFrame containing class probability scores for each class in the taxonomy.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><ul class="simple">
-<li><p>pd.DataFrame</p></li>
-</ul>
-</p>
+<dd class="field-odd"><p>pd.DataFrame</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>KeyError</strong> – </p></li>
-<li><p><strong>If one</strong><strong> or </strong><strong>more keys in time_independent_feature_list are missing from table.meta.</strong> – </p></li>
-<li><p><strong>ValueError</strong> – </p></li>
-<li><p><strong>If time-series columns have inconsistent lengths</strong><strong> or </strong><strong>if the table is empty</strong> – </p></li>
-<li><p><strong>in a way that the downstream model cannot handle.</strong> – </p></li>
+<li><p><strong>KeyError</strong> – If one or more keys in time_independent_feature_list are missing from table.meta.</p></li>
+<li><p><strong>ValueError</strong> – If time-series columns have inconsistent lengths or if the table is empty in a way that the downstream model cannot handle.</p></li>
 </ul>
 </dd>
 </dl>
@@ -210,16 +236,13 @@ to DataFrames containing the corresponding node scores. Taxonomy levels 0
 and 3 are removed because they are irrelevant in the current taxonomy.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>table</strong> (<em>pandas.DataFrame</em>) – Input observations/features to be scored.</p>
+<dd class="field-odd"><p><strong>table</strong> (<em>astropy.table.Table</em>) – Input observations/features to be scored.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>A mapping from taxonomy depth level to a</dt><dd><p>DataFrame of predicted scores for nodes at that level. Each DataFrame
+<dd class="field-even"><p>A mapping from taxonomy depth level to a
+DataFrame of predicted scores for nodes at that level. Each DataFrame
 is a subset of the full prediction DataFrame containing only the
 columns for the nodes at that depth.</p>
-</dd>
-</dl>
-</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict[int, pandas.DataFrame]</p>
@@ -250,23 +273,16 @@ the columns ‘FLUX’, ‘FLUXERR’, ‘BAND’, ‘MJD’, and ‘PHOTFLAG’
 require additional metadata entries.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>table</strong> (<em>-</em>) – Astropy Table containing time-series data.</p>
+<dd class="field-odd"><p><strong>table</strong> (<em>astropy.table.Table</em>) – Astropy Table containing time-series data.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A DataFrame containing class probability scores for each class in the taxonomy.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><ul class="simple">
-<li><p>pd.DataFrame</p></li>
-</ul>
-</p>
+<dd class="field-odd"><p>pd.DataFrame</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>ValueError</strong> – </p></li>
-<li><p><strong>If time-series columns have inconsistent lengths</strong><strong> or </strong><strong>if the table is empty</strong> – </p></li>
-<li><p><strong>in a way that the downstream model cannot handle.</strong> – </p></li>
-</ul>
+<dd class="field-even"><p><strong>ValueError</strong> – If time-series columns have inconsistent lengths or if the table is empty in a way that the downstream model cannot handle.</p>
 </dd>
 </dl>
 <div class="admonition note">
@@ -280,12 +296,47 @@ require additional metadata entries.</p>
 </ul>
 </div>
 <dl class="py method">
+<dt class="sig sig-object py" id="oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC_lite.embed">
+<span class="sig-name descname"><span class="pre">embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC_lite.embed" title="Link to this definition"></a></dt>
+<dd><p>Embed a table into its latent space representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>table</strong> – The input data (e.g., a table or structured data) to be embedded. The exact format
+is expected to be compatible with the make_batch method.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A NumPy array containing the latent space embeddings corresponding to the input table.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC_lite.make_batch">
+<span class="sig-name descname"><span class="pre">make_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC_lite.make_batch" title="Link to this definition"></a></dt>
+<dd><p>Create a batch from the input table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>table</strong> (<em>astropy.table.Table</em>) – Input data containing one or more rows.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary containing the batch data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC_lite.predict">
 <span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.pretrained.ELAsTiCC.ORACLE1_ELAsTiCC_lite.predict" title="Link to this definition"></a></dt>
 <dd><p>Predict the label at each hierarchical level for the table.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>table</strong> (<em>pandas.DataFrame</em><em> or </em><em>array-like</em>) – Input data containing one or more rows.</p>
+<dd class="field-odd"><p><strong>table</strong> (<em>astropy.table.Table</em>) – Input data containing one or more rows.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><dl class="simple">
@@ -300,10 +351,7 @@ predicted label is the column with the highest score for the first sample.</p>
 <dd class="field-odd"><p>dict</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>Any exceptions raised by self.score</strong><strong> or </strong><strong>by numpy operations</strong><strong> (</strong><strong>e.g.</strong><strong>, </strong><strong>if the score DataFrame</strong> – </p></li>
-<li><p><strong>is empty</strong><strong>) </strong><strong>will be propagated.</strong> – </p></li>
-</ul>
+<dd class="field-even"><p><strong>Any exceptions raised by self.score</strong><strong> or </strong><strong>by numpy operations</strong><strong> (</strong><strong>e.g.</strong><strong>, </strong><strong>if the score DataFrame is empty</strong><strong>) </strong><strong>will be propagated.</strong> – </p>
 </dd>
 </dl>
 </dd></dl>
@@ -318,23 +366,16 @@ The input table must contain the columns ‘FLUX’, ‘FLUXERR’, ‘BAND’, 
 ‘PHOTFLAG’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>table</strong> (<em>-</em>) – Astropy Table containing time-series data.</p>
+<dd class="field-odd"><p><strong>table</strong> (<em>astropy.table.Table</em>) – Astropy Table containing time-series data.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A DataFrame containing class probability scores for each class in the taxonomy.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><ul class="simple">
-<li><p>pd.DataFrame</p></li>
-</ul>
-</p>
+<dd class="field-odd"><p>pd.DataFrame</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>ValueError</strong> – </p></li>
-<li><p><strong>If time-series columns have inconsistent lengths</strong><strong> or </strong><strong>if the table is empty</strong> – </p></li>
-<li><p><strong>in a way that the downstream model cannot handle.</strong> – </p></li>
-</ul>
+<dd class="field-even"><p><strong>ValueError</strong> – If time-series columns have inconsistent lengths or if the table is empty in a way that the downstream model cannot handle.</p>
 </dd>
 </dl>
 <div class="admonition note">
@@ -358,7 +399,7 @@ to DataFrames containing the corresponding node scores. Taxonomy levels 0
 and 3 are removed because they are irrelevant in the current taxonomy.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>table</strong> (<em>pandas.DataFrame</em>) – Input observations/features to be scored.</p>
+<dd class="field-odd"><p><strong>table</strong> (<em>astropy.table.Table</em>) – Input observations/features to be scored.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><dl class="simple">
@@ -373,8 +414,7 @@ columns for the nodes at that depth.</p>
 <dd class="field-odd"><p>dict[int, pandas.DataFrame]</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>KeyError</strong> – If expected node columns (from self.taxonomy.get_nodes_by_depth())
-    are not present in the DataFrame returned by predict_full_scores().</p>
+<dd class="field-even"><p><strong>KeyError</strong> – If expected node columns (from self.taxonomy.get_nodes_by_depth()) are not present in the DataFrame returned by predict_full_scores().</p>
 </dd>
 </dl>
 <div class="admonition note">
@@ -434,6 +474,7 @@ of columns and metadata.</p>
 </section>
 <section id="module-oracle.pretrained">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-oracle.pretrained" title="Link to this heading"></a></h2>
+<p>Module for working with pretrained models in the ORACLE framework.</p>
 </section>
 </section>
 

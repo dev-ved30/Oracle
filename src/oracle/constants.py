@@ -1,3 +1,6 @@
+"""
+Module containing constant mappings and configurations for the ORACLE project."""
+
 ELAsTiCC_to_Astrophysical_mappings = {
     'SNII-NMF': 'SNII', 
     'SNIc-Templates': 'SNIb/c', 

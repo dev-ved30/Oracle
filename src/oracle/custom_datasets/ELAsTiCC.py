@@ -1,3 +1,4 @@
+"""Custom dataset class for the ELAsTiCC light curve dataset for LSST."""
 import io
 import torch
 

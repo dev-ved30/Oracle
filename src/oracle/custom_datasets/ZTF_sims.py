@@ -1,3 +1,4 @@
+"""Custom dataset class for the simulated ZTF light curve dataset."""
 import io
 import torch
 

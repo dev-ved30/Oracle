@@ -40,7 +40,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">API Reference</a></li>
 </ul>
@@ -71,6 +71,7 @@
              
   <section id="module-oracle.train">
 <span id="oracle-train-module"></span><h1>oracle.train module<a class="headerlink" href="#module-oracle.train" title="Link to this heading"></a></h1>
+<p>Interface for training models in the ORACLE framework.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="oracle.train.get_wandb_run">
 <span class="sig-prename descclassname"><span class="pre">oracle.train.</span></span><span class="sig-name descname"><span class="pre">get_wandb_run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.train.get_wandb_run" title="Link to this definition"></a></dt>
@@ -78,15 +79,15 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>args</strong> – An object that must contain the following attributes:
-num_epochs (int): The number of training epochs.
-batch_size (int): The batch size to be used.
-lr (float): The learning rate for training.
-max_n_per_class (int): The maximum number of samples per class.
-alpha (float): A hyperparameter  used for controlling loss behavior.
-gamma (float): A hyperparameter used for weighting.
-dir (str): The directory path where the model should be saved.
-model (str): The identifier for the chosen model architecture.
-load_weights (str): The file path for the pretrained model weights, if any.</p>
+1. num_epochs (int): The number of training epochs.
+2. batch_size (int): The batch size to be used.
+3. lr (float): The learning rate for training.
+4. max_n_per_class (int): The maximum number of samples per class.
+5. alpha (float): A hyperparameter  used for controlling loss behavior.
+6. gamma (float): A hyperparameter used for weighting.
+7. dir (str): The directory path where the model should be saved.
+8. model (str): The identifier for the chosen model architecture.
+9. load_weights (str): The file path for the pretrained model weights, if any.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A wandb run instance initialized with the given configuration, which logs metadata and hyperparameters.</p>
@@ -124,15 +125,15 @@ load_weights (str): The file path for the pretrained model weights, if any.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>args</strong> (<em>argparse.Namespace</em>) – An object containing all necessary configuration parameters and hyperparameters including:
-- num_epochs (int): Number of epochs to train the model.
-- batch_size (int): Size of the batches used in training and validation.
-- lr (float): Learning rate for the optimizer.
-- max_n_per_class (int): Maximum number of samples per class for the training data.
-- alpha (float): Hyperparameter used during training (specific purpose defined by model’s setup).
-- gamma (float): Hyperparameter used during training (specific purpose defined by model’s setup).
-- dir (str): Directory path for saving the model and other related artifacts.
-- model (str): Identifier to select which model architecture to use.
-- load_weights (str or None): Path to pretrained model weights. If provided, these weights are loaded into the model.</p>
+1. num_epochs (int): Number of epochs to train the model.
+2. batch_size (int): Size of the batches used in training and validation.
+3. lr (float): Learning rate for the optimizer.
+4. max_n_per_class (int): Maximum number of samples per class for the training data.
+5. alpha (float): Hyperparameter used during training (specific purpose defined by model’s setup).
+6. gamma (float): Hyperparameter used during training (specific purpose defined by model’s setup).
+7. dir (str): Directory path for saving the model and other related artifacts.
+8. model (str): Identifier to select which model architecture to use.
+9. load_weights (str or None): Path to pretrained model weights. If provided, these weights are loaded into the model.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>

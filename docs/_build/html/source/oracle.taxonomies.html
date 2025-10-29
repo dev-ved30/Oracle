@@ -40,7 +40,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">API Reference</a></li>
 </ul>
@@ -71,6 +71,7 @@
              
   <section id="module-oracle.taxonomies">
 <span id="oracle-taxonomies-module"></span><h1>oracle.taxonomies module<a class="headerlink" href="#module-oracle.taxonomies" title="Link to this heading"></a></h1>
+<p>Top level module for defining taxonomies used in hierarchical classification tasks.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="oracle.taxonomies.BTS_Taxonomy">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.taxonomies.</span></span><span class="sig-name descname"><span class="pre">BTS_Taxonomy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.taxonomies.BTS_Taxonomy" title="Link to this definition"></a></dt>
@@ -104,20 +105,16 @@ number of samples and M is the number of nodes in the taxonomy. Each element rep
 the conditional probability of a node given its parent node.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>A tensor of the same shape as <cite>conditional_probabilities</cite> where each element</dt><dd><p>represents the computed class probability for the corresponding node. The class probability
+<dd class="field-even"><p>A tensor of the same shape as <cite>conditional_probabilities</cite> where each element
+represents the computed class probability for the corresponding node. The class probability
 is calculated as the product of the conditional probabilities along the path from the root
 to that node.</p>
-</dd>
-</dl>
-</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>torch.Tensor</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>AssertionError</strong> – If the number of columns in <cite>conditional_probabilities</cite> does not match the number of
-    nodes in the taxonomy.</p>
+<dd class="field-even"><p><strong>AssertionError</strong> – If the number of columns in <cite>conditional_probabilities</cite> does not match the number of nodes in the taxonomy.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -138,11 +135,8 @@ during normalization. Default is 1e-10.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>The tensor of logits after applying conditional probability computations using masked</dt><dd><p>softmax operations, where probabilities are normalized within the sibling groups.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>The tensor of logits after applying conditional probability computations using masked
+softmax operations, where probabilities are normalized within the sibling groups.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>torch.Tensor</p>
@@ -181,13 +175,10 @@ by a level-order traversal of the taxonomy.</p>
 as verified by the level-order traversal.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>A 2D numpy array of shape (number of labels, total number of nodes in the taxonomy),</dt><dd><p>where each row is the one-hot encoded vector for the corresponding label.
+<dd class="field-even"><p>A 2D numpy array of shape (number of labels, total number of nodes in the taxonomy),
+where each row is the one-hot encoded vector for the corresponding label.
 A value of 1 indicates that a node is part of the path from the root to the label;
 all other positions are 0.</p>
-</dd>
-</dl>
-</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>numpy.ndarray</p>
@@ -250,12 +241,9 @@ For each unique depth obtained from the hierarchy (via get_depths), this functio
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt>A dictionary where each key (of type int) corresponds to a depth level,</dt><dd><p>and the associated value is a NumPy array containing the nodes at that depth.
+<dd class="field-odd"><p>A dictionary where each key (of type int) corresponds to a depth level,
+and the associated value is a NumPy array containing the nodes at that depth.
 The key -1 is used to store a NumPy array of all leaf nodes.</p>
-</dd>
-</dl>
-</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>dict</p>
@@ -283,11 +271,8 @@ The key -1 is used to store a NumPy array of all leaf nodes.</p>
 <dd><p>Retrieves the parent node for each node in the taxonomy following a level order traversal.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt>A list where each element is the parent of the corresponding node from the level order traversal.</dt><dd><p>The root node will have an empty string as its parent.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-odd"><p>A list where each element is the parent of the corresponding node from the level order traversal.
+The root node will have an empty string as its parent.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>list</p>
@@ -329,11 +314,8 @@ a numpy array is created where each element is set to 1 if the corresponding nod
 level order traversal has that parent, and 0 otherwise.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt>A list of numpy arrays, each representing a mask for sibling nodes</dt><dd><p>corresponding to one unique parent in the taxonomy.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-odd"><p>A list of numpy arrays, each representing a mask for sibling nodes
+corresponding to one unique parent in the taxonomy.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>List[numpy.ndarray]</p>

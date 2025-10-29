@@ -40,7 +40,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
 </ul>
@@ -173,10 +173,12 @@
 </section>
 <section id="module-oracle.architectures">
 <span id="oracle-architectures-module"></span><h2>oracle.architectures module<a class="headerlink" href="#module-oracle.architectures" title="Link to this heading"></a></h2>
+<p>Top-level module for defining various neural network architectures for hierarchical classification.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="oracle.architectures.GRU">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.architectures.</span></span><span class="sig-name descname"><span class="pre">GRU</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taxonomy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="source/oracle.taxonomies.html#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><span class="pre">Taxonomy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts_feature_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="source/oracle.architectures.html#oracle.architectures.Hierarchical_classifier" title="oracle.architectures.Hierarchical_classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hierarchical_classifier</span></code></a></p>
+<p>GRU-based neural network architecture for hierarchical classification.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.architectures.GRU.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU.forward" title="Link to this definition"></a></dt>
@@ -204,8 +206,8 @@ connected output layer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>batch</strong> (<em>dict</em>) – A dictionary containing:
-- ‘ts’ (torch.Tensor): Input time-series data of shape (batch_size, seq_len, n_ts_features).
-- ‘length’ (torch.Tensor or list[int]): Sequence lengths indicating the valid lengths of each time-series in the batch.</p>
+1. ‘ts’ (torch.Tensor): Input time-series data of shape (batch_size, seq_len, n_ts_features).
+2.’length’ (torch.Tensor or list[int]): Sequence lengths indicating the valid lengths of each time-series in the batch.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The latent space embeddings resulting from the network’s forward pass.</p>
@@ -222,6 +224,7 @@ connected output layer.</p>
 <dt class="sig sig-object py" id="oracle.architectures.GRU_MD">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.architectures.</span></span><span class="sig-name descname"><span class="pre">GRU_MD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taxonomy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="source/oracle.taxonomies.html#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><span class="pre">Taxonomy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts_feature_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_feature_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MD" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="source/oracle.architectures.html#oracle.architectures.Hierarchical_classifier" title="oracle.architectures.Hierarchical_classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hierarchical_classifier</span></code></a></p>
+<p>GRU-based neural network architecture with multi-dimensional static features for hierarchical classification.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.architectures.GRU_MD.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MD.forward" title="Link to this definition"></a></dt>
@@ -254,9 +257,9 @@ This method performs the following steps:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>batch</strong> (<em>dict</em>) – A dictionary containing the following keys:
-- ‘ts’ (torch.Tensor): Time series data of shape (batch_size, seq_len, n_ts_features).
-- ‘length’ (torch.Tensor): Tensor containing the true lengths for each time series in the batch (shape: (batch_size)).
-- ‘static’ (torch.Tensor): Static features of shape (batch_size, n_static_features).</p>
+1. ‘ts’ (torch.Tensor): Time series data of shape (batch_size, seq_len, n_ts_features).
+2. ‘length’ (torch.Tensor): Tensor containing the true lengths for each time series in the batch (shape: (batch_size)).
+3. ‘static’ (torch.Tensor): Static features of shape (batch_size, n_static_features).</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The latent space embedding computed by merging the processed time series and static features after passing them through respective dense layers and nonlinear activations.</p>
@@ -273,6 +276,7 @@ This method performs the following steps:</p>
 <dt class="sig sig-object py" id="oracle.architectures.GRU_MD_MM">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.architectures.</span></span><span class="sig-name descname"><span class="pre">GRU_MD_MM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts_feature_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_feature_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">18</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MD_MM" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="source/oracle.architectures.html#oracle.architectures.Hierarchical_classifier" title="oracle.architectures.Hierarchical_classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hierarchical_classifier</span></code></a></p>
+<p>GRU-based neural network architecture with multi-dimensional static features and multi-modal inputs for hierarchical classification.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.architectures.GRU_MD_MM.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MD_MM.forward" title="Link to this definition"></a></dt>
@@ -310,10 +314,10 @@ The function performs the following steps:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>batch</strong> (<em>dict</em>) – A dictionary containing:
-- “ts” (torch.Tensor): Time series data of shape (batch_size, seq_len, n_ts_features).
-- “length” (torch.Tensor): Lengths of each time series in the batch (batch_size, ).
-- “static” (torch.Tensor): Static features of shape (batch_size, n_static_features).
-- “postage_stamp” (torch.Tensor): Postage stamp data for additional processing.</p>
+1. “ts” (torch.Tensor): Time series data of shape (batch_size, seq_len, n_ts_features).
+2. “length” (torch.Tensor): Lengths of each time series in the batch (batch_size, ).
+3. “static” (torch.Tensor): Static features of shape (batch_size, n_static_features).
+4. “postage_stamp” (torch.Tensor): Postage stamp data for additional processing.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The latent space embeddings computed from the combined features.</p>
@@ -330,6 +334,23 @@ The function performs the following steps:</p>
 <dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.architectures.</span></span><span class="sig-name descname"><span class="pre">Hierarchical_classifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taxonomy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="source/oracle.taxonomies.html#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><span class="pre">Taxonomy</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <a class="reference internal" href="source/oracle.trainer.html#oracle.trainer.Trainer" title="oracle.trainer.Trainer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trainer</span></code></a>, <a class="reference internal" href="source/oracle.tester.html#oracle.tester.Tester" title="oracle.tester.Tester"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tester</span></code></a></p>
+<p>Base class for hierarchical classification architectures.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier.embed">
+<span class="sig-name descname"><span class="pre">embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier.embed" title="Link to this definition"></a></dt>
+<dd><p>Embeds the provided table into the model’s latent space.
+:param table: object</p>
+<blockquote>
+<div><p>The table data to be embedded. The expected type and structure of this data
+should be compatible with the model’s input requirements.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>NotImplementedError</strong> – This method is not implemented by default and is intended for pretrained models only.</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier.get_latent_space_embeddings">
 <span class="sig-name descname"><span class="pre">get_latent_space_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier.get_latent_space_embeddings" title="Link to this definition"></a></dt>
@@ -342,17 +363,40 @@ The exact nature of the embedding (e.g., dimensionality, transformation mechanis
 be defined by the implementing subclass.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>The latent space embeddings corresponding to the provided batch. The structure and type of the embeddings</dt><dd><p>is determined by the subclass implementation.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>The latent space embeddings corresponding to the provided batch. The structure and type of the embeddings
+is determined by the subclass implementation.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Any</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>NotImplementedError</strong> – If the method is not implemented by the subclass.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier.predict" title="Link to this definition"></a></dt>
+<dd><p>Predict the label at each hierarchical level for the table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>table</strong> (<em>astropy.table.Table</em>) – Input data containing one or more rows.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Mapping from hierarchical level (as returned by self.score) to the predicted class</dt><dd><p>label. For each level, self.score(table) is expected to return a
+pandas.DataFrame of shape (n_samples, n_classes) with class labels as columns; the
+predicted label is the column with the highest score for the first sample.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Any exceptions raised by self.score</strong><strong> or </strong><strong>by numpy operations</strong><strong> (</strong><strong>e.g.</strong><strong>, </strong><strong>if the score DataFrame is empty</strong><strong>) </strong><strong>will be propagated.</strong> – </p>
 </dd>
 </dl>
 </dd></dl>
@@ -382,32 +426,21 @@ convert these conditional probabilities into final class probabilities.</p>
 <span class="sig-name descname"><span class="pre">predict_class_probabilities_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier.predict_class_probabilities_df" title="Link to this definition"></a></dt>
 <dd><p>Predict class probabilities for a given batch and return the results in a DataFrame.</p>
 <p>This method performs the following steps:
-1. Retrieves the list of taxonomy nodes ordered by level using the taxonomy’s</p>
-<blockquote>
-<div><p><cite>get_level_order_traversal</cite> method.</p>
-</div></blockquote>
-<ol class="arabic simple" start="2">
-<li><p>Computes the class probabilities for the input batch via the <cite>predict_class_probabilities</cite> method.</p></li>
-<li><dl class="simple">
-<dt>Constructs and returns a pandas DataFrame with the computed probabilities, where each column</dt><dd><p>corresponds to a taxonomy node in level order.</p>
-</dd>
-</dl>
-</li>
-</ol>
+1. Retrieves the list of taxonomy nodes ordered by level using the taxonomy’s <cite>get_level_order_traversal</cite> method.
+2. Computes the class probabilities for the input batch via the <cite>predict_class_probabilities</cite> method.
+3. Constructs and returns a pandas DataFrame with the computed probabilities, where each column corresponds to a taxonomy node in level order.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>batch</strong> (<em>dictionary</em>) – The input data batch on which to perform predictions. The expected format
 and type of <cite>batch</cite> depend on the implementation details of the prediction model.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>A DataFrame with columns representing taxonomy nodes and each cell containing</dt><dd><p>the predicted class probability for the corresponding node.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>A DataFrame with columns representing taxonomy nodes and each cell containing</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>pandas.DataFrame</p>
+<dd class="field-odd"><p><p>pandas.DataFrame</p>
+<p>the predicted class probability for the corresponding node.</p>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -447,14 +480,45 @@ node order from the taxonomy’s level-order traversal.</p>
 <dd class="field-odd"><p><strong>batch</strong> (<em>dictionary</em>) – The input data batch for which the conditional probabilities are to be predicted.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A DataFrame containing the predicted conditional probabilities with columns
+corresponding to the level-order nodes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier.predict_full_scores">
+<span class="sig-name descname"><span class="pre">predict_full_scores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier.predict_full_scores" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier.score">
+<span class="sig-name descname"><span class="pre">score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier.score" title="Link to this definition"></a></dt>
+<dd><p>Compute hierarchical scores for the input table.
+Predicts scores for all taxonomy nodes using self.predict_full_scores(), then
+groups those scores by taxonomy depth and returns a mapping from depth levels
+to DataFrames containing the corresponding node scores.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>table</strong> (<em>astropy.table.Table</em>) – Input observations/features to be scored.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><dl class="simple">
-<dt>A DataFrame containing the predicted conditional probabilities with columns</dt><dd><p>corresponding to the level-order nodes.</p>
+<dt>A mapping from taxonomy depth level to a</dt><dd><p>DataFrame of predicted scores for nodes at that level. Each DataFrame
+is a subset of the full prediction DataFrame containing only the
+columns for the nodes at that depth.</p>
 </dd>
 </dl>
 </p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>pandas.DataFrame</p>
+<dd class="field-odd"><p>dict[int, pandas.DataFrame]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>KeyError</strong> – If expected node columns (from self.taxonomy.get_nodes_by_depth()) are not present in the DataFrame returned by predict_full_scores().</p>
 </dd>
 </dl>
 </dd></dl>
@@ -464,13 +528,16 @@ node order from the taxonomy’s level-order traversal.</p>
 </section>
 <section id="module-oracle.constants">
 <span id="oracle-constants-module"></span><h2>oracle.constants module<a class="headerlink" href="#module-oracle.constants" title="Link to this heading"></a></h2>
+<p>Module containing constant mappings and configurations for the ORACLE project.</p>
 </section>
 <section id="module-oracle.loss">
 <span id="oracle-loss-module"></span><h2>oracle.loss module<a class="headerlink" href="#module-oracle.loss" title="Link to this heading"></a></h2>
+<p>Top level module for defining the Weighted Hierarchical Cross Entropy Loss function for hierarchical classification tasks.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="oracle.loss.WHXE_Loss">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.loss.</span></span><span class="sig-name descname"><span class="pre">WHXE_Loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taxonomy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="source/oracle.taxonomies.html#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><span class="pre">Taxonomy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.loss.WHXE_Loss" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Implementation of the Weighted Hierarchical Cross Entropy Loss function.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.loss.WHXE_Loss.compute_lambda_term">
 <span class="sig-name descname"><span class="pre">compute_lambda_term</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.loss.WHXE_Loss.compute_lambda_term" title="Link to this definition"></a></dt>
@@ -515,15 +582,16 @@ levels of the tree according to their depth.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.loss.WHXE_Loss.get_class_weights">
 <span class="sig-name descname"><span class="pre">get_class_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">true</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.loss.WHXE_Loss.get_class_weights" title="Link to this definition"></a></dt>
-<dd><p>Computes the class weights for each node in the taxonomy based on the true label data, using inverse frequency weighting.
-:param true: A binary tensor of shape (N_samples, N_nodes) where each row represents a sample and each column corresponds to a node in the taxonomy. An element should be 1 if the sample belongs to the class represented by the node, and 0 otherwise.
-:type true: torch.Tensor</p>
+<dd><p>Computes the class weights for each node in the taxonomy based on the true label data, using inverse frequency weighting.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A 1D tensor of shape (N_nodes,) containing the computed class weights.</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>true</strong> (<em>torch.Tensor</em>) – A binary tensor of shape (N_samples, N_nodes) where each row represents a sample and each column corresponds to a node in the taxonomy. An element should be 1 if the sample belongs to the class represented by the node, and 0 otherwise.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>torch.Tensor</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A 1D tensor of shape (N_nodes,) containing the computed class weights.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
 </dd>
 </dl>
 </dd></dl>
@@ -533,6 +601,8 @@ levels of the tree according to their depth.</p>
 </section>
 <section id="module-oracle.presets">
 <span id="oracle-presets-module"></span><h2>oracle.presets module<a class="headerlink" href="#module-oracle.presets" title="Link to this heading"></a></h2>
+<p>Top-level module for defining presets and utility functions for model selection,
+data loading, and training configurations in the ORACLE project.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="oracle.presets.get_class_weights">
 <span class="sig-prename descclassname"><span class="pre">oracle.presets.</span></span><span class="sig-name descname"><span class="pre">get_class_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.presets.get_class_weights" title="Link to this definition"></a></dt>
@@ -603,9 +673,11 @@ day from days_list.</p>
 <dd class="field-odd"><p>List[DataLoader]</p>
 </dd>
 </dl>
-<p class="rubric">Notes</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
 <p>Each DataLoader is constructed for a specific truncation of the light curve based on the day value.
 The generator for DataLoader shuffling is explicitly created on the CPU.</p>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -658,14 +730,13 @@ applied to the dataset.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><p>A tuple containing:
-- DataLoader: The DataLoader for the concatenated validation dataset with the specified batch size</p>
-<blockquote>
-<div><p>and collate function, constructed with a CPU-based torch.Generator.</p>
-</div></blockquote>
-<ul class="simple">
+<dd class="field-even"><p><dl class="simple">
+<dt>A tuple containing:</dt><dd><ul class="simple">
+<li><p>DataLoader: The DataLoader for the concatenated validation dataset with the specified batch size and collate function, constructed with a CPU-based torch.Generator.</p></li>
 <li><p>list: A list of validation labels obtained from the first dataset in the list via get_all_labels().</p></li>
 </ul>
+</dd>
+</dl>
 </p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -677,6 +748,7 @@ applied to the dataset.</p></li>
 </section>
 <section id="module-oracle.taxonomies">
 <span id="oracle-taxonomies-module"></span><h2>oracle.taxonomies module<a class="headerlink" href="#module-oracle.taxonomies" title="Link to this heading"></a></h2>
+<p>Top level module for defining taxonomies used in hierarchical classification tasks.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="oracle.taxonomies.BTS_Taxonomy">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.taxonomies.</span></span><span class="sig-name descname"><span class="pre">BTS_Taxonomy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.taxonomies.BTS_Taxonomy" title="Link to this definition"></a></dt>
@@ -710,20 +782,16 @@ number of samples and M is the number of nodes in the taxonomy. Each element rep
 the conditional probability of a node given its parent node.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>A tensor of the same shape as <cite>conditional_probabilities</cite> where each element</dt><dd><p>represents the computed class probability for the corresponding node. The class probability
+<dd class="field-even"><p>A tensor of the same shape as <cite>conditional_probabilities</cite> where each element
+represents the computed class probability for the corresponding node. The class probability
 is calculated as the product of the conditional probabilities along the path from the root
 to that node.</p>
-</dd>
-</dl>
-</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>torch.Tensor</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>AssertionError</strong> – If the number of columns in <cite>conditional_probabilities</cite> does not match the number of
-    nodes in the taxonomy.</p>
+<dd class="field-even"><p><strong>AssertionError</strong> – If the number of columns in <cite>conditional_probabilities</cite> does not match the number of nodes in the taxonomy.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -744,11 +812,8 @@ during normalization. Default is 1e-10.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>The tensor of logits after applying conditional probability computations using masked</dt><dd><p>softmax operations, where probabilities are normalized within the sibling groups.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>The tensor of logits after applying conditional probability computations using masked
+softmax operations, where probabilities are normalized within the sibling groups.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>torch.Tensor</p>
@@ -787,13 +852,10 @@ by a level-order traversal of the taxonomy.</p>
 as verified by the level-order traversal.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>A 2D numpy array of shape (number of labels, total number of nodes in the taxonomy),</dt><dd><p>where each row is the one-hot encoded vector for the corresponding label.
+<dd class="field-even"><p>A 2D numpy array of shape (number of labels, total number of nodes in the taxonomy),
+where each row is the one-hot encoded vector for the corresponding label.
 A value of 1 indicates that a node is part of the path from the root to the label;
 all other positions are 0.</p>
-</dd>
-</dl>
-</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>numpy.ndarray</p>
@@ -856,12 +918,9 @@ For each unique depth obtained from the hierarchy (via get_depths), this functio
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt>A dictionary where each key (of type int) corresponds to a depth level,</dt><dd><p>and the associated value is a NumPy array containing the nodes at that depth.
+<dd class="field-odd"><p>A dictionary where each key (of type int) corresponds to a depth level,
+and the associated value is a NumPy array containing the nodes at that depth.
 The key -1 is used to store a NumPy array of all leaf nodes.</p>
-</dd>
-</dl>
-</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>dict</p>
@@ -889,11 +948,8 @@ The key -1 is used to store a NumPy array of all leaf nodes.</p>
 <dd><p>Retrieves the parent node for each node in the taxonomy following a level order traversal.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt>A list where each element is the parent of the corresponding node from the level order traversal.</dt><dd><p>The root node will have an empty string as its parent.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-odd"><p>A list where each element is the parent of the corresponding node from the level order traversal.
+The root node will have an empty string as its parent.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>list</p>
@@ -935,11 +991,8 @@ a numpy array is created where each element is set to 1 if the corresponding nod
 level order traversal has that parent, and 0 otherwise.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt>A list of numpy arrays, each representing a mask for sibling nodes</dt><dd><p>corresponding to one unique parent in the taxonomy.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-odd"><p>A list of numpy arrays, each representing a mask for sibling nodes
+corresponding to one unique parent in the taxonomy.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>List[numpy.ndarray]</p>
@@ -987,6 +1040,7 @@ custom styling. Finally, it displays the plot using Matplotlib.</p>
 </section>
 <section id="module-oracle.test">
 <span id="oracle-test-module"></span><h2>oracle.test module<a class="headerlink" href="#module-oracle.test" title="Link to this heading"></a></h2>
+<p>Interface for testing saved models in the ORACLE framework.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="oracle.test.main">
 <span class="sig-prename descclassname"><span class="pre">oracle.test.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.test.main" title="Link to this definition"></a></dt>
@@ -1002,22 +1056,26 @@ custom styling. Finally, it displays the plot using Matplotlib.</p>
 <dt class="sig sig-object py" id="oracle.test.run_testing_loop">
 <span class="sig-prename descclassname"><span class="pre">oracle.test.</span></span><span class="sig-name descname"><span class="pre">run_testing_loop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.test.run_testing_loop" title="Link to this definition"></a></dt>
 <dd><p>Runs the testing loop for a specified model using the provided arguments.</p>
-<p>This function performs the following steps:
-1. Extracts key parameters (batch_size, max_n_per_class, and model directory) from the input arguments.
-2. Reads the model choice from ‘train_args.csv’ located in the specified model directory.
-3. Creates necessary subdirectories (‘plots’ and ‘reports’) within the model directory if they do not already exist.
-4. Loads the appropriate model architecture based on the model choice and loads its pre-trained weights from ‘best_model_f1.pth’.
-5. Sets up the model for testing and moves it to the designated device.
-6. Retrieves test datasets for multiple default days (ignoring the ‘Anomaly’ class) and runs comprehensive analysis on each.
-7. Retrieves additional test datasets (using an alternative mapping for anomalies) to generate embeddings for anomaly detection.
-8. Generates and saves performance plots, including loss history and metrics across different phases.
-9. Merges and displays performance tables based on a predefined list of thresholds.</p>
+<dl class="simple">
+<dt>This function performs the following steps:</dt><dd><ul class="simple">
+<li><p>Extracts key parameters (batch_size, max_n_per_class, and model directory) from the input arguments.</p></li>
+<li><p>Reads the model choice from ‘train_args.csv’ located in the specified model directory.</p></li>
+<li><p>Creates necessary subdirectories (‘plots’ and ‘reports’) within the model directory if they do not already exist.</p></li>
+<li><p>Loads the appropriate model architecture based on the model choice and loads its pre-trained weights from ‘best_model_f1.pth’.</p></li>
+<li><p>Sets up the model for testing and moves it to the designated device.</p></li>
+<li><p>Retrieves test datasets for multiple default days (ignoring the ‘Anomaly’ class) and runs comprehensive analysis on each.</p></li>
+<li><p>Retrieves additional test datasets (using an alternative mapping for anomalies) to generate embeddings for anomaly detection.</p></li>
+<li><p>Generates and saves performance plots, including loss history and metrics across different phases.</p></li>
+<li><p>Merges and displays performance tables based on a predefined list of thresholds.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>args</strong> (<em>Namespace</em>) – An object containing the following attributes:
-- batch_size (int): The batch size for data loading.
-- max_n_per_class (int): The maximum number of samples per class for testing.
-- dir (str): The directory path where the model and related files are stored.</p>
+1. batch_size (int): The batch size for data loading.
+2. max_n_per_class (int): The maximum number of samples per class for testing.
+3. dir (str): The directory path where the model and related files are stored.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
@@ -1034,10 +1092,12 @@ merge_performance_tables) are defined elsewhere in the codebase.</p>
 </section>
 <section id="module-oracle.tester">
 <span id="oracle-tester-module"></span><h2>oracle.tester module<a class="headerlink" href="#module-oracle.tester" title="Link to this heading"></a></h2>
+<p>Module for testing hierarchical models in the ORACLE framework.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="oracle.tester.Tester">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.tester.</span></span><span class="sig-name descname"><span class="pre">Tester</span></span><a class="headerlink" href="#oracle.tester.Tester" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Top-level class providing testing functionalities for hierarchical classification models.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.tester.Tester.create_classification_report">
 <span class="sig-name descname"><span class="pre">create_classification_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.tester.Tester.create_classification_report" title="Link to this definition"></a></dt>
@@ -1201,6 +1261,7 @@ batch is a dictionary containing tensors (and other values) including the key �
 </section>
 <section id="module-oracle.train">
 <span id="oracle-train-module"></span><h2>oracle.train module<a class="headerlink" href="#module-oracle.train" title="Link to this heading"></a></h2>
+<p>Interface for training models in the ORACLE framework.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="oracle.train.get_wandb_run">
 <span class="sig-prename descclassname"><span class="pre">oracle.train.</span></span><span class="sig-name descname"><span class="pre">get_wandb_run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.train.get_wandb_run" title="Link to this definition"></a></dt>
@@ -1208,15 +1269,15 @@ batch is a dictionary containing tensors (and other values) including the key �
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>args</strong> – An object that must contain the following attributes:
-num_epochs (int): The number of training epochs.
-batch_size (int): The batch size to be used.
-lr (float): The learning rate for training.
-max_n_per_class (int): The maximum number of samples per class.
-alpha (float): A hyperparameter  used for controlling loss behavior.
-gamma (float): A hyperparameter used for weighting.
-dir (str): The directory path where the model should be saved.
-model (str): The identifier for the chosen model architecture.
-load_weights (str): The file path for the pretrained model weights, if any.</p>
+1. num_epochs (int): The number of training epochs.
+2. batch_size (int): The batch size to be used.
+3. lr (float): The learning rate for training.
+4. max_n_per_class (int): The maximum number of samples per class.
+5. alpha (float): A hyperparameter  used for controlling loss behavior.
+6. gamma (float): A hyperparameter used for weighting.
+7. dir (str): The directory path where the model should be saved.
+8. model (str): The identifier for the chosen model architecture.
+9. load_weights (str): The file path for the pretrained model weights, if any.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A wandb run instance initialized with the given configuration, which logs metadata and hyperparameters.</p>
@@ -1254,15 +1315,15 @@ load_weights (str): The file path for the pretrained model weights, if any.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>args</strong> (<em>argparse.Namespace</em>) – An object containing all necessary configuration parameters and hyperparameters including:
-- num_epochs (int): Number of epochs to train the model.
-- batch_size (int): Size of the batches used in training and validation.
-- lr (float): Learning rate for the optimizer.
-- max_n_per_class (int): Maximum number of samples per class for the training data.
-- alpha (float): Hyperparameter used during training (specific purpose defined by model’s setup).
-- gamma (float): Hyperparameter used during training (specific purpose defined by model’s setup).
-- dir (str): Directory path for saving the model and other related artifacts.
-- model (str): Identifier to select which model architecture to use.
-- load_weights (str or None): Path to pretrained model weights. If provided, these weights are loaded into the model.</p>
+1. num_epochs (int): Number of epochs to train the model.
+2. batch_size (int): Size of the batches used in training and validation.
+3. lr (float): Learning rate for the optimizer.
+4. max_n_per_class (int): Maximum number of samples per class for the training data.
+5. alpha (float): Hyperparameter used during training (specific purpose defined by model’s setup).
+6. gamma (float): Hyperparameter used during training (specific purpose defined by model’s setup).
+7. dir (str): Directory path for saving the model and other related artifacts.
+8. model (str): Identifier to select which model architecture to use.
+9. load_weights (str or None): Path to pretrained model weights. If provided, these weights are loaded into the model.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
@@ -1291,6 +1352,7 @@ load_weights (str): The file path for the pretrained model weights, if any.</p>
 </section>
 <section id="module-oracle.trainer">
 <span id="oracle-trainer-module"></span><h2>oracle.trainer module<a class="headerlink" href="#module-oracle.trainer" title="Link to this heading"></a></h2>
+<p>Module for training hierarchical models in the ORACLE framework.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="oracle.trainer.EarlyStopper">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.trainer.</span></span><span class="sig-name descname"><span class="pre">EarlyStopper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.trainer.EarlyStopper" title="Link to this definition"></a></dt>
@@ -1341,15 +1403,6 @@ load_weights (str): The file path for the pretrained model weights, if any.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">early_stop(validation_loss</span></span></dt>
-<dd><p>float) -&gt; bool:
-Checks whether the current validation loss warrants early stopping.
-Resets the counter if there is an improvement, and increments it otherwise.
-Returns True if the counter exceeds or equals the patience threshold, otherwise False.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="oracle.trainer.EarlyStopper.early_stop">
 <span class="sig-name descname"><span class="pre">early_stop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">validation_loss</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.trainer.EarlyStopper.early_stop" title="Link to this definition"></a></dt>
 <dd><p>Checks if training should be stopped early based on the current validation loss.
@@ -1366,11 +1419,8 @@ This method compares the provided validation loss against the minimum validation
 <dd class="field-odd"><p><strong>validation_loss</strong> (<em>float</em>) – The current validation loss from the evaluation phase.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>True if early stopping criterion is met (i.e., the counter has reached the patience limit),</dt><dd><p>otherwise False.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>True if early stopping criterion is met (i.e., the counter has reached the patience limit),
+otherwise False.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
@@ -1384,6 +1434,7 @@ This method compares the provided validation loss against the minimum validation
 <dt class="sig sig-object py" id="oracle.trainer.Trainer">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.trainer.</span></span><span class="sig-name descname"><span class="pre">Trainer</span></span><a class="headerlink" href="#oracle.trainer.Trainer" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Top-level class providing training functionalities for hierarchical classification models.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.trainer.Trainer.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.trainer.Trainer.fit" title="Link to this definition"></a></dt>
@@ -1544,6 +1595,7 @@ moved to the device.</p>
 </section>
 <section id="module-oracle.visualization">
 <span id="oracle-visualization-module"></span><h2>oracle.visualization module<a class="headerlink" href="#module-oracle.visualization" title="Link to this heading"></a></h2>
+<p>Module for visualization functions in the ORACLE framework.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="oracle.visualization.plot_average_performance_over_all_phases">
 <span class="sig-prename descclassname"><span class="pre">oracle.visualization.</span></span><span class="sig-name descname"><span class="pre">plot_average_performance_over_all_phases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics_dictionary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.visualization.plot_average_performance_over_all_phases" title="Link to this definition"></a></dt>
@@ -1699,7 +1751,7 @@ along with the macro-average AUC.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="oracle.visualization.plot_umap">
-<span class="sig-prename descclassname"><span class="pre">oracle.visualization.</span></span><span class="sig-name descname"><span class="pre">plot_umap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bts_classes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.visualization.plot_umap" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">oracle.visualization.</span></span><span class="sig-name descname"><span class="pre">plot_umap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bts_classes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.visualization.plot_umap" title="Link to this definition"></a></dt>
 <dd><p>Plot UMAP projection of embeddings.
 This function computes a 2D UMAP projection from high-dimensional embeddings and generates both a
 static scatter plot using matplotlib and an interactive scatter plot using plotly. Points in the plots
@@ -1710,6 +1762,7 @@ to disk; otherwise, the static plot is displayed.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>embeddings</strong> (<em>array-like</em>) – High-dimensional feature data (e.g., a numpy array) with shape (n_samples, n_features).</p></li>
 <li><p><strong>classes</strong> (<em>array-like</em>) – Class labels for each embedding, used for color-coding the points in the plot.</p></li>
+<li><p><strong>id</strong> (<em>array-like</em>) – Unique identifiers for each source, used for hover information in the interactive plot.</p></li>
 <li><p><strong>bts_classes</strong> (<em>array-like</em>) – Additional class information for tooltips in the interactive plot.</p></li>
 <li><p><strong>d</strong> (<em>int</em><em> or </em><em>str</em>) – Identifier (e.g., number of days or a delay parameter) used in the plot title and file names.</p></li>
 <li><p><strong>model_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – Directory where the plots will be saved. If None, the static plot is shown instead.</p></li>
@@ -1727,6 +1780,7 @@ to disk; otherwise, the static plot is displayed.</p>
 </section>
 <section id="module-oracle">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-oracle" title="Link to this heading"></a></h2>
+<p>ORACLE is a general framework for hierarchical classification.</p>
 </section>
 </section>
 

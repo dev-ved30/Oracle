@@ -1,4 +1,4 @@
-oracle.presets
+﻿oracle.presets
 ==============
 
 .. automodule:: oracle.presets
@@ -13,4 +13,5 @@ oracle.presets
       get_test_loaders
       get_train_loader
       get_val_loader
+      worker_init_fn
    

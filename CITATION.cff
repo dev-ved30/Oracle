@@ -1,41 +1,22 @@
-cff-version: "1.2.0"
-message: "If you use this software, please cite the software DOI and the corresponding paper."
-title: "ORACLE: A Real-Time, Hierarchical, Deep-Learning Photometric Classifier for the LSST"
-authors:
-  - family: "Shah"
-    given: "Ved G."
-  - family: "Gagliano"
-    given: "Alexander"
-  - family: "Malanchev"
-    given: "Konstantin"
-  - family: "Narayan"
-    given: "Gautham"
-  - family: "Malz"
-    given: "A.I."
-  - name: "The LSST Dark Energy Science Collaboration"
-doi: "10.5281/zenodo.15099699"
-version: "1.0.0"
-date-released: "2025-03-01"
-url: "https://doi.org/10.5281/zenodo.15099699"
-repository-code: "https://github.com/dev-ved30/Oracle"
-keywords:
-  - "astronomy"
-  - "photometric-classification"
-  - "deep-learning"
-  - "LSST"
-preferred-citation: |
-  @software{oracle1-software,
-    author       = {Shah, Ved and
-                    Gagliano, Alexander and
-                    Malanchev, Konstantin and
-                    Narayan, Gautham and
-                    Malz, A.I. and
-                    The LSST Dark Energy Science Collaboration},
-    title        = {ORACLE: A Real-Time, Hierarchical, Deep-Learning
-                     Photometric Classifier for the LSST},
-    month        = mar,
-    year         = 2025,
-    publisher    = {Zenodo},
-    doi          = {10.5281/zenodo.15099699},
-    url          = {https://doi.org/10.5281/zenodo.15099699},
-  }
+@software{oracle1-software,
+  author       = {Shah, Ved and
+                  Gagliano, Alexander and
+                  Malanchev, Konstantin and
+                  Narayan, Gautham and
+                  Malz, A.I. and
+                  The LSST Dark Energy Science Collaboration},
+  title        = {ORACLE: A Real-Time, Hierarchical, Deep-Learning
+                   Photometric Classifier for the LSST
+                  },
+  month        = mar,
+  year         = 2025,
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.15099699},
+  url          = {https://doi.org/10.5281/zenodo.15099699},
+  swhid        = {swh:1:dir:731eb324342ca22b473e5ff6710483c721d417aa
+                   ;origin=https://doi.org/10.5281/zenodo.15099698;vi
+                   sit=swh:1:snp:8fc4b2c5a108b4542b5133dcfcd1dc2d7087
+                   2fca;anchor=swh:1:rel:4aa4f29a46142866d1d3d0182950
+                   4631c8b02696;path=ELAsTiCC-Classification-main
+                  },
+}

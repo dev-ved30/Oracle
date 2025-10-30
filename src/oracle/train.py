@@ -143,6 +143,7 @@ def run_training_loop(args):
     batch_size = args.batch_size
     lr = args.lr
     max_n_per_class = args.max_n_per_class
+    max_n_per_class_val = int(np.ceil(max_n_per_class/len(val_truncation_days))) if max_n_per_class != None else None
     alpha = args.alpha
     gamma = args.gamma
     model_dir = args.dir
@@ -154,7 +155,7 @@ def run_training_loop(args):
 
     # Get the train and validation datasets
     train_dataloader, train_labels = get_train_loader(model_choice, batch_size, max_n_per_class, ['Anomaly'])
-    val_dataloader, val_labels = get_val_loader(model_choice, batch_size, val_truncation_days, int(np.ceil(max_n_per_class/len(val_truncation_days))), ['Anomaly'])
+    val_dataloader, val_labels = get_val_loader(model_choice, batch_size, val_truncation_days, max_n_per_class_val, ['Anomaly'])
 
     # This is used to log data
     wandb_run = get_wandb_run(args)

@@ -1,4 +1,3 @@
-```
 @ARTICLE{oracle1,
        author = {{Shah}, Ved G. and {Gagliano}, Alex and {Malanchev}, Konstantin and {Narayan}, Gautham and {The LSST Dark Energy Science Collaboration}},
         title = "{ORACLE: A Real-Time, Hierarchical, Deep-Learning Photometric Classifier for the LSST}",
@@ -38,4 +37,3 @@ archivePrefix = {arXiv},
                    4631c8b02696;path=ELAsTiCC-Classification-main
                   },
 }
-```

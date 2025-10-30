@@ -341,8 +341,8 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
 
         for c in unique_classes:
 
-            class_df = self.parquet_df.filter(pl.col("class") == c).slice(0, self.max_n_per_class)
-            class_dfs.append(class_df)
+            class_df = self.parquet_df.filter(pl.col("class") == c)
+            class_dfs.append(class_df.sample(n=min(self.max_n_per_class, len(class_df)), shuffle=True, seed=42).slice(0, self.max_n_per_class))
             print(f"{c}: {class_df.shape[0]}")
 
         self.parquet_df = pl.concat(class_dfs)

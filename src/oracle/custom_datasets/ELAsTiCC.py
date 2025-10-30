@@ -107,7 +107,7 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         self.excluded_classes = excluded_classes
 
         print(f'Loading dataset from {self.parquet_file_path}\n')
-        self.parquet_df = pl.read_parquet(self.parquet_file_path, columns=self.columns)
+        self.parquet_df = pl.read_parquet(self.parquet_file_path)
         self.columns_dtypes = self.parquet_df.schema
         self.map_models_to_classes()
 
@@ -198,6 +198,20 @@ class ELAsTiCC_LC_Dataset(torch.utils.data.Dataset):
         self.parquet_df = self.parquet_df.with_columns(
             pl.col("ELASTICC_class").replace(ELAsTiCC_to_Astrophysical_mappings, return_dtype=pl.String).alias("class")
         )
+
+        self.parquet_df = self.parquet_df.with_columns([
+            pl.when((pl.col("class") == "SLSN") & (pl.col("SIM_REDSHIFT_CMB") >= 1))
+            .then(pl.lit("high-z-SLSN"))
+            .otherwise(pl.col("class"))
+            .alias("class"),
+        ]) 
+
+        self.parquet_df = self.parquet_df.with_columns([
+            pl.when((pl.col("class") == "SLSN") & (pl.col("SIM_REDSHIFT_CMB") < 1))
+            .then(pl.lit("low-z-SLSN"))
+            .otherwise(pl.col("class"))
+            .alias("class"),
+        ])
 
     def exclude_classes(self):
         """

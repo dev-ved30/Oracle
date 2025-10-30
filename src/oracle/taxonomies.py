@@ -455,7 +455,7 @@ class ORACLE_Taxonomy(Taxonomy):
         self.add_edges_from([('Fast', level_3b_node) for level_3b_node in level_3b_nodes])
 
         # Level 3c nodes for Long events Transients
-        level_3c_nodes = ['SLSN', 'TDE', 'ILOT', 'CART', 'PISN']
+        level_3c_nodes = ['low-z-SLSN', 'high-z-SLSN', 'TDE', 'ILOT', 'CART', 'PISN']
         self.add_nodes_from(level_3c_nodes)
         self.add_edges_from([('Long', level_3c_node) for level_3c_node in level_3c_nodes])
 

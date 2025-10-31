@@ -393,11 +393,12 @@ def plot_umap(embeddings, classes, bts_classes, id, d, model_dir=None):
     plt.close('all')
     plt.style.use(['default'])
 
-    reducer = umap.UMAP(random_state=42)
+    reducer = umap.UMAP(n_components=3, random_state=42)
     umap_embedding = reducer.fit_transform(embeddings)
 
     x = umap_embedding[:, 0]
     y = umap_embedding[:, 1]
+    x = umap_embedding[:, 2]
 
     for c in np.unique(classes):
 
@@ -420,11 +421,11 @@ def plot_umap(embeddings, classes, bts_classes, id, d, model_dir=None):
 
     plt.close()
 
-    df = pd.DataFrame(umap_embedding, columns=['umap1','umap2'])
+    df = pd.DataFrame(umap_embedding, columns=['umap1','umap2','umap3'])
     df['class'] = classes
     df['raw_class'] = bts_classes
     df['id'] = id
-    fig = px.scatter(df, x='umap1', y='umap2', color=f"class", hover_data=['class', 'raw_class', 'id'])#, cmap='viridis', marker=markers[i])
+    fig = px.scatter_3d(df, x='umap1', y='umap2', z='umap3', color=f"class", hover_data=['class', 'raw_class', 'id'])#, cmap='viridis', marker=markers[i])
     fig.write_html(f"{model_dir}/plots/umap/umap_trigger+{d}.html")
 
         

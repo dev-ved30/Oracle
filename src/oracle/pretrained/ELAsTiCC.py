@@ -12,8 +12,8 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 torch.set_default_device(device)
 
 here = Path(__file__).resolve().parent
-default_oracle1_elasticc_model_path = str(here.parent.parent.parent / "models" / 'ELAsTiCC' / 'vocal-bird-160')
-default_oracle1_elasticc_lite_model_path = str(here.parent.parent.parent / "models" / 'ELAsTiCC-lite' / 'revived-star-159')
+default_oracle1_elasticc_model_path = str(here.parent.parent.parent / "models" / 'ELAsTiCC' / 'tenebrous-husk-200')
+default_oracle1_elasticc_lite_model_path = str(here.parent.parent.parent / "models" / 'ELAsTiCC-lite' / 'spooky-poltergeist-199')
 
 def augment_table(table):
     """

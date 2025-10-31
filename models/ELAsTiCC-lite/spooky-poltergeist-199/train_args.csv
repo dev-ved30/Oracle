@@ -1,0 +1,2 @@
+model,num_epochs,batch_size,lr,max_n_per_class,alpha,gamma,dir,load_weights
+ELAsTiCC-lite,2000,1024,0.0002,40000,0.5,1,,

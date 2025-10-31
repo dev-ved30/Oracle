@@ -600,6 +600,210 @@ class GRU_MD_MM(Hierarchical_classifier):
         logits = self.fc_out(x)
 
         return logits
+    
+class GRU_MD_Improved(Hierarchical_classifier):
+    """
+    Improved GRU-based neural network architecture with multi-dimensional static features for hierarchical classification.
+
+    Key differences vs original:
+        - Bidirectional GRU with attention pooling over time (gives richer sequence summary).
+        - LayerNorm / BatchNorm and Dropout for regularisation & stability.
+        - Residual connections in the MLP head.
+        - Configurable hidden sizes and dropout.
+        - GELU activations in the head for smoother gradients.
+    """
+    def __init__(self,
+                 taxonomy: Taxonomy,
+                 ts_feature_dim: int = 5,
+                 static_feature_dim: int = 30,
+                 gru_hidden: int = 128,
+                 gru_layers: int = 2,
+                 dropout: float = 0.2):
+        """
+        Args:
+            taxonomy (Taxonomy): hierarchical taxonomy (used to determine output dim via self.n_nodes).
+            ts_feature_dim (int): dimensionality of time-series features.
+            static_feature_dim (int): dimensionality of static features.
+            gru_hidden (int): hidden size of the (per-direction) GRU.
+            gru_layers (int): number of GRU layers.
+            dropout (float): dropout probability for regularisation.
+        """
+        super(GRU_MD_Improved, self).__init__(taxonomy)
+
+        self.ts_feature_dim = ts_feature_dim
+        self.static_feature_dim = static_feature_dim
+        self.output_dim = self.n_nodes
+
+        # recurrent backbone: bidirectional for richer encoding
+        self.gru_hidden = gru_hidden
+        self.gru_layers = gru_layers
+        self.num_directions = 2  # bidirectional
+        self.gru = nn.GRU(input_size=ts_feature_dim,
+                          hidden_size=gru_hidden,
+                          num_layers=gru_layers,
+                          batch_first=True,
+                          bidirectional=True,
+                          dropout=dropout if gru_layers > 1 else 0.0)
+
+        # attention pooling on top of per-timestep outputs
+        # attention: score = v^T tanh(W h_t + b)
+        self.attn_W = nn.Linear(gru_hidden * self.num_directions, gru_hidden, bias=True)
+        self.attn_v = nn.Linear(gru_hidden, 1, bias=False)
+
+        # post-GRU dense on time-series path
+        self.ts_proj = nn.Linear(gru_hidden * self.num_directions, 128)
+        self.ts_ln = nn.LayerNorm(128)
+        self.ts_dropout = nn.Dropout(dropout)
+
+        # dense on static path
+        self.static_proj = nn.Linear(static_feature_dim, 64)
+        self.static_bn = nn.BatchNorm1d(64)
+        self.static_dropout = nn.Dropout(dropout)
+
+        # merge & head with residual blocks
+        merge_in = 128 + 64
+        self.merge_proj = nn.Linear(merge_in, 128)
+
+        # head (residual MLP blocks)
+        self.head_fc1 = nn.Linear(128, 128)
+        self.head_fc2 = nn.Linear(128, 64)
+        self.head_fc3 = nn.Linear(64, 32)
+
+        # small bottleneck before output
+        self.latent_proj = nn.Linear(32, 16)
+
+        self.fc_out = nn.Linear(16, self.output_dim)
+
+        # activations
+        self.tanh = nn.Tanh()
+        self.relu = nn.ReLU()
+        self.gelu = nn.GELU()
+
+        # dropout and layernorm in head
+        self.head_dropout = nn.Dropout(dropout)
+        self.head_ln1 = nn.LayerNorm(128)
+        self.head_ln2 = nn.LayerNorm(64)
+
+        # init weights
+        self._init_weights()
+
+    def _init_weights(self):
+        """Simple weight initialization to help training stability."""
+        for m in self.modules():
+            if isinstance(m, (nn.Linear, nn.Conv1d)):
+                nn.init.xavier_uniform_(m.weight)
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)
+            elif isinstance(m, nn.GRU):
+                for name, param in m.named_parameters():
+                    if 'weight' in name:
+                        nn.init.orthogonal_(param)
+                    elif 'bias' in name:
+                        nn.init.zeros_(param)
+
+    def _attention_pool(self, packed_outputs, lengths):
+        """
+        Attention pooling over time.
+        packed_outputs: output from GRU (PackedSequence)
+        lengths: tensor of true lengths (batch,)
+        returns: (batch, hidden_size * num_directions)
+        """
+        from torch.nn.utils.rnn import pad_packed_sequence
+        outputs, _ = pad_packed_sequence(packed_outputs, batch_first=True)  # (batch, max_seq, feat)
+        # compute attention scores
+        attn_hidden = torch.tanh(self.attn_W(outputs))  # (batch, max_seq, gru_hidden)
+        attn_scores = self.attn_v(attn_hidden).squeeze(-1)  # (batch, max_seq)
+        # mask padding positions
+        max_len = outputs.size(1)
+        device = outputs.device
+        mask = torch.arange(max_len, device=device).unsqueeze(0) >= lengths.unsqueeze(1)  # True for padding
+        attn_scores = attn_scores.masked_fill(mask, float('-inf'))
+        attn_weights = torch.softmax(attn_scores, dim=1).unsqueeze(-1)  # (batch, max_seq, 1)
+        context = torch.sum(attn_weights * outputs, dim=1)  # (batch, feat)
+        return context
+
+    def get_latent_space_embeddings(self, batch):
+        """
+        Generates the latent embedding for a batch (time-series + static).
+        batch keys:
+            'ts'     -> (batch, seq_len, n_ts_features)
+            'length' -> (batch,)
+            'static' -> (batch, n_static_features)
+        Returns:
+            torch.Tensor of shape (batch, 16) -- the latent representation before final classifier.
+        """
+        x_ts = batch['ts']                  # (batch, seq_len, ts_features)
+        lengths = batch['length']           # (batch,)
+        x_static = batch['static']          # (batch, static_features)
+
+        # pack padded sequences so GRU ignores padding
+        packed = pack_padded_sequence(x_ts, lengths.cpu(), batch_first=True, enforce_sorted=False)
+
+        # initialize h0 properly: (num_layers * num_directions, batch, hidden_size)
+        batch_size = x_ts.shape[0]
+        h0 = torch.zeros(self.gru_layers * self.num_directions, batch_size, self.gru_hidden, device=x_ts.device)
+
+        # GRU returns PackedSequence for outputs when input is packed
+        packed_outputs, hidden = self.gru(packed, h0)
+
+        # attention pooling over time using the packed_outputs
+        seq_repr = self._attention_pool(packed_outputs, lengths)  # (batch, gru_hidden * num_directions)
+
+        # ts path projection
+        ts = self.ts_proj(seq_repr)
+        ts = self.ts_ln(ts)
+        ts = self.gelu(ts)
+        ts = self.ts_dropout(ts)
+
+        # static path
+        static = self.static_proj(x_static)  # (batch, 64)
+        # batchnorm expects (batch, features). If batch==1, BN behaves strangely; keep as-is.
+        static = self.static_bn(static)
+        static = self.relu(static)
+        static = self.static_dropout(static)
+
+        # merge
+        x = torch.cat((ts, static), dim=1)
+        x = self.merge_proj(x)
+        x = self.gelu(x)
+
+        # head with residual connection
+        residual = x
+        x = self.head_fc1(x)
+        x = self.head_ln1(x)
+        x = self.gelu(x)
+        x = self.head_dropout(x)
+
+        x = self.head_fc2(x)
+        x = self.head_ln2(x)
+        x = self.gelu(x)
+        x = self.head_dropout(x)
+
+        # add residual (project if needed)
+        if residual.size(1) == x.size(1):
+            x = x + residual
+        else:
+            # project residual to match dim
+            proj_res = nn.Linear(residual.size(1), x.size(1)).to(x.device)
+            x = x + proj_res(residual)
+
+        x = self.head_fc3(x)
+        x = self.gelu(x)
+
+        # final latent projection
+        latent = self.latent_proj(x)  # (batch, 16)
+
+        return latent
+
+    def forward(self, batch):
+        """
+        Forward pass: get latent embedding and compute logits.
+        """
+        x = self.get_latent_space_embeddings(batch)
+        x = self.relu(x)
+        logits = self.fc_out(x)
+        return logits
+
 
 if __name__ == '__main__':
 

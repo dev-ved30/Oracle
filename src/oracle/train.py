@@ -23,7 +23,7 @@ default_model_dir = None
 default_gamma = 1
 
 # <----- Config for the model ----->
-model_choices = ["BTS-lite", "BTS", "ZTF_Sims-lite", "ELAsTiCC", "ELAsTiCC-lite", "ELAsTiCCv2"]
+model_choices = ["BTS-lite", "BTS", "ZTF_Sims-lite", "ELAsTiCC", "ELAsTiCC-lite", "ELAsTiCCv2", "BTSv2"]
 default_model_type = "BTS"
 
 # Switch device to GPU if available

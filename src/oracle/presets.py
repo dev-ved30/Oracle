@@ -164,7 +164,6 @@ def get_train_loader(model_choice, batch_size, max_n_per_class, gamma, excluded_
     train_dataloader = DataLoader(train_dataset, 
                                   batch_size=batch_size, 
                                   sampler=sampler,
-                                  shuffle=True, 
                                   collate_fn=collate_fn, 
                                   generator=generator, 
                                   pin_memory=pin_memory, 

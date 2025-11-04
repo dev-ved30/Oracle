@@ -89,7 +89,7 @@ def get_model(model_choice):
         model = GRU_MD_Improved(taxonomy, static_feature_dim=30)
     return model
 
-def get_train_loader(model_choice, batch_size, max_n_per_class, excluded_classes=[]):
+def get_train_loader(model_choice, batch_size, max_n_per_class, gamma, excluded_classes=[]):
     """
     Generates a DataLoader for training based on the provided model choice and dataset configuration.
 
@@ -160,8 +160,18 @@ def get_train_loader(model_choice, batch_size, max_n_per_class, excluded_classes
 
     class_weights = get_class_weights(train_labels)
     train_weights = torch.from_numpy(np.array([class_weights[x] for x in train_labels]))
-    sampler = WeightedRandomSampler(train_weights, len(train_weights))
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn, generator=generator, pin_memory=pin_memory, num_workers=num_workers, prefetch_factor=prefetch_factor, persistent_workers=persistent_workers, worker_init_fn=worker_init_fn)
+    sampler = WeightedRandomSampler(train_weights**(1-gamma), len(train_weights))
+    train_dataloader = DataLoader(train_dataset, 
+                                  batch_size=batch_size, 
+                                  sampler=sampler,
+                                  shuffle=True, 
+                                  collate_fn=collate_fn, 
+                                  generator=generator, 
+                                  pin_memory=pin_memory, 
+                                  num_workers=num_workers, 
+                                  prefetch_factor=prefetch_factor, 
+                                  persistent_workers=persistent_workers, 
+                                  worker_init_fn=worker_init_fn)
     
     return train_dataloader, train_labels
 

@@ -154,7 +154,7 @@ def run_training_loop(args):
     model = get_model(model_choice)
 
     # Get the train and validation datasets
-    train_dataloader, train_labels = get_train_loader(model_choice, batch_size, max_n_per_class, ['Anomaly'])
+    train_dataloader, train_labels = get_train_loader(model_choice, batch_size, max_n_per_class, gamma, ['Anomaly'])
     val_dataloader, val_labels = get_val_loader(model_choice, batch_size, val_truncation_days, max_n_per_class_val, ['Anomaly'])
 
     # This is used to log data

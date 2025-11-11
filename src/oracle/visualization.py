@@ -57,6 +57,8 @@ def plot_confusion_matrix(y_true, y_pred, labels, normalize='true', title=None, 
     disp.im_.colorbar.remove()
     
     fig = disp.figure_
+    if n_class < 3:
+        plt.yticks(rotation=90, verticalalignment='center')
     if n_class > 7:
         plt.xticks(rotation=90)
         plt.yticks(rotation=45)
@@ -120,8 +122,7 @@ def plot_plain_cf(y_true, y_pred, labels, normalize='true', title=None, img_file
     
     cm = np.round(confusion_matrix(y_true, y_pred, labels=labels, normalize=normalize),2)
 
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
-    disp.plot(ax=ax, include_values=False, colorbar=False, cmap='Blues')
+    ax.imshow(cm, cmap='Blues', vmin=0, vmax=1)
 
     ax.set_xticks([])
     ax.set_yticks([])

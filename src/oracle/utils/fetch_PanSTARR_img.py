@@ -13,14 +13,8 @@ import pandas as pd
 import numpy as np
 import requests
 import argparse
-import sys
 import io
 
-
-if sys.platform == 'darwin':
-    base_dir = "/Users/nabeelr/Desktop/School/ZTF/BTSbot/"
-else:
-    base_dir = "/projects/b1094/rehemtulla/BTSbot/"
 
 def get_ps_image_table(ra, dec, filters="grizy"):
     """
@@ -58,17 +52,25 @@ def get_ps_url(ra, dec, size=252, im_format="jpeg", output_size=None):
     if output_size is None:
         output_size = size
 
-    table = get_ps_image_table(ra, dec, filters="grizy")
+    table = get_ps_image_table(ra, dec, filters="gri")
     url = (f"https://ps1images.stsci.edu/cgi-bin/fitscut.cgi?"
            f"ra={ra}&dec={dec}&size={size}&format={im_format}&output_size={output_size}")
 
     if not all(f in table['filter'] for f in ['g', 'r', 'i']):
         print("One of g r and i is missing")
-        return None
+        table = get_ps_image_table(ra, dec, filters="grz")
+        url = (f"https://ps1images.stsci.edu/cgi-bin/fitscut.cgi?"
+            f"ra={ra}&dec={dec}&size={size}&format={im_format}&output_size={output_size}")
 
-    flist = ["irgzy".find(x) for x in table['filter']]
-    table = table[np.argsort(flist)]
-    table = table[np.isin(table['filter'], ['g', 'r', 'i'])]
+        flist = ["irgzy".find(x) for x in table['filter']]
+        table = table[np.argsort(flist)]
+        table = table[np.isin(table['filter'], ['g', 'r', 'z'])]
+    
+    else:
+
+        flist = ["irgzy".find(x) for x in table['filter']]
+        table = table[np.argsort(flist)]
+        table = table[np.isin(table['filter'], ['g', 'r', 'i'])]
 
     for i, param in enumerate(["red", "green", "blue"]):
         url = url + f"&{param}={table['filename'][i]}"
@@ -98,6 +100,7 @@ def download_image_batch(batch, survey):
                 # PanSTARRS query
                 url = get_ps_url(source['ra'], source['dec'], size=252, im_format="jpeg")
                 if url is None:
+                    print('something broke here')
                     results.append((source['objectId'], None, True))
                     continue
 
@@ -175,40 +178,24 @@ def process_dataset(survey, split_to_process, dir, workers):
         print(f"Querying {survey.upper()} for {split} split...")
 
         # Load candidate data
-        cand = pd.read_parquet(f"{dir}/{split}.parquet")
-        cand[['objectId', 'ra', 'dec']]
+        original_cand = pd.read_parquet(f"{dir}/{split}.parquet")
+        cand = original_cand[['objectId', 'ra', 'dec']]
         cand['ra'] = [x[0] for x in cand['ra']]
         cand['dec'] = [x[0] for x in cand['dec']]
         cand['objectId'] = [x[0] for x in cand['objectId']]
 
         # Query images based on survey
         cand, img_cache = query_images(cand, survey, max_workers=workers)
-        missing_col = f'missing_{survey.upper()}'
-        survey_suffix = f'{survey.upper()}63'
 
         # Create image array
         imgs = []
-        for idx in cand.index:
-
+        for i, idx in enumerate(cand.index):
             obj = cand.loc[idx]
-            imgs.append(img_cache[obj['objectId']].astype(float).flatten())
+            if obj[f'missing_{survey.upper()}'] == False:
+                imgs.append(img_cache[obj['objectId']].astype(float).flatten())
 
-        cand['ps'] = imgs
-        cand.to_parquet(f"{dir}/{split}_{survey}.parquet")
-
-        
-        # # Save with missing images
-        # cand.to_csv(f"{base_dir}data/{split}_cand_{version}{survey_suffix}_N100.csv", index=False)
-        # np.save(f"{base_dir}data/{split}_triplets_{version}{survey_suffix}_N100.npy", imgs)
-
-        # print(f"ratio of missing {survey.upper()}: {np.sum(cand[missing_col])/len(cand)}")
-
-        # # Save without missing images
-        # imgs = imgs[~cand[missing_col]]
-        # cand = cand[~cand[missing_col]]
-
-        # cand.to_csv(f"{base_dir}data/{split}_cand_{version}{survey_suffix}nd_N100.csv", index=False)
-        # np.save(f"{base_dir}data/{split}_triplets_{version}{survey_suffix}nd_N100.npy", imgs)
+        original_cand['ps'] = imgs
+        original_cand.to_parquet(f"{dir}/{split}_{survey}.parquet")
 
 
 if __name__ == "__main__":
@@ -220,7 +207,7 @@ if __name__ == "__main__":
         help='Survey to query from: PS (PanSTARRS) or LS (Legacy Survey)'
     )
     parser.add_argument(
-        '--split', type=str, default='train', choices=['train', 'val', 'test', 'all'],
+        '--split', type=str, choices=['train', 'val', 'test', 'all'],
         help='Dataset split to process (default: train)'
     )
     parser.add_argument(

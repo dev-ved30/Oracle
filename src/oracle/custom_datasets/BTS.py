@@ -21,9 +21,9 @@ from oracle.constants import ztf_filters, ztf_alert_image_order, ztf_alert_image
 here = Path(__file__).resolve().parent
 
 # Go up to the root, then into data/ and then get the parquet file
-BTS_train_parquet_path = str(here.parent.parent.parent / "data" / 'BTS_new' / 'train.parquet')
-BTS_test_parquet_path = str(here.parent.parent.parent / "data" / 'BTS_new' / 'test.parquet')
-BTS_val_parquet_path = str(here.parent.parent.parent / "data" / 'BTS_new' / 'val.parquet')
+BTS_train_parquet_path = str(here.parent.parent.parent / "data" / 'BTS_new' / 'train_PS.parquet')
+BTS_test_parquet_path = str(here.parent.parent.parent / "data" / 'BTS_new' / 'test_PS.parquet')
+BTS_val_parquet_path = str(here.parent.parent.parent / "data" / 'BTS_new' / 'val_PS.parquet')
 
 # <----- constant for the dataset ----->
 
@@ -84,6 +84,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
                  max_n_per_class=None, 
                  include_postage_stamps=False, 
                  include_lc_plots=False, 
+                 include_PS_images=False,
                  transform=None, 
                  over_sample=False, 
                  excluded_classes=[]):
@@ -94,7 +95,8 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
             mapper (dictionary, optional): A mapping dictionary used to convert dataset values. 
                 If None, defaults to BTS_to_Astrophysical_mappings.
             max_n_per_class (int, optional): Maximum number of samples to include per class. If set, limits dataset samples per class.
-            include_postage_stamps (bool, optional): Flag indicating whether to include postage stamp images in the batch. Defaults to False.
+            include_postage_stamps (bool, optional): Flag indicating whether to include postage stamp images in the batch. Defaults to False. Cannot be True if include_PS_images is also True.
+            include_PS_images (bool, optional): Flag indicating whether to include Pan-STARRS images in the batch. Defaults to False. Cannot be True if include_postage_stamps is also True.
             include_lc_plots (bool, optional): Flag indicating whether to include light curve plots in the batch. Defaults to False.
             transform (callable, optional): A transformation function to be applied to the dataset samples.
             over_sample (bool, optional): Flag indicating whether to apply oversampling to minority classes.
@@ -115,9 +117,13 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         self.transform = transform
         self.include_lc_plots = include_lc_plots
         self.include_postage_stamps = include_postage_stamps
+        self.include_PS_images = include_PS_images
         self.max_n_per_class = max_n_per_class
         self.over_sample = over_sample
         self.excluded_classes = excluded_classes
+
+        if self.include_PS_images and self.include_postage_stamps:
+            raise ValueError('ZTF postage stamps and PS images cannot both be included in the batch')
 
         if mapper == None:
             self.mapper = BTS_to_Astrophysical_mappings
@@ -237,6 +243,12 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
                         postage_stamps[f"{f}_{img_type}"] = np.reshape(img_data, ztf_alert_image_dimension)
             postage_stamps = self.get_postage_stamp(postage_stamps)
             dictionary['postage_stamp'] = postage_stamps
+
+        if self.include_PS_images:
+
+            # Grab the flattened data and reshape it to an image
+            data = row['ps']
+            dictionary['postage_stamp'] = np.asarray(data).reshape((3, 252, 252))
 
         # This operation is costly. Only do it if include_lc_plots stamps is true
         if self.include_lc_plots:
@@ -733,7 +745,11 @@ def custom_collate_BTS(batch):
     meta_features_tensor = torch.zeros((batch_size, n_meta_features),  dtype=torch.float32, device='cpu')
     static_features_tensor = torch.zeros((batch_size, n_static_features),  dtype=torch.float32, device='cpu')
     lc_plot_tensor = torch.zeros((batch_size, n_channels, img_height, img_height), dtype=torch.float32)
-    postage_stamps_tensor = torch.zeros((batch_size, n_channels, 63, 63), dtype=torch.float32)
+
+    if 'postage_stamp' in batch[0].keys():
+        img = batch[0]['postage_stamp']
+        image_tensor_size = (batch_size, img.shape[0], img.shape[1], img.shape[2]) 
+        postage_stamps_tensor = torch.zeros(image_tensor_size, dtype=torch.float32, device='cpu')
 
     for i, sample in enumerate(batch):
 
@@ -747,7 +763,7 @@ def custom_collate_BTS(batch):
         static_features_tensor[i, :] = sample['static']
 
         if 'postage_stamp' in sample.keys():
-            postage_stamps_tensor[i,:,:,:] = sample['postage_stamp']        
+            postage_stamps_tensor[i,:,:,:] = torch.from_numpy(sample['postage_stamp'])         
 
         if 'lc_plot' in sample.keys():
             lc_plot_tensor[i,:,:,:] = sample['lc_plot']
@@ -813,7 +829,6 @@ def show_batch(images, labels, n=16):
             ax.imshow(img, cmap='gray')
         else:  # RGB
             img = img.permute(1, 2, 0)  # (C, H, W) -> (H, W, C)
-            img = img.numpy().astype(int) 
             ax.imshow(img)
 
         ax.set_title(f"{label}", fontsize=8) 
@@ -825,7 +840,7 @@ if __name__=='__main__':
     
     # <--- Example usage of the dataset --->
 
-    dataset = BTS_LC_Dataset(BTS_train_parquet_path, include_postage_stamps=False, include_lc_plots=False, transform=truncate_BTS_light_curve_fractionally, max_n_per_class=1000)
+    dataset = BTS_LC_Dataset(BTS_val_parquet_path, include_postage_stamps=False, include_PS_images=True, transform=truncate_BTS_light_curve_by_days_since_trigger, max_n_per_class=1000)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, collate_fn=custom_collate_BTS, shuffle=True)
 
     for batch in tqdm(dataloader):
@@ -835,8 +850,8 @@ if __name__=='__main__':
         for k in (batch.keys()):
             print(f"{k}: \t{batch[k].shape}")
 
-        # if 'postage_stamp' in batch.keys():
-        #     show_batch(batch['postage_stamp'], batch['label'])
+        if 'postage_stamp' in batch.keys():
+            show_batch(batch['postage_stamp'], batch['label'])
         
         # if 'lc_plot' in batch.keys():
         #     show_batch(batch['lc_plot'], batch['label'])

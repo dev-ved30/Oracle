@@ -57,20 +57,11 @@ def get_ps_url(ra, dec, size=252, im_format="jpeg", output_size=None):
            f"ra={ra}&dec={dec}&size={size}&format={im_format}&output_size={output_size}")
 
     if not all(f in table['filter'] for f in ['g', 'r', 'i']):
-        print("One of g r and i is missing")
-        table = get_ps_image_table(ra, dec, filters="grz")
-        url = (f"https://ps1images.stsci.edu/cgi-bin/fitscut.cgi?"
-            f"ra={ra}&dec={dec}&size={size}&format={im_format}&output_size={output_size}")
+        return None
 
-        flist = ["irgzy".find(x) for x in table['filter']]
-        table = table[np.argsort(flist)]
-        table = table[np.isin(table['filter'], ['g', 'r', 'z'])]
-    
-    else:
-
-        flist = ["irgzy".find(x) for x in table['filter']]
-        table = table[np.argsort(flist)]
-        table = table[np.isin(table['filter'], ['g', 'r', 'i'])]
+    flist = ["irgzy".find(x) for x in table['filter']]
+    table = table[np.argsort(flist)]
+    table = table[np.isin(table['filter'], ['g', 'r', 'i'])]
 
     for i, param in enumerate(["red", "green", "blue"]):
         url = url + f"&{param}={table['filename'][i]}"
@@ -98,22 +89,50 @@ def download_image_batch(batch, survey):
 
             elif survey == 'PS':
                 # PanSTARRS query
-                url = get_ps_url(source['ra'], source['dec'], size=252, im_format="jpeg")
-                if url is None:
-                    print('something broke here')
-                    results.append((source['objectId'], None, True))
+                table = get_ps_image_table(source["ra"], source["dec"], filters="gri")
+                file_by_filter = {
+                    f: fname
+                    for f, fname in zip(table["filter"], table["filename"])
+                    if f in ("g", "r", "i")
+                }
+
+                filt_to_channel = {
+                    'g': 'blue',
+                    'r': 'green',
+                    'i': 'red',
+                }
+
+                channels = []
+                img_shape = None
+                cutout_size = 252
+                for filt in ("i", "r", "g"):  # i->red, r->green, g->blue
+                    fname = file_by_filter.get(filt)
+                    if fname is None:
+                        channels.append(None)  # will be zeroed later
+                        continue
+
+                    url = (
+                        "https://ps1images.stsci.edu/cgi-bin/fitscut.cgi?"
+                        f"ra={source['ra']}&dec={source['dec']}&size={cutout_size}&format=jpeg"
+                        f"&{filt_to_channel[filt]}={fname}"
+                    )
+                    r = requests.get(url, timeout=30)
+                    r.raise_for_status()
+                    band_img = Image.open(io.BytesIO(r.content)).convert("L")
+                    arr = np.array(band_img).astype(np.float32)
+                    img_shape = img_shape or arr.shape
+                    channels.append(arr)
+                rgb = np.zeros((3, cutout_size, cutout_size), dtype=np.float32)
+                if img_shape is None:
+                    results.append((source['objectId'], rgb, True))
                     continue
-
-                r = requests.get(url)
-                image = Image.open(io.BytesIO(r.content)).convert("RGB")
-                image_array = np.array(image)
-
-                # Bin to 1 arcsec/pixel resolution and normalize values to [0,1]
-                #image_array = image_array.reshape(63, 4, 63, 4, 3).mean(axis=(1, 3)) # This is to make the size the same as ZTF cutouts.
-                image_array = image_array.astype(np.float32)
-                image_array = image_array / image_array.max()
-
-                results.append((source['objectId'], image_array, False))
+                
+                for idx, band in enumerate(channels):
+                    if band is not None:
+                        band_max = band.max() if band.size else 1.0
+                        if band_max > 0:
+                            rgb[idx, :, :] = band / band_max
+                results.append((source['objectId'], rgb, False))
             else:
                 raise ValueError(f"Unknown survey: {survey}")
 

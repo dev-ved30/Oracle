@@ -2,6 +2,7 @@
 Top-level module for defining various neural network architectures for hierarchical classification.
 """
 import torch
+import timm
 
 import torch.nn as nn
 import pandas as pd
@@ -601,6 +602,55 @@ class GRU_MD_MM(Hierarchical_classifier):
 
         return logits
     
+class MaxViT(Hierarchical_classifier):
+
+    def __init__(self, taxonomy: Taxonomy):
+
+        super(MaxViT, self).__init__(taxonomy)
+
+        self.output_dim = self.n_nodes
+
+        model_kind = "maxvit_tiny_rw_224.sw_in1k"
+        self.image_size = 224
+        self.maxvit = timm.create_model(model_kind, pretrained=True)
+
+        self.maxvit.head = nn.Sequential(
+            self.maxvit.head.global_pool,
+            nn.Linear(self.maxvit.head.in_features, 256),
+            nn.GELU(),
+            nn.Dropout(0.2),
+            nn.Linear(256, 128),
+        )
+
+        self.final_out = nn.Sequential(
+            nn.GELU(),
+            nn.Linear(128, self.output_dim),
+        )
+
+
+    def get_latent_space_embeddings(self, batch):
+
+        input_data = batch['postage_stamp']
+
+        if input_data.shape[-1] != self.image_size or input_data.shape[-2] != self.image_size:
+            input_data = torch.nn.functional.interpolate(
+                input_data,
+                size=(self.image_size, self.image_size),
+                mode='bilinear',
+                align_corners=False
+            )
+        return self.maxvit(input_data)
+
+    def forward(self, batch) -> torch.Tensor:
+
+        # Get the latent space embedding
+        x = self.get_latent_space_embeddings(batch)
+
+        # Final step to produce logits
+        logits = self.final_out(x)
+
+        return logits
+    
 class GRU_MD_Improved(Hierarchical_classifier):
     """
     Improved GRU-based neural network architecture with multi-dimensional static features for hierarchical classification.
@@ -807,17 +857,22 @@ class GRU_MD_Improved(Hierarchical_classifier):
 
 if __name__ == '__main__':
 
+    batch_size = 10
+
     taxonomy = ORACLE_Taxonomy()
     
     model = GRU(taxonomy)
     model.eval()
 
     x = {
-        'ts': torch.rand(10, 256, 5),
-        'length': torch.from_numpy(np.array([256]*10))
+        'ts': torch.rand(batch_size, 256, 5),
+        'length': torch.from_numpy(np.array([256]*batch_size)),
+        'postage_stamp': torch.rand(batch_size, 3, 252, 252)
     }
 
     print(model.predict_conditional_probabilities_df(x))
     print(model.predict_class_probabilities_df(x))
 
-    print(model.state_dict())
+    model = MaxViT(taxonomy)
+    print(model.predict_conditional_probabilities_df(x))
+    print(model.predict_class_probabilities_df(x))

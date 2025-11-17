@@ -400,7 +400,8 @@ def get_test_loaders(model_choice, batch_size, max_n_per_class, days_list, exclu
 
     elif model_choice == "BTSv2_PSonly":
 
-        for d in days_list:
+        # make sure the val set is not loaded many times for the image model.
+        for d in [1024]:
             
             # Set the custom transform and recreate dataloader
             test_dataset = BTS_LC_Dataset(BTS_test_parquet_path, include_PS_images=True, max_n_per_class=max_n_per_class, excluded_classes=excluded_classes, mapper=mapper)

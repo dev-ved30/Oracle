@@ -290,7 +290,7 @@ def get_val_loader(model_choice, batch_size, val_truncation_days, max_n_per_clas
 
         # Load the validation set
         val_dataset = []
-        for d in val_truncation_days:
+        for d in [1024]:
             transform = partial(truncate_BTS_light_curve_by_days_since_trigger, d=d)
             val_dataset.append(BTS_LC_Dataset(BTS_val_parquet_path, include_PS_images=True, transform=transform,  excluded_classes=excluded_classes))
         concatenated_val_dataset = ConcatDataset(val_dataset)

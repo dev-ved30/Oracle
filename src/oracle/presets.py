@@ -87,6 +87,9 @@ def get_model(model_choice):
     elif model_choice == "BTSv2":
         taxonomy = BTS_Taxonomy()
         model = GRU_MD_Improved(taxonomy, static_feature_dim=30)
+    elif model_choice == "BTSv2_PSonly":
+        taxonomy = BTS_Taxonomy()
+        model = MaxViT(taxonomy)
     return model
 
 def get_train_loader(model_choice, batch_size, max_n_per_class, gamma, excluded_classes=[]):
@@ -154,6 +157,13 @@ def get_train_loader(model_choice, batch_size, max_n_per_class, gamma, excluded_
         # Load the training set
         transform = partial(truncate_BTS_light_curve_by_days_since_trigger, add_jitter=True)
         train_dataset = BTS_LC_Dataset(BTS_train_parquet_path, max_n_per_class=max_n_per_class, transform=transform, excluded_classes=excluded_classes)
+        collate_fn = custom_collate_BTS
+    
+    elif model_choice == "BTSv2_PSonly":
+
+        # Load the training set
+        transform = partial(truncate_BTS_light_curve_by_days_since_trigger, add_jitter=True)
+        train_dataset = BTS_LC_Dataset(BTS_train_parquet_path, include_PS_images=True, max_n_per_class=max_n_per_class, transform=transform, excluded_classes=excluded_classes)
         collate_fn = custom_collate_BTS
 
     train_labels = train_dataset.get_all_labels()
@@ -276,6 +286,16 @@ def get_val_loader(model_choice, batch_size, val_truncation_days, max_n_per_clas
         concatenated_val_dataset = ConcatDataset(val_dataset)
         collate_func = custom_collate_BTS
 
+    elif model_choice == "BTSv2_PSonly":
+
+        # Load the validation set
+        val_dataset = []
+        for d in val_truncation_days:
+            transform = partial(truncate_BTS_light_curve_by_days_since_trigger, d=d)
+            val_dataset.append(BTS_LC_Dataset(BTS_val_parquet_path, include_PS_images=True, transform=transform,  excluded_classes=excluded_classes))
+        concatenated_val_dataset = ConcatDataset(val_dataset)
+        collate_func = custom_collate_BTS
+
     val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_func, generator=generator, pin_memory=pin_memory, num_workers=num_workers, prefetch_factor=prefetch_factor, persistent_workers=persistent_workers, worker_init_fn=worker_init_fn)
     val_labels = val_dataset[0].get_all_labels()
     return val_dataloader, val_labels
@@ -378,6 +398,15 @@ def get_test_loaders(model_choice, batch_size, max_n_per_class, days_list, exclu
             test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_BTS, generator=generator)
             test_loaders.append(test_dataloader)
 
+    elif model_choice == "BTSv2_PSonly":
+
+        for d in days_list:
+            
+            # Set the custom transform and recreate dataloader
+            test_dataset = BTS_LC_Dataset(BTS_test_parquet_path, include_PS_images=True, max_n_per_class=max_n_per_class, excluded_classes=excluded_classes, mapper=mapper)
+            test_dataset.transform = partial(truncate_BTS_light_curve_by_days_since_trigger, d=d)
+            test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_BTS, generator=generator)
+            test_loaders.append(test_dataloader)
 
     return test_loaders
 

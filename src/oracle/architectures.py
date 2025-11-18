@@ -650,6 +650,7 @@ class MaxViT(Hierarchical_classifier):
         # Final step to produce logits
         logits = self.final_out(x)
 
+
         return logits
     
 class GRU_MD_MM_Improved(Hierarchical_classifier):

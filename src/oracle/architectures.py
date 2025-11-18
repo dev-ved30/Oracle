@@ -11,7 +11,7 @@ import numpy as np
 from torchvision.models import swin_v2_b
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
-from oracle.taxonomies import Taxonomy, ORACLE_Taxonomy
+from oracle.taxonomies import Taxonomy, ORACLE_Taxonomy, BTS_Taxonomy
 from oracle.trainer import Trainer
 from oracle.tester import Tester
 
@@ -609,8 +609,9 @@ class MaxViT(Hierarchical_classifier):
         super(MaxViT, self).__init__(taxonomy)
 
         self.output_dim = self.n_nodes
+        self.latent_space_dim = 128
 
-        model_kind = "maxvit_tiny_rw_224.sw_in1k"
+        model_kind = "hf_hub:mwalmsley/baseline-encoder-regression-maxvit_tiny"
         self.image_size = 224
         self.maxvit = timm.create_model(model_kind, pretrained=True)
 
@@ -619,12 +620,12 @@ class MaxViT(Hierarchical_classifier):
             nn.Linear(self.maxvit.head.in_features, 256),
             nn.GELU(),
             nn.Dropout(0.2),
-            nn.Linear(256, 128),
+            nn.Linear(256, self.latent_space_dim),
         )
 
         self.final_out = nn.Sequential(
             nn.GELU(),
-            nn.Linear(128, self.output_dim),
+            nn.Linear(self.latent_space_dim, self.output_dim),
         )
 
 
@@ -642,6 +643,73 @@ class MaxViT(Hierarchical_classifier):
         return self.maxvit(input_data)
 
     def forward(self, batch) -> torch.Tensor:
+
+        # Get the latent space embedding
+        x = self.get_latent_space_embeddings(batch)
+
+        # Final step to produce logits
+        logits = self.final_out(x)
+
+        return logits
+    
+class GRU_MD_MM_Improved(Hierarchical_classifier):
+
+    def __init__(self, taxonomy: Taxonomy,
+                 lc_md_model_dir="models/BTSv2/prime-frost-205/",
+                 image_model_dir="models/BTSv2_PSonly/vibrant-jazz-217/"):
+        
+        super().__init__(taxonomy)
+
+        self.output_dim = self.n_nodes
+        self.latent_space_dim = 16
+
+        # Create the LC + MD model and load the weights
+        self.lc_md_spine = GRU_MD_Improved(taxonomy)
+        self.lc_md_spine.load_state_dict(torch.load(f'{lc_md_model_dir}/best_model_f1.pth', map_location=torch.device('cpu')), strict=False)
+
+
+        # Create the image only model and load the weights
+        self.image_spine = MaxViT(taxonomy)
+        self.image_spine.load_state_dict(torch.load(f'{image_model_dir}/best_model_f1.pth', map_location=torch.device('cpu')), strict=False)
+
+        self.mlp_head_in_dim = self.lc_md_spine.latent_space_dim + self.image_spine.latent_space_dim
+
+        # MLP head to connect 
+        self.mlp_head = nn.Sequential(
+            nn.Linear(self.mlp_head_in_dim, 64),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, self.latent_space_dim),
+        )
+
+        self.final_out = nn.Sequential(
+            nn.GELU(),
+            nn.Linear(self.latent_space_dim, self.output_dim),
+        )
+
+        # Freeze all the weights and use them as encoders
+        for p in self.lc_md_spine.parameters():
+            p.requires_grad = False
+
+        for p in self.image_spine.parameters():
+            p.requires_grad = False
+
+
+    def get_latent_space_embeddings(self, batch):
+        
+        lc_md_out = self.lc_md_spine.get_latent_space_embeddings(batch)
+        image_out = self.image_spine.get_latent_space_embeddings(batch)
+
+        print(lc_md_out.shape, image_out.shape)
+
+        combined_embeddings = torch.cat([lc_md_out, image_out], dim=1)
+        x = self.mlp_head(combined_embeddings)
+
+        return x
+    
+    def forward(self, batch):
 
         # Get the latent space embedding
         x = self.get_latent_space_embeddings(batch)
@@ -683,6 +751,7 @@ class GRU_MD_Improved(Hierarchical_classifier):
         self.ts_feature_dim = ts_feature_dim
         self.static_feature_dim = static_feature_dim
         self.output_dim = self.n_nodes
+        self.latent_space_dim = 16
 
         # recurrent backbone: bidirectional for richer encoding
         self.gru_hidden = gru_hidden
@@ -720,9 +789,9 @@ class GRU_MD_Improved(Hierarchical_classifier):
         self.head_fc3 = nn.Linear(64, 32)
 
         # small bottleneck before output
-        self.latent_proj = nn.Linear(32, 16)
+        self.latent_proj = nn.Linear(32, self.latent_space_dim)
 
-        self.fc_out = nn.Linear(16, self.output_dim)
+        self.fc_out = nn.Linear(self.latent_space_dim, self.output_dim)
 
         # activations
         self.tanh = nn.Tanh()
@@ -867,6 +936,7 @@ if __name__ == '__main__':
     x = {
         'ts': torch.rand(batch_size, 256, 5),
         'length': torch.from_numpy(np.array([256]*batch_size)),
+        'static': torch.rand(batch_size, 30),
         'postage_stamp': torch.rand(batch_size, 3, 252, 252)
     }
 
@@ -874,5 +944,10 @@ if __name__ == '__main__':
     print(model.predict_class_probabilities_df(x))
 
     model = MaxViT(taxonomy)
+    print(model.predict_conditional_probabilities_df(x))
+    print(model.predict_class_probabilities_df(x))
+
+    taxonomy = BTS_Taxonomy()
+    model = GRU_MD_MM_Improved(taxonomy)
     print(model.predict_conditional_probabilities_df(x))
     print(model.predict_class_probabilities_df(x))

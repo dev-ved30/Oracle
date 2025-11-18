@@ -101,7 +101,8 @@ class Trainer:
         self.train_criterion = WHXE_Loss(self.taxonomy, train_labels, self.alpha, self.gamma)
         self.val_criterion = WHXE_Loss(self.taxonomy, val_labels, self.alpha)
 
-        self.optimizer = optim.Adam(self.parameters(), lr=lr)
+        # Only compute grads on unfrozen params
+        self.optimizer = optim.Adam(filter(lambda p: p.requires_grad, self.parameters()), lr=lr)
         self.model_dir = model_dir
         self.device = device
         self.wandb_run = wandb_run

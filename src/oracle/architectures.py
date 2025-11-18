@@ -703,8 +703,6 @@ class GRU_MD_MM_Improved(Hierarchical_classifier):
         lc_md_out = self.lc_md_spine.get_latent_space_embeddings(batch)
         image_out = self.image_spine.get_latent_space_embeddings(batch)
 
-        print(lc_md_out.shape, image_out.shape)
-
         combined_embeddings = torch.cat([lc_md_out, image_out], dim=1)
         x = self.mlp_head(combined_embeddings)
 

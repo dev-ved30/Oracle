@@ -723,7 +723,7 @@ class GRU_MD_MM_Improved(Hierarchical_classifier):
 
     def __init__(self, taxonomy: Taxonomy,
                  lc_md_model_dir="models/BTSv2/prime-frost-205/",
-                 image_model_dir="models/BTSv2_PSonly/vibrant-jazz-217/"):
+                 image_model_dir="models/BTSv2_PSonly/bright-mountain-225/"):
         
         super().__init__(taxonomy)
 
@@ -736,19 +736,14 @@ class GRU_MD_MM_Improved(Hierarchical_classifier):
 
 
         # Create the image only model and load the weights
-        self.image_spine = MaxViT(taxonomy)
+        self.image_spine = ConvNeXt(taxonomy)
         self.image_spine.load_state_dict(torch.load(f'{image_model_dir}/best_model_f1.pth', map_location=torch.device('cpu')), strict=False)
 
         self.mlp_head_in_dim = self.lc_md_spine.latent_space_dim + self.image_spine.latent_space_dim
 
         # MLP head to connect 
         self.mlp_head = nn.Sequential(
-            nn.Linear(self.mlp_head_in_dim, 64),
-            nn.ReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(64, 32),
-            nn.ReLU(),
-            nn.Linear(32, self.latent_space_dim),
+            nn.Linear(self.mlp_head_in_dim, self.latent_space_dim),
         )
 
         self.final_out = nn.Sequential(

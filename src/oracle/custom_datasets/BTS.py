@@ -1,6 +1,7 @@
 """Custom dataset class for the ZTF Bright Transient Survey light curve dataset."""
 import io
 import torch
+import random
 
 import polars as pl
 import pandas as pd
@@ -13,6 +14,7 @@ from pathlib import Path
 from PIL import Image
 from tqdm import tqdm
 from torch.nn.utils.rnn import pad_sequence
+import torchvision.transforms.functional as F
 from astropy.coordinates import SkyCoord
 
 from oracle.constants import ztf_filters, ztf_alert_image_order, ztf_alert_image_dimension, ztf_filter_to_fid, BTS_to_Astrophysical_mappings
@@ -86,6 +88,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
                  include_lc_plots=False, 
                  include_PS_images=False,
                  transform=None, 
+                 img_transform=None,
                  over_sample=False, 
                  excluded_classes=[]):
         """
@@ -99,6 +102,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
             include_PS_images (bool, optional): Flag indicating whether to include Pan-STARRS images in the batch. Defaults to False. Cannot be True if include_postage_stamps is also True.
             include_lc_plots (bool, optional): Flag indicating whether to include light curve plots in the batch. Defaults to False.
             transform (callable, optional): A transformation function to be applied to the dataset samples.
+            img_transform (callable, optional): A transformation function to be applied to the images in the dataset.
             over_sample (bool, optional): Flag indicating whether to apply oversampling to minority classes.
             excluded_classes (list, optional): A list of classes to be excluded from the dataset. Defaults to an empty list.
         Functionality:
@@ -115,6 +119,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
 
         self.parquet_file_path = parquet_file_path
         self.transform = transform
+        self.img_transform = img_transform
         self.include_lc_plots = include_lc_plots
         self.include_postage_stamps = include_postage_stamps
         self.include_PS_images = include_PS_images
@@ -249,6 +254,9 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
             # Grab the flattened data and reshape it to an image
             data = row['ps']
             dictionary['postage_stamp'] = np.asarray(data).reshape((3, 252, 252))
+
+            if self.img_transform is not None:
+                dictionary['postage_stamp'] = self.img_transform(dictionary['postage_stamp'])
 
         # This operation is costly. Only do it if include_lc_plots stamps is true
         if self.include_lc_plots:
@@ -638,6 +646,39 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         buf.close()
         
         return im
+    
+def augment_panstarss(img, channel_dropout_p=0.15, max_offset=4):
+
+    C, H, W = img.shape
+
+    # --- Random Rotation 0–360°
+    angle = random.uniform(0, 360)
+    img = F.rotate(img, angle, interpolation=F.InterpolationMode.BILINEAR)
+
+    # --- Random Flip (H/V)
+    if random.random() < 0.5:
+        img = F.hflip(img)
+    if random.random() < 0.5:
+        img = F.vflip(img)
+
+    # --- Random Offset (translation)
+    tx = random.randint(-max_offset, max_offset)
+    ty = random.randint(-max_offset, max_offset)
+    img = F.affine(
+        img,
+        angle=0,
+        translate=[tx, ty],
+        scale=1.0,
+        shear=[0.0, 0.0],
+        interpolation=F.InterpolationMode.BILINEAR
+    )
+
+    # --- Random Channel Dropout
+    if random.random() < channel_dropout_p:
+        drop_idx = random.randrange(C)
+        img[drop_idx] = 0.0
+
+    return img
 
 def truncate_BTS_light_curve_by_days_since_trigger(x_ts, x_static, d=None, add_jitter=False, normalize_flux=False):
     """

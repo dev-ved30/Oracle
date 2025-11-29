@@ -92,7 +92,7 @@ def get_model(model_choice):
         model = GRU_MD_MM_Improved(taxonomy)
     elif model_choice == "BTSv2_PSonly":
         taxonomy = BTS_Taxonomy()
-        model = MaxViT(taxonomy)
+        model = ConvNeXt(taxonomy)
     return model
 
 def get_train_loader(model_choice, batch_size, max_n_per_class, gamma, excluded_classes=[]):

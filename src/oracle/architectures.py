@@ -36,6 +36,18 @@ class Hierarchical_classifier(nn.Module, Trainer, Tester):
         self.taxonomy = taxonomy
         self.n_nodes = len(taxonomy.get_level_order_traversal())
 
+    def count_parameters(self):
+        total = 0
+        trainable = 0
+        for p in self.parameters():
+            num = p.numel()
+            total += num
+            if p.requires_grad:
+                trainable += num
+        print("Total:", total)
+        print("Trainable:", trainable)
+        return total, trainable
+
     def predict_conditional_probabilities(self, batch):
         """
         Compute conditional probabilities from the model's output.
@@ -652,6 +664,60 @@ class MaxViT(Hierarchical_classifier):
 
 
         return logits
+
+class ConvNeXt(Hierarchical_classifier):
+    def __init__(self, taxonomy: Taxonomy):
+        super(ConvNeXt, self).__init__(taxonomy)
+
+        self.output_dim = self.n_nodes
+        self.latent_space_dim = 16
+
+        model_kind = "hf_hub:mwalmsley/zoobot-encoder-convnext_nano" 
+        self.image_size = 224
+        self.convnext = timm.create_model(model_kind, pretrained=True)
+
+        self.convnext.head = nn.Sequential(
+            self.convnext.head.global_pool,
+            self.convnext.head.norm,
+            self.convnext.head.flatten,
+            nn.Linear(self.convnext.head.in_features, 256),
+            nn.GELU(),
+            nn.Linear(256,128),
+            nn.GELU(),
+            nn.Dropout(0.2),
+            nn.Linear(128,64),
+            nn.GELU(),
+            nn.Linear(64,self.latent_space_dim),
+        )
+
+        self.final_out = nn.Sequential(
+            nn.GELU(),
+            nn.Linear(self.latent_space_dim, self.output_dim),
+        )
+
+    def get_latent_space_embeddings(self, batch):
+
+        input_data = batch['postage_stamp']
+
+        if input_data.shape[-1] != self.image_size or input_data.shape[-2] != self.image_size:
+            input_data = torch.nn.functional.interpolate(
+                input_data,
+                size=(self.image_size, self.image_size),
+                mode='bilinear',
+                align_corners=False
+            )
+        return self.convnext(input_data)
+
+    def forward(self, batch) -> torch.Tensor:
+
+        # Get the latent space embedding
+        x = self.get_latent_space_embeddings(batch)
+
+        # Final step to produce logits
+        logits = self.final_out(x)
+
+        return logits
+
     
 class GRU_MD_MM_Improved(Hierarchical_classifier):
 
@@ -942,7 +1008,7 @@ if __name__ == '__main__':
     print(model.predict_conditional_probabilities_df(x))
     print(model.predict_class_probabilities_df(x))
 
-    model = MaxViT(taxonomy)
+    model = ConvNeXt(taxonomy)
     print(model.predict_conditional_probabilities_df(x))
     print(model.predict_class_probabilities_df(x))
 

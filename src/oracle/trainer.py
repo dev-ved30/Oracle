@@ -311,6 +311,8 @@ class Trainer:
 
         print(f"==========\nBEGINNING TRAINING\n")
 
+        self.count_parameters()
+
         for epoch in range(num_epochs):
 
             print(f"----------\nStarting epoch {epoch+1}/{num_epochs}...")

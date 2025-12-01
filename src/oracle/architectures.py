@@ -672,7 +672,7 @@ class ConvNeXt(Hierarchical_classifier):
         self.output_dim = self.n_nodes
         self.latent_space_dim = 16
 
-        model_kind = "hf_hub:mwalmsley/zoobot-encoder-convnext_nano" 
+        model_kind = "hf_hub:mwalmsley/zoobot-encoder-convnext_pico" 
         self.image_size = 224
         self.convnext = timm.create_model(model_kind, pretrained=True)
 

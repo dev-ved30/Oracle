@@ -651,32 +651,21 @@ def augment_panstarss(img, channel_dropout_p=0.15, max_offset=4):
 
     C, H, W = img.shape
 
-    # --- Random Rotation 0–360°
-    angle = random.uniform(0, 360)
-    img = F.rotate(img, angle, interpolation=F.InterpolationMode.BILINEAR)
+    # rotation
+    img = np.rot90(img, k=random.choice([0,1,2,3]), axes=[1, 2])
 
     # --- Random Flip (H/V)
     if random.random() < 0.5:
-        img = F.hflip(img)
+        img = np.fliplr(img)
     if random.random() < 0.5:
-        img = F.vflip(img)
-
-    # --- Random Offset (translation)
-    tx = random.randint(-max_offset, max_offset)
-    ty = random.randint(-max_offset, max_offset)
-    img = F.affine(
-        img,
-        angle=0,
-        translate=[tx, ty],
-        scale=1.0,
-        shear=[0.0, 0.0],
-        interpolation=F.InterpolationMode.BILINEAR
-    )
+        img = np.flipud(img)
 
     # --- Random Channel Dropout
     if random.random() < channel_dropout_p:
         drop_idx = random.randrange(C)
-        img[drop_idx] = 0.0
+        img[drop_idx, :, :] = 0.0
+
+    img = np.ascontiguousarray(img)
 
     return img
 
@@ -881,7 +870,7 @@ if __name__=='__main__':
     
     # <--- Example usage of the dataset --->
 
-    dataset = BTS_LC_Dataset(BTS_val_parquet_path, include_postage_stamps=False, include_PS_images=True, transform=truncate_BTS_light_curve_by_days_since_trigger, max_n_per_class=1000)
+    dataset = BTS_LC_Dataset(BTS_val_parquet_path, include_postage_stamps=False, include_PS_images=True, transform=truncate_BTS_light_curve_by_days_since_trigger, img_transform=augment_panstarss, max_n_per_class=1000)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, collate_fn=custom_collate_BTS, shuffle=True)
 
     for batch in tqdm(dataloader):

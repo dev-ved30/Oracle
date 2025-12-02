@@ -651,21 +651,26 @@ def augment_panstarss(img, channel_dropout_p=0.15, max_offset=4):
 
     C, H, W = img.shape
 
-    # rotation
-    img = np.rot90(img, k=random.choice([0,1,2,3]), axes=[1, 2])
+    # random 90-degree rotation around spatial axes (H,W)
+    k = random.choice([0, 1, 2, 3])
+    if k != 0:
+        img = np.rot90(img, k=k, axes=(1, 2))
 
-    # --- Random Flip (H/V)
+    # random horizontal (left-right) flip -> flip width axis (axis=2)
     if random.random() < 0.5:
-        img = np.fliplr(img)
-    if random.random() < 0.5:
-        img = np.flipud(img)
+        img = np.flip(img, axis=2)
 
-    # --- Random Channel Dropout
+    # random vertical (up-down) flip -> flip height axis (axis=1)
+    if random.random() < 0.5:
+        img = np.flip(img, axis=1)
+
+    # random channel dropout (zero one channel)
     if random.random() < channel_dropout_p:
         drop_idx = random.randrange(C)
         img[drop_idx, :, :] = 0.0
 
-    img = np.ascontiguousarray(img)
+    # ensure contiguous float32 (avoids negative-stride errors when converting to torch)
+    img = np.ascontiguousarray(img, dtype=np.float32)
 
     return img
 

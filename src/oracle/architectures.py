@@ -684,7 +684,7 @@ class ConvNeXt(Hierarchical_classifier):
             nn.GELU(),
             nn.Linear(256,128),
             nn.GELU(),
-            nn.Dropout(0.3),
+            nn.Dropout(0.2),
             nn.Linear(128,64),
             nn.GELU(),
             nn.Linear(64,self.latent_space_dim),

@@ -684,7 +684,6 @@ class ConvNeXt(Hierarchical_classifier):
             nn.GELU(),
             nn.Linear(256,128),
             nn.GELU(),
-            nn.Dropout(0.2),
             nn.Linear(128,64),
             nn.GELU(),
             nn.Linear(64,self.latent_space_dim),
@@ -723,7 +722,7 @@ class GRU_MD_MM_Improved(Hierarchical_classifier):
 
     def __init__(self, taxonomy: Taxonomy,
                  lc_md_model_dir="models/BTSv2/prime-frost-205/",
-                 image_model_dir="models/BTSv2_PSonly/bright-mountain-225/"):
+                 image_model_dir="models/BTSv2_PSonly/solar-microwave-238/"):
         
         super().__init__(taxonomy)
 

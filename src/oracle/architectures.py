@@ -680,12 +680,8 @@ class ConvNeXt(Hierarchical_classifier):
             self.convnext.head.global_pool,
             self.convnext.head.norm,
             self.convnext.head.flatten,
-            nn.Linear(self.convnext.head.in_features, 256),
-            nn.GELU(),
-            nn.Linear(256,128),
-            nn.GELU(),
-            nn.Linear(128,64),
-            nn.GELU(),
+            nn.Linear(self.convnext.head.in_features, 256), nn.GELU(), nn.Dropout(0.3),
+            nn.Linear(256,64), nn.GELU(), nn.Dropout(0.3),
             nn.Linear(64,self.latent_space_dim),
         )
 

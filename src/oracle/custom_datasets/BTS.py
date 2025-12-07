@@ -719,11 +719,11 @@ def truncate_BTS_light_curve_by_days_since_trigger(x_ts, x_static, d=None, add_j
         x_ts[:, flux_index] = x_ts[:, flux_index] + np.random.normal([0]*x_ts.shape[0],  x_ts[:, flux_err_index])
         
         # Jitter the mag unc
-        x_ts[:, flux_err_index] = x_ts[:, flux_err_index] + np.random.normal([0]*x_ts.shape[0],  0.01)
+        x_ts[:, flux_err_index] = x_ts[:, flux_err_index] + np.random.normal([0]*x_ts.shape[0],  [0.01]*x_ts.shape[0])
         
         # Jitter the time
-        x_ts[:, jd_index] = x_ts[:, jd_index] + np.random.uniform([0]*x_ts.shape[0],  0.25)
-        x_ts[:, jd_index] -= np.min(x_ts[:, jd_index])
+        x_ts[:, jd_index] = x_ts[:, jd_index] + np.random.uniform([0]*x_ts.shape[0],  [0.25]*x_ts.shape[0])
+        x_ts[:, jd_index] -= min(x_ts[:, jd_index])
 
     # Get indices of observations within d days of the first detection (trigger)
     idx = np.where(jd <= d)[0]

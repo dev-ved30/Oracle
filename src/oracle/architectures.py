@@ -717,8 +717,8 @@ class ConvNeXt(Hierarchical_classifier):
 class GRU_MD_MM_Improved(Hierarchical_classifier):
 
     def __init__(self, taxonomy: Taxonomy,
-                 lc_md_model_dir="models/BTSv2/frosty-oath-206/",
-                 image_model_dir="models/BTSv2_PSonly/solar-microwave-238/"):
+                 lc_md_model_dir="models/BTSv2/crisp-lake-253/",
+                 image_model_dir="models/BTSv2_PSonly/snowy-hill-244/"):
         
         super().__init__(taxonomy)
 

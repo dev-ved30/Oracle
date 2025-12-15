@@ -13,9 +13,9 @@ from oracle.custom_datasets.ELAsTiCC import truncate_ELAsTiCC_light_curve_by_day
 # Path to this file's directory
 here = Path(__file__).resolve().parent
 
-MALLORN_train_parquet = str(here.parent.parent.parent / "data" / 'MALLORN' / 'mallorn_train.parquet')
-MALLORN_val_parquet = str(here.parent.parent.parent / "data" / 'MALLORN' / 'mallorn_val.parquet')
-MALLORN_test_parquet = str(here.parent.parent.parent / "data" / 'MALLORN' / 'mallorn_test.parquet')
+MALLORN_train_parquet_path = str(here.parent.parent.parent / "data" / 'MALLORN' / 'mallorn_train.parquet')
+MALLORN_val_parquet_path = str(here.parent.parent.parent / "data" / 'MALLORN' / 'mallorn_val.parquet')
+MALLORN_test_parquet_path = str(here.parent.parent.parent / "data" / 'MALLORN' / 'mallorn_test.parquet')
 
 LSST_passband_to_wavelengths = {
     'u': (320 + 400) / (2 * 1000),
@@ -30,7 +30,7 @@ class_mappings = {
     'SN Ia': 'Not TDE',
     'SN Ia-91T-like': 'Not TDE',
     'SN Ia-91bg-like': 'Not TDE',
-    'SN Ia02cx-like': 'Not TDE',
+    'SN Iax[02cx-like]': 'Not TDE',
     'SN Ia-pec': 'Not TDE',
     'SN Ib': 'Not TDE',
     'SN Ib/c': 'Not TDE',
@@ -38,10 +38,11 @@ class_mappings = {
     'SN Ic-BL': 'Not TDE',
     'SN II': 'Not TDE',
     'SN IIb': 'Not TDE',
+    'SN IIP': 'Not TDE',
     'SN IIn': 'Not TDE',
     'SLSN-I': 'Not TDE',
     'SLSN-II': 'Not TDE',
-    'TDEs': 'TDE',
+    'TDE': 'TDE',
     'AGN': 'Not TDE',
 }
 
@@ -91,13 +92,8 @@ class MALLORN_Dataset(torch.utils.data.Dataset):
         print("Compute the SNR and adding photflag column...")
         self.df = self.df.with_columns(
             pl.struct(["FLUXCAL", "FLUXCALERR"])
-            .apply(lambda row: [4096 if np.abs(flux / flux_err) > 0 else 0 for flux, flux_err in zip(row["FLUXCAL"], row["FLUXCALERR"])])
+            .apply(lambda row: [1 if np.abs(flux / flux_err) >= 5 else 0 for flux, flux_err in zip(row["FLUXCAL"], row["FLUXCALERR"])])
             .alias("PHOTFLAG")
-        )
-
-        print(f"Replacing PHOTFLAG bitmask with binary values...")
-        self.df = self.df.with_columns(
-            pl.col("PHOTFLAG").map_elements(lambda x: np.where(np.array(x) & 4096 != 0, 1, 0).tolist(), return_dtype=pl.List(pl.Int64)).alias("PHOTFLAG")
         )
 
         print("Subtracting time of first observation...")
@@ -105,6 +101,15 @@ class MALLORN_Dataset(torch.utils.data.Dataset):
             pl.col("MJD").map_elements(lambda x: (np.array(x) - min(x)).tolist(), return_dtype=pl.List(pl.Float64)).alias("MJD")
         )
 
+    def get_all_labels(self):
+        """
+        Retrieves all labels from the parquet dataframe's 'class' column.
+
+        Returns:
+            list: A list of labels extracted from the 'class' column.
+        """
+
+        return self.df['class'].to_list()
 
     def __len__(self):
 
@@ -199,7 +204,7 @@ def custom_collate_MALLORN(batch):
 
 if __name__ == "__main__":
 
-    dataset = MALLORN_Dataset(parquet_file_path=MALLORN_train_parquet)
+    dataset = MALLORN_Dataset(parquet_file_path=MALLORN_train_parquet_path, transform=truncate_ELAsTiCC_light_curve_fractionally)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True, collate_fn=custom_collate_MALLORN, num_workers=4, pin_memory=True, prefetch_factor=2)
 
     for k in range(10):

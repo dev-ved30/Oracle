@@ -713,6 +713,39 @@ class ConvNeXt(Hierarchical_classifier):
 
         return logits
 
+class GRU_MALLORN(Hierarchical_classifier):
+
+    def __init__(self, taxonomy: Taxonomy,
+                 base_model_dir="models/ELAsTiCC-lite/revived-star-159/"):
+        
+        super().__init__(taxonomy)
+        self.output_dim = self.n_nodes
+
+        # Create the base GRU model and load the weights
+        self.base_model = GRU(ORACLE_Taxonomy())
+        self.base_model.load_state_dict(torch.load(f'{base_model_dir}/best_model_f1.pth', map_location=torch.device('cpu')), strict=False)
+        for p in self.base_model.parameters():
+            p.requires_grad = True
+
+        self.final_out = nn.Sequential(
+            nn.GELU(),
+            nn.Linear(16, self.output_dim),
+        )
+
+    def get_latent_space_embeddings(self, batch):
+        
+        x = self.base_model.get_latent_space_embeddings(batch)
+        return x
+    
+    def forward(self, batch):
+
+        # Get the latent space embedding
+        x = self.get_latent_space_embeddings(batch)
+
+        # Final step to produce logits
+        logits = self.final_out(x)
+
+        return logits
     
 class GRU_MD_MM_Improved(Hierarchical_classifier):
 

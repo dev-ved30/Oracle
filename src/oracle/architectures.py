@@ -727,10 +727,15 @@ class GRU_MALLORN(Hierarchical_classifier):
         for p in self.base_model.parameters():
             p.requires_grad = False
 
+        for p in self.base_model.dense2.parameters():
+            p.requires_grad = True
+
+        for p in self.base_model.dense3.parameters():
+            p.requires_grad = True
+
         self.final_out = nn.Sequential(
-            nn.GELU(), nn.Linear(16, 8),
-            nn.GELU(), nn.Linear(8, 4),
-            nn.GELU(), nn.Linear(4, self.output_dim),
+            nn.GELU(),
+            nn.Linear(16, self.output_dim),
         )
 
     def get_latent_space_embeddings(self, batch):

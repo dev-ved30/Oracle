@@ -724,6 +724,7 @@ class GRU_MALLORN(Hierarchical_classifier):
         # Create the base GRU model and load the weights
         self.base_model = GRU(ORACLE_Taxonomy())
         self.base_model.load_state_dict(torch.load(f'{base_model_dir}/best_model_f1.pth', map_location=torch.device('cpu')), strict=False)
+        
         for p in self.base_model.parameters():
             p.requires_grad = False
 

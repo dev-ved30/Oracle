@@ -10,7 +10,8 @@ from oracle.architectures import *
 from oracle.custom_datasets.BTS import *
 from oracle.custom_datasets.ZTF_sims import *
 from oracle.custom_datasets.ELAsTiCC import *  
-from oracle.taxonomies import BTS_Taxonomy, ORACLE_Taxonomy
+from oracle.custom_datasets.MALLORN import *
+from oracle.taxonomies import BTS_Taxonomy, ORACLE_Taxonomy, MALLORN_Taxonomy
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 # torch.set_default_device(device)
@@ -93,6 +94,9 @@ def get_model(model_choice):
     elif model_choice == "BTSv2_PSonly":
         taxonomy = BTS_Taxonomy()
         model = ConvNeXt(taxonomy)
+    elif model_choice == "MALLORN":
+        taxonomy = MALLORN_Taxonomy()
+        model = GRU_MALLORN(taxonomy)
     return model
 
 def get_train_loader(model_choice, batch_size, max_n_per_class, gamma, excluded_classes=[]):
@@ -175,6 +179,12 @@ def get_train_loader(model_choice, batch_size, max_n_per_class, gamma, excluded_
         transform = partial(truncate_BTS_light_curve_by_days_since_trigger, add_jitter=True)
         train_dataset = BTS_LC_Dataset(BTS_train_parquet_path, include_PS_images=True, max_n_per_class=max_n_per_class, transform=transform, img_transform=augment_panstarss, excluded_classes=excluded_classes)
         collate_fn = custom_collate_BTS
+
+    elif model_choice == "MALLORN":
+
+        # Load the training set
+        train_dataset = MALLORN_Dataset(MALLORN_train_parquet_path, transform=truncate_ELAsTiCC_light_curve_by_days_since_trigger)
+        collate_fn = custom_collate_MALLORN
 
     train_labels = train_dataset.get_all_labels()
 
@@ -316,6 +326,13 @@ def get_val_loader(model_choice, batch_size, val_truncation_days, max_n_per_clas
         concatenated_val_dataset = ConcatDataset(val_dataset)
         collate_func = custom_collate_BTS
 
+    elif model_choice == "MALLORN":
+
+        # Load the validation set. Here we do not concatenate since we want to keep all val curves at full length    
+        val_dataset = [MALLORN_Dataset(MALLORN_val_parquet_path)]
+        concatenated_val_dataset =  ConcatDataset(val_dataset)
+        collate_func = custom_collate_MALLORN
+
     val_dataloader = DataLoader(concatenated_val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_func, generator=generator, pin_memory=pin_memory, num_workers=num_workers, prefetch_factor=prefetch_factor, persistent_workers=persistent_workers, worker_init_fn=worker_init_fn)
     val_labels = val_dataset[0].get_all_labels()
     return val_dataloader, val_labels
@@ -441,5 +458,17 @@ def get_test_loaders(model_choice, batch_size, max_n_per_class, days_list, exclu
             test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_BTS, generator=generator)
             test_loaders.append(test_dataloader)
 
+    elif model_choice == "MALLORN":
+
+        # Set the custom transform and recreate dataloader. Here we do not vary by days since trigger, just load full test set.
+        test_dataset = MALLORN_Dataset(MALLORN_test_parquet_path)
+        test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_MALLORN, generator=generator)
+        test_loaders.append(test_dataloader)
+
+
     return test_loaders
 
+if __name__ == "__main__":
+
+    train_dataset = get_test_loaders("ELAsTiCC-lite", batch_size=16, max_n_per_class=1000, days_list=[2,4,6,8,10])
+    print(train_dataset)

@@ -728,8 +728,8 @@ class GRU_MALLORN(Hierarchical_classifier):
             p.requires_grad = False
 
         self.final_out = nn.Sequential(
-            nn.GELU(), nn.Linear(16, self.output_dim),
-            nn.GELU(), nn.Linear(8, self.output_dim),
+            nn.GELU(), nn.Linear(16, 8),
+            nn.GELU(), nn.Linear(8, 4),
             nn.GELU(), nn.Linear(4, self.output_dim),
         )
 

@@ -725,17 +725,12 @@ class GRU_MALLORN(Hierarchical_classifier):
         self.base_model = GRU(ORACLE_Taxonomy())
         self.base_model.load_state_dict(torch.load(f'{base_model_dir}/best_model_f1.pth', map_location=torch.device('cpu')), strict=False)
         
-        for p in self.base_model.parameters():
+        # Freeze only the GRU backbone
+        for p in self.base_model.gru.parameters():
             p.requires_grad = False
 
-        for p in self.base_model.dense2.parameters():
-            p.requires_grad = True
-
-        for p in self.base_model.dense3.parameters():
-            p.requires_grad = True
-
         self.final_out = nn.Sequential(
-            nn.GELU(),
+            nn.ReLU(),  # Match the base model's activation
             nn.Linear(16, self.output_dim),
         )
 

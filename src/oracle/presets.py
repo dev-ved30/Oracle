@@ -183,7 +183,7 @@ def get_train_loader(model_choice, batch_size, max_n_per_class, gamma, excluded_
     elif model_choice == "MALLORN":
 
         # Load the training set
-        train_dataset = MALLORN_Dataset(MALLORN_train_parquet_path, transform=truncate_ELAsTiCC_light_curve_by_days_since_trigger)
+        train_dataset = MALLORN_Dataset(MALLORN_train_parquet_path)
         collate_fn = custom_collate_MALLORN
 
     train_labels = train_dataset.get_all_labels()

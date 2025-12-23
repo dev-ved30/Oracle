@@ -52,7 +52,12 @@ n_book_keeping_features = len(book_keeping_feature_list)
 
 class ZTF_SIM_LC_Dataset(torch.utils.data.Dataset):
 
-    def __init__(self, parquet_file_path, max_n_per_class=None, include_lc_plots=False, transform=None):
+    def __init__(self, 
+                 parquet_file_path, 
+                 max_n_per_class=None, 
+                 include_lc_plots=False, 
+                 transform=None,
+                 excluded_classes=[]):
         """
         Initializes a ZTF_SIM_LC_Dataset instance by loading a parquet file, selecting required features,
         and performing several data preparation steps including cleaning and optional sample limiting.
@@ -84,6 +89,7 @@ class ZTF_SIM_LC_Dataset(torch.utils.data.Dataset):
         self.transform = transform
         self.include_lc_plots = include_lc_plots
         self.max_n_per_class = max_n_per_class
+        self.excluded_classes = excluded_classes
 
         print(f'Loading dataset from {self.parquet_file_path}\n')
         self.parquet_df = pl.read_parquet(self.parquet_file_path, columns=self.columns)
@@ -92,6 +98,7 @@ class ZTF_SIM_LC_Dataset(torch.utils.data.Dataset):
         self.print_dataset_composition()
 
         self.clean_up_dataset()
+        self.exclude_classes()
 
         if self.max_n_per_class != None:
             self.limit_max_samples_per_class()
@@ -140,7 +147,34 @@ class ZTF_SIM_LC_Dataset(torch.utils.data.Dataset):
             dictionary['lc_plot'] = light_curve_plot
         
         return dictionary
-    
+
+    def exclude_classes(self):
+        """
+        Exclude specified classes from the dataset.
+        This method filters the dataset contained in `self.parquet_df` by removing any rows whose
+        'class' value is present in the `self.excluded_classes` list.
+
+        Returns:
+            None
+
+        Note:
+            - Assumes that the dataframe `self.parquet_df` has a column named 'class'.
+            - The method leverages the filtering function of the dataframe library (e.g., Polars).
+        """
+
+        print(f"Excluding {self.excluded_classes} from the dataset...")
+
+        class_dfs = []
+        unique_classes = np.unique(self.parquet_df['class'])
+
+        for c in unique_classes:
+
+            if c not in self.excluded_classes:
+                class_df = self.parquet_df.filter(pl.col("class") == c)
+                class_dfs.append(class_df)
+
+        self.parquet_df = pl.concat(class_dfs)    
+
     def print_dataset_composition(self):
         """
         Prints the composition of the dataset. It formats these values into 

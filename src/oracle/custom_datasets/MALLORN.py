@@ -3,6 +3,7 @@ import torch
 
 import polars as pl
 import numpy as np
+import matplotlib.pyplot as plt
 
 from tqdm import tqdm
 from pathlib import Path
@@ -25,6 +26,22 @@ LSST_passband_to_wavelengths = {
     'z': (818 + 922) / (2 * 1000),
     'y': (950 + 1080) / (2 * 1000),
 }
+
+# Mean wavelength to colors for plotting
+LSST_passband_wavelengths_to_color = {
+    LSST_passband_to_wavelengths['u']: np.array((0, 127, 255))/255,
+    LSST_passband_to_wavelengths['g']: np.array((127, 0, 255))/255,
+    LSST_passband_to_wavelengths['r']: np.array((0, 255, 127))/255,
+    LSST_passband_to_wavelengths['i']: np.array((127, 255, 0))/255,
+    LSST_passband_to_wavelengths['z']: np.array((255, 127, 0))/255,
+    LSST_passband_to_wavelengths['y']: np.array((255, 0, 127))/255,
+}
+
+# Marker styles for plotting
+marker_style_detection = 'o'
+marker_style_non_detection = 'v'
+marker_size = 6
+linewidth = 0.1
 
 class_mappings = {
     'SN Ia': 'Not TDE',
@@ -92,7 +109,7 @@ class MALLORN_Dataset(torch.utils.data.Dataset):
         print("Compute the SNR and adding photflag column...")
         self.df = self.df.with_columns(
             pl.struct(["FLUXCAL", "FLUXCALERR"])
-            .apply(lambda row: [1 if np.abs(flux / flux_err) >= 5 else 0 for flux, flux_err in zip(row["FLUXCAL"], row["FLUXCALERR"])])
+            .apply(lambda row: [1 if np.abs(flux / flux_err) >= 3 else 0 for flux, flux_err in zip(row["FLUXCAL"], row["FLUXCALERR"])])
             .alias("PHOTFLAG")
         )
 
@@ -202,12 +219,187 @@ def custom_collate_MALLORN(batch):
 
     return d    
 
+
+def visualize_batch_light_curves(batch, n_samples=None, ncols=4, figsize_per_plot=(4, 3), save_path=None):
+    """
+    Visualize light curves from a batch of MALLORN dataset samples.
+    
+    Parameters:
+        batch (dict): A batch dictionary returned by custom_collate_MALLORN containing:
+            - 'ts': Padded tensor of time series data (batch_size, max_length, n_features)
+            - 'length': Tensor of actual lengths for each light curve
+            - 'label': Array of astrophysical class labels
+            - 'raw_label': Array of MALLORN class labels
+            - 'id': Array of object IDs
+        n_samples (int, optional): Number of samples to visualize. If None, visualizes all samples in batch.
+        ncols (int, optional): Number of columns in the subplot grid. Default is 4.
+        figsize_per_plot (tuple, optional): Size of each individual plot (width, height). Default is (4, 3).
+        save_path (str, optional): If provided, saves the figure to this path instead of displaying it.
+    
+    Returns:
+        matplotlib.figure.Figure: The generated figure object.
+    
+    Note:
+        - Detections (PHOTFLAG=1) are shown with circles (o)
+        - Non-detections (PHOTFLAG=0) are shown with triangles (v)
+        - Each filter is plotted with a different color according to LSST_passband_wavelengths_to_color
+        - The title shows the object ID, astrophysical class, and MALLORN class
+    """
+    
+    # Extract data from batch
+    ts_tensor = batch['ts']  # (batch_size, max_length, n_features)
+    lengths = batch['length']  # (batch_size,)
+    labels = batch['label']  # (batch_size,)
+    raw_labels = batch['raw_label']  # (batch_size,)
+    object_ids = batch['id']  # (batch_size,)
+    
+    batch_size = ts_tensor.shape[0]
+    
+    # Determine number of samples to plot
+    if n_samples is None:
+        n_samples = batch_size
+    else:
+        n_samples = min(n_samples, batch_size)
+    
+    # Calculate grid dimensions
+    nrows = int(np.ceil(n_samples / ncols))
+    
+    # Create figure
+    fig, axes = plt.subplots(nrows, ncols, figsize=(figsize_per_plot[0] * ncols, figsize_per_plot[1] * nrows))
+    
+    # Ensure axes is always a 2D array for consistent indexing
+    if nrows == 1 and ncols == 1:
+        axes = np.array([[axes]])
+    elif nrows == 1:
+        axes = axes.reshape(1, -1)
+    elif ncols == 1:
+        axes = axes.reshape(-1, 1)
+    
+    # Flatten axes for easier iteration
+    axes_flat = axes.flatten()
+    
+    # Feature indices
+    mjd_idx = time_dependent_feature_list.index('MJD')
+    flux_idx = time_dependent_feature_list.index('FLUXCAL')
+    flux_err_idx = time_dependent_feature_list.index('FLUXCALERR')
+    band_idx = time_dependent_feature_list.index('BAND')
+    photflag_idx = time_dependent_feature_list.index('PHOTFLAG')
+    
+    # Plot each sample
+    for i in range(n_samples):
+        ax = axes_flat[i]
+        
+        # Get the actual length of this light curve
+        actual_length = lengths[i].item()
+        
+        # Extract time series data for this sample (only up to actual length)
+        ts_data = ts_tensor[i, :actual_length, :].cpu().numpy()
+        
+        # Extract features
+        mjd = ts_data[:, mjd_idx]
+        flux = ts_data[:, flux_idx]
+        flux_err = ts_data[:, flux_err_idx]
+        bands = ts_data[:, band_idx]
+        phot_flags = ts_data[:, photflag_idx]
+        
+        # Plot each filter
+        for wavelength in LSST_passband_wavelengths_to_color.keys():
+            # Find indices for this wavelength
+            band_mask = np.isclose(bands, wavelength, atol=1e-6)
+            detection_mask = band_mask & (phot_flags == 1)
+            non_detection_mask = band_mask & (phot_flags == 0)
+            
+            color = LSST_passband_wavelengths_to_color[wavelength]
+            
+            # Plot detections
+            if np.any(detection_mask):
+                ax.errorbar(mjd[detection_mask], flux[detection_mask], 
+                           yerr=flux_err[detection_mask], 
+                           fmt=marker_style_detection, 
+                           color=color,
+                           markersize=marker_size,
+                           linewidth=linewidth,
+                           capsize=2)
+            
+            # Plot non-detections
+            if np.any(non_detection_mask):
+                ax.errorbar(mjd[non_detection_mask], flux[non_detection_mask], 
+                           yerr=flux_err[non_detection_mask], 
+                           fmt=marker_style_non_detection, 
+                           color=color,
+                           markersize=marker_size,
+                           linewidth=linewidth,
+                           capsize=2)
+            
+            # Connect points with lines
+            if np.any(band_mask):
+                ax.plot(mjd[band_mask], flux[band_mask], 
+                       color=color, 
+                       linewidth=linewidth,
+                       alpha=0.5)
+        
+        # Set title with object info
+        title = f"ID: {object_ids[i]}\n{labels[i]} ({raw_labels[i]})"
+        ax.set_title(title, fontsize=9)
+        
+        # Labels
+        ax.set_xlabel('MJD (days)', fontsize=8)
+        ax.set_ylabel('Flux', fontsize=8)
+        ax.tick_params(labelsize=7)
+        ax.grid(True, alpha=0.3)
+    
+    # Hide unused subplots
+    for i in range(n_samples, len(axes_flat)):
+        axes_flat[i].axis('off')
+    
+    # Create legend for filters
+    legend_elements = [
+        plt.Line2D([0], [0], marker='o', color='w', 
+                   markerfacecolor=LSST_passband_wavelengths_to_color[LSST_passband_to_wavelengths['u']], 
+                   markersize=8, label='u'),
+        plt.Line2D([0], [0], marker='o', color='w', 
+                   markerfacecolor=LSST_passband_wavelengths_to_color[LSST_passband_to_wavelengths['g']], 
+                   markersize=8, label='g'),
+        plt.Line2D([0], [0], marker='o', color='w', 
+                   markerfacecolor=LSST_passband_wavelengths_to_color[LSST_passband_to_wavelengths['r']], 
+                   markersize=8, label='r'),
+        plt.Line2D([0], [0], marker='o', color='w', 
+                   markerfacecolor=LSST_passband_wavelengths_to_color[LSST_passband_to_wavelengths['i']], 
+                   markersize=8, label='i'),
+        plt.Line2D([0], [0], marker='o', color='w', 
+                   markerfacecolor=LSST_passband_wavelengths_to_color[LSST_passband_to_wavelengths['z']], 
+                   markersize=8, label='z'),
+        plt.Line2D([0], [0], marker='o', color='w', 
+                   markerfacecolor=LSST_passband_wavelengths_to_color[LSST_passband_to_wavelengths['y']], 
+                   markersize=8, label='y'),
+        plt.Line2D([0], [0], marker='o', color='k', markersize=8, label='Detection'),
+        plt.Line2D([0], [0], marker='v', color='k', markersize=8, label='Non-detection'),
+    ]
+    
+    fig.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(0.5, 0.02),
+               ncol=8, fontsize=9, frameon=True)
+    
+    plt.tight_layout(rect=[0, 0.03, 1, 1])  # Leave space for legend at bottom
+    
+    if save_path:
+        plt.savefig(save_path, dpi=150, bbox_inches='tight')
+        print(f"Figure saved to {save_path}")
+    else:
+        plt.show()
+    
+    return fig
+
+
 if __name__ == "__main__":
 
-    dataset = MALLORN_Dataset(parquet_file_path=MALLORN_train_parquet_path, transform=truncate_ELAsTiCC_light_curve_fractionally)
+    dataset = MALLORN_Dataset(parquet_file_path=MALLORN_train_parquet_path)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True, collate_fn=custom_collate_MALLORN, num_workers=4, pin_memory=True, prefetch_factor=2)
 
-    for k in range(10):
-        for batch in tqdm(dataloader):
-            
-            pass
+    # Example: Visualize the first batch
+    batch = next(iter(dataloader))
+    visualize_batch_light_curves(batch, n_samples=16, ncols=4)
+    
+    # Optionally test the full dataloader
+    # for k in range(10):
+    #     for batch in tqdm(dataloader):
+    #         pass

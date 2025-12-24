@@ -17,6 +17,7 @@ from oracle.custom_datasets.ELAsTiCC import *
 from oracle.custom_datasets.BTS import *
 from oracle.custom_datasets.ZTF_sims import *
 from oracle.presets import get_model, get_test_loaders
+from oracle.visualization import plot_trajectory_umaps
 
 # <----- Defaults for training the models ----->
 default_batch_size = 1024
@@ -104,6 +105,8 @@ def run_testing_loop(args):
     model.create_loss_history_plot()
     model.create_metric_phase_plots()
     model.merge_performance_tables([1, 2, 4, 8, 16, 32, 64, 128, 512, 1024])
+
+    plot_trajectory_umaps(model_dir, defaults_days_list)
 
 def main():
     args = parse_args()

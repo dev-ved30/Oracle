@@ -38,14 +38,14 @@ ELAsTiCC_to_Astrophysical_mappings = {
 
 BTS_to_Astrophysical_mappings = {
     'AGN': 'AGN',
-    'AGN?': 'Anomaly',
+    'AGN?': 'AGN',
     'CLAGN': 'AGN',
     'bogus?': 'Anomaly',
     'rock': 'Anomaly',
     'CV': 'CV',
-    'CV?': 'Anomaly',
+    'CV?': 'CV',
     'AM CVn': 'CV',
-    'varstar': 'Anomaly',
+    'varstar': 'Varstar',
     "Cataclysmic": 'CV',
     'QSO': 'AGN', # AGN?
     'QSO?': 'AGN', # AGN?

@@ -198,10 +198,10 @@ def process_dataset(survey, split_to_process, dir, workers):
 
         # Load candidate data
         original_cand = pd.read_parquet(f"{dir}/{split}.parquet")
-        cand = original_cand[['objectId', 'ra', 'dec']]
+        cand = original_cand[['ZTFID', 'ra', 'dec']]
         cand['ra'] = [x[0] for x in cand['ra']]
         cand['dec'] = [x[0] for x in cand['dec']]
-        cand['objectId'] = [x[0] for x in cand['objectId']]
+        cand['objectId'] = cand['ZTFID']
 
         # Query images based on survey
         cand, img_cache = query_images(cand, survey, max_workers=workers)

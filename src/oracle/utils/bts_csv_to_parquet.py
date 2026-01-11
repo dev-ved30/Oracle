@@ -34,7 +34,7 @@ def main(argv=None):
 
     data_df = pd.read_csv(data_csv_path)
     labels_df = pd.read_csv(labels_csv_path)
-    images = np.load(images_np_path, mmap_mode='r')
+    #images = np.load(images_np_path, mmap_mode='r')
 
     unique_data_id = np.unique(data_df['objectId'])
     id_with_labels = labels_df['ZTFID'].unique()
@@ -59,32 +59,32 @@ def main(argv=None):
 
                 # Next, we find the images corresponding to this source. The number of images should be equal to the length of the time series * 3
                 # Since we only care about the reference images, we pick the first one from each of the filters
-                img_dictionary = {}
+                # img_dictionary = {}
 
-                for f in ztf_filters:
+                # for f in ztf_filters:
                     
-                    # Find all observations in this pass band
-                    source_df_in_filter = source_df[source_df['fid']==ztf_filter_to_fid[f]]
+                #     # Find all observations in this pass band
+                #     source_df_in_filter = source_df[source_df['fid']==ztf_filter_to_fid[f]]
 
-                    # Make sure there is at least one alert in the pass band
-                    if source_df_in_filter.to_numpy().shape[0] > 0:
+                #     # Make sure there is at least one alert in the pass band
+                #     if source_df_in_filter.to_numpy().shape[0] > 0:
 
-                        img_index = source_df_in_filter.index[0]
+                #         img_index = source_df_in_filter.index[0]
 
-                        # Grab the set of ref, science, and diff images from the first alert
-                        for j, img_type in enumerate(ztf_alert_image_order):
+                #         # Grab the set of ref, science, and diff images from the first alert
+                #         for j, img_type in enumerate(ztf_alert_image_order):
 
-                            # Grab the image data and then flatten it
-                            img = images[img_index, :, :, j] # shape: (N, 63, 63, 3)
-                            flattened_img = img.flatten()
+                #             # Grab the image data and then flatten it
+                #             img = images[img_index, :, :, j] # shape: (N, 63, 63, 3)
+                #             flattened_img = img.flatten()
 
-                            img_dictionary[f"{f}_{img_type}"] = flattened_img
+                #             img_dictionary[f"{f}_{img_type}"] = flattened_img
 
-                    else: 
+                #     else: 
 
-                        # Grab the set of ref, science, and diff images from the first alert
-                        for j, img_type in enumerate(ztf_alert_image_order):
-                            img_dictionary[f"{f}_{img_type}"] = None
+                #         # Grab the set of ref, science, and diff images from the first alert
+                #         for j, img_type in enumerate(ztf_alert_image_order):
+                #             img_dictionary[f"{f}_{img_type}"] = None
 
                     
                 # Start assembling new row in parquet file
@@ -93,8 +93,8 @@ def main(argv=None):
                 new_row['bts_class'] = bts_class
                 
                 # Add all the images
-                for k in img_dictionary.keys():
-                    new_row[k] = [img_dictionary[k]]
+                # for k in img_dictionary.keys():
+                #     new_row[k] = [img_dictionary[k]]
                 
                 # Add all the time series data
                 for c in source_df.columns:

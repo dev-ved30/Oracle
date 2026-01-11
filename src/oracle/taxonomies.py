@@ -411,7 +411,7 @@ class BTS_Taxonomy(Taxonomy):
         self.add_nodes_from(level_1_nodes)
         self.add_edges_from([(root_label, node) for node in level_1_nodes])
 
-        level_2a_nodes = ['AGN','CV']
+        level_2a_nodes = ['AGN','CV', 'Varstar']
         self.add_nodes_from(level_2a_nodes)
         self.add_edges_from([('Persistent', node) for node in level_2a_nodes])
 

@@ -23,9 +23,9 @@ from oracle.constants import ztf_filters, ztf_alert_image_order, ztf_alert_image
 here = Path(__file__).resolve().parent
 
 # Go up to the root, then into data/ and then get the parquet file
-BTS_train_parquet_path = str(here.parent.parent.parent / "data" / 'BTS_new' / 'train_PS.parquet')
-BTS_test_parquet_path = str(here.parent.parent.parent / "data" / 'BTS_new' / 'test_PS.parquet')
-BTS_val_parquet_path = str(here.parent.parent.parent / "data" / 'BTS_new' / 'val_PS.parquet')
+BTS_train_parquet_path = str(here.parent.parent.parent / "data" / 'BTSv3' / 'train_PS.parquet')
+BTS_test_parquet_path = str(here.parent.parent.parent / "data" / 'BTSv3' / 'test_PS.parquet')
+BTS_val_parquet_path = str(here.parent.parent.parent / "data" / 'BTSv3' / 'val_PS.parquet')
 
 # <----- constant for the dataset ----->
 

@@ -752,8 +752,8 @@ class GRU_MALLORN(Hierarchical_classifier):
 class GRU_MD_MM_Improved(Hierarchical_classifier):
 
     def __init__(self, taxonomy: Taxonomy,
-                 lc_md_model_dir="models/BTSv2/crisp-lake-253/",
-                 image_model_dir="models/BTSv2_PSonly/snowy-hill-244/"):
+                 lc_md_model_dir="models/BTSv2/pleasant-sun-337/",
+                 image_model_dir="models/BTSv2_PSonly/efficient-gorge-338/"):
         
         super().__init__(taxonomy)
 

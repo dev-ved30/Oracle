@@ -205,7 +205,7 @@ class Trainer:
 
                 # Record everything for computing F1, accuracy, etc.
                 all_true_labels += batch['label'].tolist()
-                all_pred_labels.append(nodes[np.argmax(level_pred_df.to_numpy(), axis=1)])
+                all_pred_labels.append(leaf_nodes[np.argmax(pred_df.to_numpy(), axis=1)])
 
         all_pred_labels = np.concatenate(all_pred_labels)
 

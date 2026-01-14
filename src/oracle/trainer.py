@@ -210,7 +210,7 @@ class Trainer:
         all_pred_labels = np.concatenate(all_pred_labels)
 
         cf = confusion_matrix(all_true_labels, all_pred_labels, normalize='true')
-        disp = ConfusionMatrixDisplay(cf, display_labels=leaf_labels)
+        disp = ConfusionMatrixDisplay(cf, display_labels=leaf_nodes)
         fig, ax = plt.subplots(figsize=(6, 6))
         disp.plot(ax=ax, cmap="Blues", values_format=".2g", colorbar=False)
 

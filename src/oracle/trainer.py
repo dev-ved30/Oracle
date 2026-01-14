@@ -183,8 +183,8 @@ class Trainer:
         all_true_labels = []
         all_pred_labels = []
 
-        leaf_labels = self.taxonomy.get_leaf_nodes()
-        leaf_mask = np.where(np.array([c in leaf_labels for c in self.taxonomy.get_level_order_traversal()])==True)[0]
+        nodes_by_level = self.taxonomy.get_nodes_by_depth()
+        leaf_nodes = nodes_by_level[-1]
 
         with torch.no_grad():
             for i, batch in enumerate(tqdm(val_loader, desc='Validation')):
@@ -201,11 +201,12 @@ class Trainer:
                 loss = self.val_criterion(logits, label_encodings)
                 val_loss_values.append(loss.item())
 
-                # Record everything for computing F1, accuracy, etc.
-                all_true_labels.append(np.argmax(label_encodings[:, leaf_mask].cpu().numpy(), axis=1))
-                all_pred_labels.append(np.argmax(logits[:, leaf_mask].cpu().numpy(), axis=1))
+                pred_df = self.predict_class_probabilities_df(batch)[leaf_nodes]
 
-        all_true_labels = np.concatenate(all_true_labels)
+                # Record everything for computing F1, accuracy, etc.
+                all_true_labels += batch['label'].tolist()
+                all_pred_labels.append(nodes[np.argmax(level_pred_df.to_numpy(), axis=1)])
+
         all_pred_labels = np.concatenate(all_pred_labels)
 
         cf = confusion_matrix(all_true_labels, all_pred_labels, normalize='true')

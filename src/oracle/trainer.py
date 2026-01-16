@@ -328,7 +328,7 @@ class Trainer:
                     param.requires_grad = True
 
                 # Re-initialize optimizer and scheduler to include the new parameters
-                self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
+                self.optimizer = optim.Adam(self.parameters(), lr=self.lr/10) # Lower lr after warmup
                 self.scheduler = ReduceLROnPlateau(self.optimizer, patience=20, factor=0.8, threshold=self.lr/100)
 
             train_loss = self.train_one_epoch(train_loader)

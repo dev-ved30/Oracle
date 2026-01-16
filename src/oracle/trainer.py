@@ -283,7 +283,7 @@ class Trainer:
         np.save(f"{self.model_dir}/val_loss_history.npy", np.array(val_loss_history))
         np.save(f"{self.model_dir}/f1_history.npy", np.array(f1_history))
 
-    def fit(self, train_loader, val_loader, num_epochs=5):
+    def fit(self, train_loader, val_loader, warmup_epochs, num_epochs=5):
         """
         Train the model for a specified number of epochs.
 
@@ -298,6 +298,7 @@ class Trainer:
         Parameters:
             train_loader (DataLoader): DataLoader providing batches of training data.
             val_loader (DataLoader): DataLoader providing batches of validation data.
+            warmup_epochs (int): Number of epochs to train with a warmup strategy before unfreezing the whole model.
             num_epochs (int, optional): Number of epochs to train for. Defaults to 5.
 
         Returns:
@@ -319,6 +320,11 @@ class Trainer:
             print(f"----------\nStarting epoch {epoch+1}/{num_epochs}...")
 
             start_time = time.time()
+
+            if epoch == warmup_epochs:
+                print("Warmup epochs complete. Unfreezing all model layers for training.")
+                for param in self.parameters():
+                    param.requires_grad = True
 
             train_loss = self.train_one_epoch(train_loader)
             val_stats = self.validate_one_epoch(val_loader)

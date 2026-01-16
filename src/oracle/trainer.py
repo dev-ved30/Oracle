@@ -210,7 +210,7 @@ class Trainer:
 
         all_pred_labels = np.concatenate(all_pred_labels)
 
-        cf = confusion_matrix(all_true_labels, all_pred_labels, normalize='true')
+        cf = confusion_matrix(all_true_labels, all_pred_labels, labels=leaf_nodes, normalize='true')
         disp = ConfusionMatrixDisplay(cf, display_labels=leaf_nodes)
         fig, ax = plt.subplots(figsize=(6, 6))
         disp.plot(ax=ax, cmap="Blues", values_format=".2g", colorbar=False)
@@ -326,7 +326,7 @@ class Trainer:
                 print("Warmup epochs complete. Unfreezing all model layers for training.")
                 for param in self.parameters():
                     param.requires_grad = True
-                    
+
                 # Re-initialize optimizer and scheduler to include the new parameters
                 self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
                 self.scheduler = ReduceLROnPlateau(self.optimizer, patience=20, factor=0.8, threshold=self.lr/100)

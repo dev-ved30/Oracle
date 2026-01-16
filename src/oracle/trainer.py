@@ -96,6 +96,7 @@ class Trainer:
 
         self.alpha = alpha
         self.gamma = gamma
+        self.lr = lr
         
         # Set up criterion for training and validation. These need to be different because the class weights can be different
         self.train_criterion = WHXE_Loss(self.taxonomy, train_labels, self.alpha, self.gamma)
@@ -325,6 +326,10 @@ class Trainer:
                 print("Warmup epochs complete. Unfreezing all model layers for training.")
                 for param in self.parameters():
                     param.requires_grad = True
+                    
+                # Re-initialize optimizer and scheduler to include the new parameters
+                self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
+                self.scheduler = ReduceLROnPlateau(self.optimizer, patience=20, factor=0.8, threshold=self.lr/100)
 
             train_loss = self.train_one_epoch(train_loader)
             val_stats = self.validate_one_epoch(val_loader)

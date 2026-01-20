@@ -78,8 +78,8 @@ BTS_to_Astrophysical_mappings = {
     'SN IIb': 'SN-II',
     'SN IIb-pec': 'SN-II',
     'SN IIb?': 'SN-II',
-    'SN IIn': 'SN-II',
-    'SN IIn?': 'SN-II',
+    'SN IIn': 'SN-IIn',
+    'SN IIn?': 'SN-IIn',
     'SN Ia': 'SN-Ia',
     'SN Ia-00cx': 'SN-Ia',# pec
     'SN Ia-03fg': 'SN-Ia',# pec
@@ -125,7 +125,7 @@ BTS_to_Astrophysical_mappings_AD = {
     'CV': 'CV',
     'CV?': 'CV',
     'AM CVn': 'CV',
-    'varstar': 'Anomaly',
+    'varstar': 'Varstar',
     "Cataclysmic": 'CV',
     'QSO': 'AGN', # AGN?
     'QSO?': 'AGN', # AGN?
@@ -158,8 +158,8 @@ BTS_to_Astrophysical_mappings_AD = {
     'SN IIb': 'SN-II',
     'SN IIb-pec': 'SN-II',
     'SN IIb?': 'SN-II',
-    'SN IIn': 'SN-II',
-    'SN IIn?': 'SN-II',
+    'SN IIn': 'SN-IIn',
+    'SN IIn?': 'SN-IIn',
     'SN Ia': 'SN-Ia',
     'SN Ia-00cx': 'Anomaly',# pec
     'SN Ia-03fg': 'Anomaly',# pec
@@ -183,7 +183,7 @@ BTS_to_Astrophysical_mappings_AD = {
     'SN Ic': 'SN-Ib/c',
     'SN Ic-BL': 'Anomaly',
     'SN Ic-BL?': 'Anomaly',
-    'SN Ic-SL': 'SLSN',
+    'SN Ic-SL': 'Anomaly',
     'SN Ic?': 'SN-Ib/c',
     'SN Icn': 'Anomaly',
     'TDE': 'Anomaly',

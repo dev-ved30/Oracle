@@ -416,7 +416,7 @@ class BTS_Taxonomy(Taxonomy):
         self.add_edges_from([('Persistent', node) for node in level_2a_nodes])
 
         # Level 2b nodes for SN-like events
-        level_2b_nodes = ['SN-Ia','SN-II','SN-Ib/c','SLSN', 'SN-IIn']
+        level_2b_nodes = ['SN-Ia','SN-II','SN-Ib/c','SLSN']
         self.add_nodes_from(level_2b_nodes)
         self.add_edges_from([('Transient', node) for node in level_2b_nodes])
 

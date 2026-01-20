@@ -78,8 +78,8 @@ BTS_to_Astrophysical_mappings = {
     'SN IIb': 'SN-II',
     'SN IIb-pec': 'SN-II',
     'SN IIb?': 'SN-II',
-    'SN IIn': 'SN-IIn',
-    'SN IIn?': 'SN-IIn',
+    'SN IIn': 'SN-II',
+    'SN IIn?': 'SN-II',
     'SN Ia': 'SN-Ia',
     'SN Ia-00cx': 'SN-Ia',# pec
     'SN Ia-03fg': 'SN-Ia',# pec
@@ -158,8 +158,8 @@ BTS_to_Astrophysical_mappings_AD = {
     'SN IIb': 'SN-II',
     'SN IIb-pec': 'SN-II',
     'SN IIb?': 'SN-II',
-    'SN IIn': 'SN-IIn',
-    'SN IIn?': 'SN-IIn',
+    'SN IIn': 'SN-II',
+    'SN IIn?': 'SN-II',
     'SN Ia': 'SN-Ia',
     'SN Ia-00cx': 'Anomaly',# pec
     'SN Ia-03fg': 'Anomaly',# pec

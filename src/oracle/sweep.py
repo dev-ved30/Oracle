@@ -48,8 +48,8 @@ def main():
     sweep_config = {
         'method': 'bayes',  # Optimization strategy
         'metric': {
-            'name': 'val_loss',
-            'goal': 'minimize'
+            'name': 'Max (f1 score)',
+            'goal': 'maximize'
         },
         'parameters': {
             'model_choice': {'value': cmd_args.model},
@@ -59,20 +59,20 @@ def main():
                 'max': 1e-3
             },
             'batch_size': {
-                'values': [256, 512, 1024]
+                'values': [32, 64, 128, 256, 512]
             },
             'alpha': {
                 'distribution': 'uniform',
                 'min': 0.0,
-                'max': 1.0
+                'max': 0.5
             },
             'gamma': {
                 'distribution': 'uniform',
                 'min': 0.5,
-                'max': 2.0
+                'max': 1.0
             },
             'num_epochs': {
-                'value': 100
+                'value': 1000
             }
         }
     }

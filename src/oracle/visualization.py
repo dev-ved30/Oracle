@@ -425,8 +425,20 @@ def plot_umap(embeddings, classes, bts_classes, id, d, model_dir=None):
     df['class'] = classes
     df['raw_class'] = bts_classes
     df['id'] = id
-    fig = px.scatter_3d(df, x='umap1', y='umap2', z='umap3', color=f"class", hover_data=['class', 'raw_class', 'id'])#, cmap='viridis', marker=markers[i])
-    fig.write_html(f"{model_dir}/plots/umap/umap_trigger+{d}.html")
+    df['fritz_link'] = ["https://fritz.science/source/" + str(i) for i in id]
+
+    js_on_click = """
+    var plot = document.getElementsByClassName('plotly-graph-div')[0];
+    plot.on('plotly_click', function(data) {
+        var url = data.points[0].customdata[3];
+        if (url) {
+            window.open(url, '_blank');
+        }
+    });
+    """
+
+    fig = px.scatter_3d(df, x='umap1', y='umap2', z='umap3', color=f"class", hover_data=['class', 'raw_class', 'id', 'fritz_link'])#, cmap='viridis', marker=markers[i])
+    fig.write_html(f"{model_dir}/plots/umap/umap_trigger+{d}.html",  post_script=[js_on_click])
 
         
 

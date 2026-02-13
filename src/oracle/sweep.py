@@ -45,37 +45,103 @@ def main():
     parser.add_argument('--count', type=int, default=10, help='Number of runs.')
     cmd_args = parser.parse_args()
 
-    sweep_config = {
-        'method': 'bayes',  # Optimization strategy
-        'metric': {
-            'name': 'Max (f1 score)',
-            'goal': 'maximize'
-        },
-        'parameters': {
-            'model_choice': {'value': cmd_args.model},
-            'lr': {
-                'distribution': 'log_uniform_values',
-                'min': 1e-6,
-                'max': 1e-3
+    model = cmd_args.model
+
+    if model=="BTSv2_PSonly":
+
+        sweep_config = {
+            'method': 'bayes',  # Optimization strategy
+            'metric': {
+                'name': 'Max (f1 score)',
+                'goal': 'maximize'
             },
-            'batch_size': {
-                'values': [32, 64, 128, 256, 512]
-            },
-            'alpha': {
-                'distribution': 'uniform',
-                'min': 0.0,
-                'max': 0.5
-            },
-            'gamma': {
-                'distribution': 'uniform',
-                'min': 0.5,
-                'max': 1.0
-            },
-            'num_epochs': {
-                'value': 1000
+            'parameters': {
+                'model_choice': {'value': model},
+                'lr': {
+                    'distribution': 'log_uniform_values',
+                    'min': 1e-7,
+                    'max': 1e-5
+                },
+                'batch_size': {
+                    'values': [32, 64, 128]
+                },
+                'alpha': {
+                    'distribution': 'uniform',
+                    'min': 0.0,
+                    'max': 0.5
+                },
+                'gamma': {
+                    'value': 1.0
+                },
+                'num_epochs': {
+                    'value': 1000
+                }
             }
         }
-    }
+    
+    elif model=="BTSv2":
+
+        sweep_config = {
+            'method': 'bayes',  # Optimization strategy
+            'metric': {
+                'name': 'Max (f1 score)',
+                'goal': 'maximize'
+            },
+            'parameters': {
+                'model_choice': {'value': model},
+                'lr': {
+                    'distribution': 'log_uniform_values',
+                    'min': 1e-6,
+                    'max': 1e-3
+                },
+                'batch_size': {
+                    'values': [32, 64, 128, 256, 512]
+                },
+                'alpha': {
+                    'distribution': 'uniform',
+                    'min': 0.0,
+                    'max': 0.5
+                },
+                'gamma': {
+                    'value': 1.0
+                },
+                'num_epochs': {
+                    'value': 1000
+                }
+            }
+        }
+
+        # sweep_config = {
+        #     'method': 'bayes',  # Optimization strategy
+        #     'metric': {
+        #         'name': 'Max (f1 score)',
+        #         'goal': 'maximize'
+        #     },
+        #     'parameters': {
+        #         'model_choice': {'value': model},
+        #         'lr': {
+        #             'distribution': 'log_uniform_values',
+        #             'min': 1e-6,
+        #             'max': 1e-3
+        #         },
+        #         'batch_size': {
+        #             'values': [32, 64, 128, 256, 512]
+        #         },
+        #         'alpha': {
+        #             'distribution': 'uniform',
+        #             'min': 0.0,
+        #             'max': 0.5
+        #         },
+        #         'gamma': {
+        #             'distribution': 'uniform',
+        #             'min': 0.5,
+        #             'max': 1.0
+        #         },
+        #         'num_epochs': {
+        #             'value': 1000
+        #         }
+        #     }
+        # }
 
     # Initialize the sweep on the wandb servers
     sweep_id = wandb.sweep(

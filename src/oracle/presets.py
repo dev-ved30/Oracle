@@ -176,7 +176,7 @@ def get_train_loader(model_choice, batch_size, max_n_per_class, gamma, excluded_
     elif model_choice == "BTSv2_PSonly":
 
         # Load the training set
-        transform = augment_panstarss
+        transform = partial(truncate_BTS_light_curve_by_days_since_trigger, add_jitter=True)
         train_dataset = BTS_LC_Dataset(BTS_train_parquet_path, include_PS_images=True, max_n_per_class=max_n_per_class, transform=transform, img_transform=augment_panstarss, excluded_classes=excluded_classes)
         collate_fn = custom_collate_BTS
 

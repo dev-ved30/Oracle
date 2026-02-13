@@ -92,7 +92,7 @@ def main():
                 'model_choice': {'value': model},
                 'lr': {
                     'distribution': 'log_uniform_values',
-                    'min': 1e-6,
+                    'min': 1e-5,
                     'max': 1e-3
                 },
                 'batch_size': {
@@ -108,9 +108,6 @@ def main():
                 },
                 'num_epochs': {
                     'value': 1000
-                },
-                'warmup_epochs': {
-                    'value': 0
                 }
             }
         }

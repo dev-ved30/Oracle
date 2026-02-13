@@ -647,7 +647,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         
         return im
     
-def augment_panstarss(img, channel_dropout_p=0.1):
+def augment_panstarss(img, channel_dropout_p=0):
 
     C, H, W = img.shape
 

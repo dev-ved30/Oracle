@@ -19,6 +19,7 @@ class SweepArgs:
         # Defaults for non-swept parameters
         self.dir = None
         self.load_weights = None
+        self.warmup_epochs = config.get('warmup_epochs', 0)
 
 def sweep_train():
     """
@@ -107,6 +108,9 @@ def main():
                 },
                 'num_epochs': {
                     'value': 1000
+                },
+                'warmup_epochs': {
+                    'value': 0
                 }
             }
         }

@@ -762,12 +762,14 @@ class GRU_MD_MM_Improved(Hierarchical_classifier):
 
         # Create the LC + MD model and load the weights
         self.lc_md_spine = GRU_MD_Improved(taxonomy)
-        self.lc_md_spine.load_state_dict(torch.load(f'{lc_md_model_dir}/best_model_f1.pth', map_location=torch.device('cpu')), strict=False)
+        if lc_md_model_dir is not None:
+            self.lc_md_spine.load_state_dict(torch.load(f'{lc_md_model_dir}/best_model_f1.pth', map_location=torch.device('cpu')), strict=False)
 
 
         # Create the image only model and load the weights
         self.image_spine = ConvNeXt(taxonomy)
-        self.image_spine.load_state_dict(torch.load(f'{image_model_dir}/best_model_f1.pth', map_location=torch.device('cpu')), strict=False)
+        if image_model_dir is not None:
+            self.image_spine.load_state_dict(torch.load(f'{image_model_dir}/best_model_f1.pth', map_location=torch.device('cpu')), strict=False)
 
         self.mlp_head_in_dim = self.lc_md_spine.latent_space_dim + self.image_spine.latent_space_dim
 
@@ -917,7 +919,7 @@ class GRU_MD_Improved(Hierarchical_classifier):
         lengths: tensor of true lengths (batch,)
         returns: (batch, hidden_size * num_directions)
         """
-        from torch.nn.utils.rnn import pad_packed_sequence
+
         outputs, _ = pad_packed_sequence(packed_outputs, batch_first=True)  # (batch, max_seq, feat)
         # compute attention scores
         attn_hidden = torch.tanh(self.attn_W(outputs))  # (batch, max_seq, gru_hidden)

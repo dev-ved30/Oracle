@@ -896,7 +896,7 @@ class GRU_MD_Improved(Hierarchical_classifier):
         self.head_ln2 = nn.LayerNorm(64)
 
         # init weights
-        self._init_weights()
+        # self._init_weights()
 
     def _init_weights(self):
         """Simple weight initialization to help training stability."""
@@ -1011,7 +1011,7 @@ class GRU_MD_Improved(Hierarchical_classifier):
         Forward pass: get latent embedding and compute logits.
         """
         x = self.get_latent_space_embeddings(batch)
-        x = self.relu(x)
+        x = self.gelu(x)
         logits = self.fc_out(x)
         return logits
 

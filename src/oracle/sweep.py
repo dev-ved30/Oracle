@@ -112,37 +112,37 @@ def main():
             }
         }
 
-        # sweep_config = {
-        #     'method': 'bayes',  # Optimization strategy
-        #     'metric': {
-        #         'name': 'Max (f1 score)',
-        #         'goal': 'maximize'
-        #     },
-        #     'parameters': {
-        #         'model_choice': {'value': model},
-        #         'lr': {
-        #             'distribution': 'log_uniform_values',
-        #             'min': 1e-6,
-        #             'max': 1e-3
-        #         },
-        #         'batch_size': {
-        #             'values': [32, 64, 128, 256, 512]
-        #         },
-        #         'alpha': {
-        #             'distribution': 'uniform',
-        #             'min': 0.0,
-        #             'max': 0.5
-        #         },
-        #         'gamma': {
-        #             'distribution': 'uniform',
-        #             'min': 0.5,
-        #             'max': 1.0
-        #         },
-        #         'num_epochs': {
-        #             'value': 1000
-        #         }
-        #     }
-        # }
+    elif model=="BTSv2-lite":
+
+        sweep_config = {
+            'method': 'bayes',  # Optimization strategy
+            'metric': {
+                'name': 'Max (f1 score)',
+                'goal': 'maximize'
+            },
+            'parameters': {
+                'model_choice': {'value': model},
+                'lr': {
+                    'distribution': 'log_uniform_values',
+                    'min': 1e-5,
+                    'max': 1e-3
+                },
+                'batch_size': {
+                    'values': [32, 64, 128, 256, 512]
+                },
+                'alpha': {
+                    'distribution': 'uniform',
+                    'min': 0.0,
+                    'max': 0.5
+                },
+                'gamma': {
+                    'value': 1.0
+                },
+                'num_epochs': {
+                    'value': 1000
+                }
+            }
+        }
 
     # Initialize the sweep on the wandb servers
     sweep_id = wandb.sweep(

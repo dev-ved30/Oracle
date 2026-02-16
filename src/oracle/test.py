@@ -1,16 +1,10 @@
 """
 Interface for testing saved models in the ORACLE framework."""
-import os
-import time
 import torch
 import argparse
 
-from tqdm import tqdm
 from pathlib import Path    
-from torch.utils.data import DataLoader
 
-from oracle.loss import WHXE_Loss
-from oracle.taxonomies import ORACLE_Taxonomy, BTS_Taxonomy
 from oracle.constants import BTS_to_Astrophysical_mappings_AD
 from oracle.architectures import *
 from oracle.custom_datasets.ELAsTiCC import *

@@ -140,9 +140,83 @@ def main():
                 },
                 'num_epochs': {
                     'value': 1000
+                },
+                'max_n_per_class': {
+                    'values': 20000  
                 }
             }
         }
+
+    elif model=="ELAsTiCCv2":
+
+        sweep_config = {
+            'method': 'bayes',  # Optimization strategy
+            'metric': {
+                'name': 'Max (f1 score)',
+                'goal': 'maximize'
+            },
+            'parameters': {
+                'model_choice': {'value': model},
+                'lr': {
+                    'distribution': 'log_uniform_values',
+                    'min': 5e-5,
+                    'max': 5e-3
+                },
+                'batch_size': {
+                    'values': [32, 64, 128, 256, 512]
+                },
+                'alpha': {
+                    'distribution': 'uniform',
+                    'min': 0.0,
+                    'max': 0.5
+                },
+                'gamma': {
+                    'value': 1.0
+                },
+                'num_epochs': {
+                    'value': 1000
+                },
+                'max_n_per_class': {
+                    'values': 20000  
+                }
+            }
+        }
+
+    elif model=="ELAsTiCCv2-lite":
+
+        sweep_config = {
+            'method': 'bayes',  # Optimization strategy
+            'metric': {
+                'name': 'Max (f1 score)',
+                'goal': 'maximize'
+            },
+            'parameters': {
+                'model_choice': {'value': model},
+                'lr': {
+                    'distribution': 'log_uniform_values',
+                    'min': 5e-5,
+                    'max': 5e-3
+                },
+                'batch_size': {
+                    'values': [32, 64, 128, 256, 512]
+                },
+                'alpha': {
+                    'distribution': 'uniform',
+                    'min': 0.0,
+                    'max': 0.5
+                },
+                'gamma': {
+                    'value': 1.0
+                },
+                'num_epochs': {
+                    'value': 1000
+                },
+                'max_n_per_class': {
+                    'values': 20000  
+                }
+            }
+        }
+
 
     # Initialize the sweep on the wandb servers
     sweep_id = wandb.sweep(

@@ -85,6 +85,9 @@ def get_model(model_choice):
     elif model_choice == "ELAsTiCCv2":
         taxonomy = ORACLE_Taxonomy()
         model = GRU_MD_Improved(taxonomy, static_feature_dim=18)
+    elif model_choice == "ELAsTiCCv2-lite":
+        taxonomy = ORACLE_Taxonomy()
+        model = GRU_Improved(taxonomy)
     elif model_choice == "BTSv2":
         taxonomy = BTS_Taxonomy()
         model = GRU_MD_Improved(taxonomy, static_feature_dim=30)
@@ -157,6 +160,12 @@ def get_train_loader(model_choice, batch_size, max_n_per_class, gamma, excluded_
         collate_fn = custom_collate_ELAsTiCC
 
     elif model_choice == "ELAsTiCCv2":
+
+        # Load the training set
+        train_dataset = ELAsTiCC_LC_Dataset(ELAsTiCC_train_parquet_path, include_lc_plots=False, transform=truncate_ELAsTiCC_light_curve_by_days_since_trigger, max_n_per_class=max_n_per_class, excluded_classes=excluded_classes)
+        collate_fn = custom_collate_ELAsTiCC
+
+    elif model_choice == "ELAsTiCCv2-lite":
 
         # Load the training set
         train_dataset = ELAsTiCC_LC_Dataset(ELAsTiCC_train_parquet_path, include_lc_plots=False, transform=truncate_ELAsTiCC_light_curve_by_days_since_trigger, max_n_per_class=max_n_per_class, excluded_classes=excluded_classes)
@@ -306,6 +315,16 @@ def get_val_loader(model_choice, batch_size, val_truncation_days, max_n_per_clas
         concatenated_val_dataset = ConcatDataset(val_dataset)
         collate_func = custom_collate_ELAsTiCC
 
+    elif model_choice == "ELAsTiCCv2-lite":
+
+        # Load the training set
+        val_dataset = []
+        for d in val_truncation_days:
+            transform = partial(truncate_ELAsTiCC_light_curve_by_days_since_trigger, d=d)
+            val_dataset.append(ELAsTiCC_LC_Dataset(ELAsTiCC_val_parquet_path, max_n_per_class, transform=transform, excluded_classes=excluded_classes))
+        concatenated_val_dataset = ConcatDataset(val_dataset)
+        collate_func = custom_collate_ELAsTiCC
+
     elif model_choice == "BTSv2":
 
         # Load the validation set
@@ -436,6 +455,16 @@ def get_test_loaders(model_choice, batch_size, max_n_per_class, days_list, exclu
             test_loaders.append(test_dataloader)
 
     elif model_choice == "ELAsTiCCv2":
+
+        for d in days_list:
+            
+            # Set the custom transform and recreate dataloader
+            test_dataset = ELAsTiCC_LC_Dataset(ELAsTiCC_test_parquet_path, include_lc_plots=False, max_n_per_class=max_n_per_class, excluded_classes=excluded_classes)
+            test_dataset.transform = partial(truncate_ELAsTiCC_light_curve_by_days_since_trigger, d=d)
+            test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_ELAsTiCC, generator=generator)
+            test_loaders.append(test_dataloader)
+
+    elif model_choice == "ELAsTiCCv2-lite":
 
         for d in days_list:
             

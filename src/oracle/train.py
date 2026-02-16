@@ -24,7 +24,7 @@ default_gamma = 1
 default_warmup_epochs = None
 
 # <----- Config for the model ----->
-model_choices = ["BTS-lite", "BTS", "ZTF_Sims-lite", "ELAsTiCC", "ELAsTiCC-lite", "ELAsTiCCv2", "BTSv2",  "BTSv2-lite", "BTSv2_PSonly", "BTSv2-pro", "MALLORN"]
+model_choices = ["BTS-lite", "BTS", "ZTF_Sims-lite", "ELAsTiCC", "ELAsTiCC-lite", "ELAsTiCCv2", "ELAsTiCCv2-lite", "BTSv2",  "BTSv2-lite", "BTSv2_PSonly", "BTSv2-pro", "MALLORN"]
 default_model_type = "BTS"
 
 # Switch device to GPU if available

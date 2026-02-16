@@ -140,9 +140,6 @@ def main():
                 },
                 'num_epochs': {
                     'value': 1000
-                },
-                'max_n_per_class': {
-                    'values': 20000  
                 }
             }
         }
@@ -177,7 +174,7 @@ def main():
                     'value': 1000
                 },
                 'max_n_per_class': {
-                    'values': 20000  
+                    'value': 20000  
                 }
             }
         }
@@ -212,7 +209,7 @@ def main():
                     'value': 1000
                 },
                 'max_n_per_class': {
-                    'values': 20000  
+                    'value': 20000  
                 }
             }
         }

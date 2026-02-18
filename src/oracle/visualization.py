@@ -83,6 +83,7 @@ def plot_confusion_matrix(y_true, y_pred, labels, normalize='true', title=None, 
 
     if img_file:
         plt.savefig(img_file)
+        np.save(img_file.replace('.pdf','.npy'), cm)
 
     plt.close()
 
@@ -129,7 +130,6 @@ def plot_plain_cf(y_true, y_pred, labels, normalize='true', title=None, img_file
     ax.set_xlabel('')
     ax.set_ylabel('')
 
-    # 🔹 Remove spines
     for spine in ax.spines.values():
         spine.set_visible(False)    
     

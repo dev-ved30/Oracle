@@ -60,8 +60,8 @@ def main():
                 'model_choice': {'value': model},
                 'lr': {
                     'distribution': 'log_uniform_values',
-                    'min': 1e-7,
-                    'max': 1e-5
+                    'min': 5e-7,
+                    'max': 5e-5
                 },
                 'batch_size': {
                     'values': [32, 64, 128]
@@ -92,11 +92,11 @@ def main():
                 'model_choice': {'value': model},
                 'lr': {
                     'distribution': 'log_uniform_values',
-                    'min': 1e-5,
-                    'max': 1e-3
+                    'min': 5e-5,
+                    'max': 5e-3
                 },
                 'batch_size': {
-                    'values': [32, 64, 128, 256, 512]
+                    'values': [32, 64, 128, 256]
                 },
                 'alpha': {
                     'distribution': 'uniform',
@@ -124,11 +124,11 @@ def main():
                 'model_choice': {'value': model},
                 'lr': {
                     'distribution': 'log_uniform_values',
-                    'min': 1e-5,
-                    'max': 1e-3
+                    'min': 5e-5,
+                    'max': 5e-3
                 },
                 'batch_size': {
-                    'values': [32, 64, 128, 256, 512]
+                    'values': [32, 64, 128, 256]
                 },
                 'alpha': {
                     'distribution': 'uniform',

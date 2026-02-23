@@ -188,7 +188,7 @@ def main():
                 'goal': 'maximize'
             },
             'parameters': {
-                'model_choice': {'value': model},
+                'model_choice': {'value': "BTSv2-pro"},
                 'lr': {
                     'distribution': 'log_uniform_values',
                     'min': 5e-7,

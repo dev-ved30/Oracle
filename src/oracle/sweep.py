@@ -179,6 +179,41 @@ def main():
             }
         }
 
+    elif model=="BTSv2-pro-free-gamma":
+
+        sweep_config = {
+            'method': 'bayes',  # Optimization strategy
+            'metric': {
+                'name': 'Max (f1 score)',
+                'goal': 'maximize'
+            },
+            'parameters': {
+                'model_choice': {'value': model},
+                'lr': {
+                    'distribution': 'log_uniform_values',
+                    'min': 5e-7,
+                    'max': 5e-4
+                },
+                'batch_size': {
+                    'values': [32, 64, 128]
+                },
+                'alpha': {
+                    'distribution': 'uniform',
+                    'min': 0.0,
+                    'max': 0.5
+                },
+                'gamma': {
+                    'values': [0.5, 1]
+                },
+                'num_epochs': {
+                    'value': 1000
+                },
+                'warmup_epochs': {
+                    'values': [25, 50, 100, None]
+                },
+            }
+        }
+
     elif model=="ELAsTiCCv2":
 
         sweep_config = {

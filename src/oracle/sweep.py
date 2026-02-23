@@ -41,6 +41,9 @@ def sweep_train():
     run_training_loop(args)
 
 def main():
+
+    model_choices.append("BTSv2-pro-free-gamma")
+      # Add the new model to the choices
     parser = argparse.ArgumentParser(description='ORACLE Sweep Runner')
     parser.add_argument('model', choices=model_choices, help='Model to sweep.')
     parser.add_argument('--count', type=int, default=10, help='Number of runs.')

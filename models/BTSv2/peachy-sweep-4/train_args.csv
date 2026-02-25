@@ -1,0 +1,2 @@
+model,num_epochs,batch_size,lr,max_n_per_class,alpha,gamma,dir,load_weights,warmup_epochs
+BTSv2,1000,64,0.0004507609646872185,,0.3110025108622264,1,,,

@@ -13,3 +13,4 @@ models/*/*/reports
 models/*/*/embeddings
 models/.DS_Store
 wandb/
+*.out

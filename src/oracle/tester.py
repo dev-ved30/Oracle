@@ -158,6 +158,7 @@ class Tester:
         raw_classes = []
         ids = []
         combined_embeddings = []
+        combined_preds = []
 
         print(f'==========\nStarting Analysis for Trigger + {d} days...')
 
@@ -169,22 +170,28 @@ class Tester:
 
 
             embeddings = pd.DataFrame(self.get_latent_space_embeddings(batch).detach().cpu())
+            pred_df = self.predict_class_probabilities_df(batch)
 
             true_classes += batch['label'].tolist()
             raw_classes += batch['raw_label'].tolist()
             ids += batch['id'].tolist()
 
             combined_embeddings.append(embeddings)
+            combined_preds.append(pred_df)
         
         true_classes = np.array(true_classes)
         combined_embeddings = pd.concat(combined_embeddings, ignore_index=True)
+        combined_preds = pd.concat(combined_preds, ignore_index=True)
 
         Path(f"{self.model_dir}/plots/umap").mkdir(parents=True, exist_ok=True)
         plot_umap(combined_embeddings.to_numpy(), true_classes, raw_classes, ids, d, model_dir=self.model_dir)
 
+        leaf_nodes = nodes_by_depth[-1]
+        combined_preds = combined_preds[leaf_nodes]
         combined_embeddings['class'] = true_classes
         combined_embeddings['raw_class'] = raw_classes
         combined_embeddings['id'] = ids
+        combined_embeddings['pred'] = leaf_nodes[np.argmax(combined_preds.to_numpy(), axis=1)]
 
         Path(f"{self.model_dir}/embeddings").mkdir(parents=True, exist_ok=True)
         combined_embeddings.to_csv(f"{self.model_dir}/embeddings/embeddings+{d}.csv", index=False)

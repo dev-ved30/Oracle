@@ -4,6 +4,7 @@ Interface for training models in the ORACLE framework.
 import torch
 import wandb
 import argparse
+import subprocess
 
 from pathlib import Path    
 from torch.utils.data import DataLoader, ConcatDataset
@@ -34,6 +35,15 @@ print(f"Using {device} device")
 torch.set_default_device(device)
 
 val_truncation_days = 2 ** np.array(range(11))
+
+# Function to get git info
+def get_git_info():
+    try:
+        branch = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).decode("utf-8").strip()
+        commit_hash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
+        return branch, commit_hash
+    except Exception:
+        return "unknown", "unknown"
 
 def parse_args():
     '''
@@ -91,6 +101,9 @@ def get_wandb_run(args):
         A wandb run instance initialized with the given configuration, which logs metadata and hyperparameters.
     """
 
+    # Get the git branch and hash for reproducibility
+    git_branch, git_hash = get_git_info()
+
     run = wandb.init(
         # Set the wandb entity where your project will be logged (generally your team name).
         entity="vedshah-email-northwestern-university",
@@ -108,6 +121,8 @@ def get_wandb_run(args):
             "model_choice": args.model,
             "pretrained_model_path": args.load_weights,
             "warmup_epochs": args.warmup_epochs,
+            "git_hash": git_hash,
+            "git_branch": git_branch,
         },
     )
     return run    

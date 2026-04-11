@@ -87,9 +87,9 @@ def run_testing_loop(args):
     model.setup_testing(model_dir, device)
 
     # # Get the test dataset augmented to different days
-    # test_loaders = get_test_loaders(model_choice, batch_size, max_n_per_class, defaults_days_list, excluded_classes=['Anomaly'])
-    # for d, test_dataloader in zip(defaults_days_list, test_loaders):
-    #     model.run_all_analysis(test_dataloader, d)
+    test_loaders = get_test_loaders(model_choice, batch_size, max_n_per_class, defaults_days_list, excluded_classes=['Anomaly'])
+    for d, test_dataloader in zip(defaults_days_list, test_loaders):
+        model.run_all_analysis(test_dataloader, d)
 
     # Include the anomalies to see the clustering
     test_loaders = get_test_loaders(model_choice, batch_size, max_n_per_class, defaults_days_list, mapper=BTS_to_Astrophysical_mappings_AD)

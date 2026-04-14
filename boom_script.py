@@ -21,7 +21,7 @@ prv_cand = None
 
 # Loading the model
 Oracle2 = get_model("BTSv2")
-Oracle2.load_state_dict(torch.load("models/BTSv2/peachy-sweep-4/best_model_f1.pth", map_location='cpu'), strict=False)
+missing, unexpected = Oracle2.load_state_dict(torch.load("models/BTSv2/stilted-elevator-551/best_model_f1.pth", map_location='cpu'), strict=True)
 Oracle2.eval()
 
 with open(path, "r") as f:
@@ -83,7 +83,7 @@ with open(path, "r") as f:
     with torch.no_grad():
 
         class_scores = Oracle2.predict_class_probabilities(batch)[0]
-        class_scores_df = Oracle2.predict_conditional_probabilities_df(batch)
+        class_scores_df = Oracle2.predict_class_probabilities_df(batch)
         Oracle2.taxonomy.plot_colored_taxonomy(class_scores)
 
         print(class_scores_df)

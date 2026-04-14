@@ -1,7 +1,7 @@
 import polars as pl
 
-main_path = "../../data/BTSv3/"
-ztf_img_data = '../../ZTF_references_april26.parquet'
+main_path = "../../../data/BTSv3/"
+ztf_img_data = '../../../ZTF_references_april26.parquet'
 
 df_ztf_img = pl.read_parquet(ztf_img_data)
 df_ztf_img = df_ztf_img.select(['g_reference', 'r_reference', 'i_reference', 'ZTFID'])

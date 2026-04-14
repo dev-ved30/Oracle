@@ -38,6 +38,7 @@ val_truncation_days = 2 ** np.array(range(11))
 
 # Function to get git info
 def get_git_info():
+    """Returns the current git branch and commit hash for reproducibility."""
     try:
         branch = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).decode("utf-8").strip()
         commit_hash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()

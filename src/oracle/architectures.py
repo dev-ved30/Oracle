@@ -865,6 +865,7 @@ class GRU_MD_Improved(Hierarchical_classifier):
         self.ts_proj = nn.Linear(gru_hidden * self.num_directions, 128)
         self.ts_ln = nn.LayerNorm(128)
         self.ts_dropout = nn.Dropout(dropout)
+        self.residual_proj = nn.Linear(128, 64, bias=False)  # for residual connection in head
 
         # dense on static path
         self.static_proj = nn.Linear(static_feature_dim, 64)
@@ -973,13 +974,8 @@ class GRU_MD_Improved(Hierarchical_classifier):
         x = self.gelu(x)
         x = self.head_dropout(x)
 
-        # add residual (project if needed)
-        if residual.size(1) == x.size(1):
-            x = x + residual
-        else:
-            # project residual to match dim
-            proj_res = nn.Linear(residual.size(1), x.size(1)).to(x.device)
-            x = x + proj_res(residual)
+        # add residual
+        x = x + self.residual_proj(residual)
 
         x = self.head_fc3(x)
         x = self.gelu(x)
@@ -1050,6 +1046,7 @@ class GRU_Improved(Hierarchical_classifier):
         self.ts_proj = nn.Linear(gru_hidden * self.num_directions, 128)
         self.ts_ln = nn.LayerNorm(128)
         self.ts_dropout = nn.Dropout(dropout)
+        self.residual_proj = nn.Linear(128, 64, bias=False)  # for residual connection in head
 
 
         # head (residual MLP blocks)
@@ -1137,13 +1134,8 @@ class GRU_Improved(Hierarchical_classifier):
         x = self.gelu(x)
         x = self.head_dropout(x)
 
-        # add residual (project if needed)
-        if residual.size(1) == x.size(1):
-            x = x + residual
-        else:
-            # project residual to match dim
-            proj_res = nn.Linear(residual.size(1), x.size(1)).to(x.device)
-            x = x + proj_res(residual)
+        # add residual
+        x = x + self.residual_proj(residual)
 
         x = self.head_fc3(x)
         x = self.gelu(x)

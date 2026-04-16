@@ -890,20 +890,24 @@ def show_batch(images, labels, id, n=16):
             img = img.squeeze(0)
             img = img.numpy().astype(int) 
             ax.imshow(img, cmap='gray')
-        else:  # RGB
+        else:  # 3-channel color composite
             img = img.permute(1, 2, 0)  # (C, H, W) -> (H, W, C)
 
-            # figure which chanel is not all zeros and only plot that one channel with a grayscale cmap. This is because the way we do data augmentation is by zeroing out two channels and only keeping one channel with data. So if we plot all three channels together, we will just get a black image.
+            # Normalize each channel independently to [0, 1]
+            img_np = img.detach().cpu().numpy().astype(np.float32)
+            rgb = np.zeros_like(img_np)
 
-            for c in range(img.shape[2]):
-                if torch.sum(img[:,:,c]) > 0:
-                    img = img[:,:,c]
-                    break
+            for c in range(3):
+                channel = img_np[:, :, c]
+                finite = np.isfinite(channel)
+                if np.any(finite):
+                    lo, hi = np.percentile(channel[finite], (1, 99))
+                    if hi > lo:
+                        rgb[:, :, c] = np.clip((channel - lo) / (hi - lo), 0, 1)
+                    else:
+                        rgb[:, :, c] = 0.0
 
-            vmin, vmax = interval.get_limits(img)
-            norm = ImageNormalize(vmin=vmin, vmax=vmax, stretch=LinearStretch())
-            _ = ax.imshow(img, origin='lower', norm=norm)
-
+            ax.imshow(rgb, origin='lower')
         ax.set_title(f"{ztfid}: {label}", fontsize=8) 
 
     plt.tight_layout()

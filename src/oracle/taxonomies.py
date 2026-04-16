@@ -310,6 +310,8 @@ class Taxonomy(nx.DiGraph):
             # (1 - mask) * y_pred gets the logits for all the values not in this mask and zeros out the values in the mask. Add those back so that we can repeat the process for other masks.
             logits = softmax + ((1 - mask) * logits)
 
+        logits[:, 0] = 1.0 # Set the root node to have a probability of 1 since it is the root node and should always be 1.
+
         return logits
     
     def get_nodes_by_depth(self):

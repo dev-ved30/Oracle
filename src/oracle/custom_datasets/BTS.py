@@ -260,14 +260,14 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         dictionary['ZTFID'] = ztfid
         dictionary['postage_stamp'] = img_data
 
-        if self.include_PS_images:
+        # if self.include_PS_images:
 
-            # Grab the flattened data and reshape it to an image
-            data = row['ps']
-            dictionary['postage_stamp'] = np.asarray(data).reshape((3, 252, 252))
+        #     # Grab the flattened data and reshape it to an image
+        #     data = row['ps']
+        #     dictionary['postage_stamp'] = np.asarray(data).reshape((3, 252, 252))
 
-            if self.img_transform is not None:
-                dictionary['postage_stamp'] = self.img_transform(dictionary['postage_stamp'])
+        #     if self.img_transform is not None:
+        #         dictionary['postage_stamp'] = self.img_transform(dictionary['postage_stamp'])
 
         # This operation is costly. Only do it if include_lc_plots stamps is true
         if self.include_lc_plots:
@@ -745,7 +745,8 @@ def truncate_BTS_light_curve_by_days_since_trigger(x_ts, x_static, x_img, d=None
         x_img[[0,2],:,:] = 0.0
     elif abs(final_alert_filter_wavelength - 0.7545) < 0.01:
         x_img[[0,1],:,:] = 0.0
-
+    else:
+        print("No matching filter found")
 
     # Normalize the time series
     if normalize_flux:

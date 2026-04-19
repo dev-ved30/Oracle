@@ -1,5 +1,6 @@
 """Custom dataset class for the ZTF Bright Transient Survey light curve dataset."""
 import io
+from sympy import im
 import torch
 import random
 
@@ -23,9 +24,9 @@ from oracle.constants import ztf_filters, ztf_alert_image_order, ztf_alert_image
 here = Path(__file__).resolve().parent
 
 # Go up to the root, then into data/ and then get the parquet file
-BTS_train_parquet_path = str(here.parent.parent.parent / "data" / 'BTSv3' / 'train_PS.parquet')
-BTS_test_parquet_path = str(here.parent.parent.parent / "data" / 'BTSv3' / 'test_PS.parquet')
-BTS_val_parquet_path = str(here.parent.parent.parent / "data" / 'BTSv3' / 'val_PS.parquet')
+BTS_train_parquet_path = str(here.parent.parent.parent / "data" / 'BTSv3' / 'train_PS_ZTF.parquet')
+BTS_test_parquet_path = str(here.parent.parent.parent / "data" / 'BTSv3' / 'test_PS_ZTF.parquet')
+BTS_val_parquet_path = str(here.parent.parent.parent / "data" / 'BTSv3' / 'val_PS_ZTF.parquet')
 
 # <----- constant for the dataset ----->
 
@@ -59,6 +60,12 @@ ZTF_wavelength_to_color = {
     ZTF_fid_to_wavelengths[1]: np.array((255, 0, 0))/255,
     ZTF_fid_to_wavelengths[2]: np.array((0, 255, 0))/255,
     ZTF_fid_to_wavelengths[3]: np.array((0, 0, 255))/255,
+}
+
+ZTF_wavelength_to_band = {
+    ZTF_passband_to_wavelengths['g']: 'g',
+    ZTF_passband_to_wavelengths['r']: 'r',
+    ZTF_passband_to_wavelengths['i']: 'i',
 }
 
 flag_value = -9
@@ -200,6 +207,27 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
 
         lc_length = len(row['jd'])
 
+        dictionary = {}
+
+        # This operation is costly. Only do it if include_postage stamps is true
+        if self.include_postage_stamps:
+
+            postage_stamps = {}
+            for f in ztf_filters:
+                for img_type in ['reference']:
+
+                    img_data = row[f"{f}_{img_type}"]
+
+                    if img_data == None:
+                        postage_stamps[f"{f}_{img_type}"] = np.zeros(ztf_alert_image_dimension)
+                    else:
+                        postage_stamps[f"{f}_{img_type}"] = np.reshape(img_data, ztf_alert_image_dimension)
+            postage_stamps = self.get_postage_stamp(postage_stamps)
+            dictionary['postage_stamp'] = postage_stamps
+
+            if self.img_transform is not None:
+                dictionary['postage_stamp'] = self.img_transform(dictionary['postage_stamp'])
+
         # Adding extra row for photflag to maintain compatibility. This is always one if we are just dealing with detections
         time_series_data = np.ones((lc_length, n_ts_features+1), dtype=np.float32)
         for i, feature in enumerate(time_dependent_feature_list):
@@ -222,41 +250,24 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         static_features = torch.from_numpy(static_features)
 
         if self.transform != None:
-            time_series_data, meta_data = self.transform(time_series_data, meta_data)
+            time_series_data, meta_data, img_data = self.transform(time_series_data, meta_data, dictionary['postage_stamp'])
 
-        dictionary = {
-            'ts': time_series_data,
-            'meta': meta_data,
-            'static': static_features,
-            'label': astrophysical_class,
-            'bts_class': bts_class,
-            'ZTFID': ztfid,
-        }
+        dictionary['ts'] = time_series_data
+        dictionary['meta'] = meta_data
+        dictionary['static'] = static_features
+        dictionary['label'] = astrophysical_class
+        dictionary['bts_class'] = bts_class
+        dictionary['ZTFID'] = ztfid
+        dictionary['postage_stamp'] = img_data
 
-        # This operation is costly. Only do it if include_postage stamps is true
-        if self.include_postage_stamps:
+        # if self.include_PS_images:
 
-            postage_stamps = {}
-            for f in ztf_filters:
-                for img_type in ztf_alert_image_order:
+        #     # Grab the flattened data and reshape it to an image
+        #     data = row['ps']
+        #     dictionary['postage_stamp'] = np.asarray(data).reshape((3, 252, 252))
 
-                    img_data = row[f"{f}_{img_type}"]
-
-                    if img_data == None:
-                        postage_stamps[f"{f}_{img_type}"] = np.zeros(ztf_alert_image_dimension)
-                    else:
-                        postage_stamps[f"{f}_{img_type}"] = np.reshape(img_data, ztf_alert_image_dimension)
-            postage_stamps = self.get_postage_stamp(postage_stamps)
-            dictionary['postage_stamp'] = postage_stamps
-
-        if self.include_PS_images:
-
-            # Grab the flattened data and reshape it to an image
-            data = row['ps']
-            dictionary['postage_stamp'] = np.asarray(data).reshape((3, 252, 252))
-
-            if self.img_transform is not None:
-                dictionary['postage_stamp'] = self.img_transform(dictionary['postage_stamp'])
+        #     if self.img_transform is not None:
+        #         dictionary['postage_stamp'] = self.img_transform(dictionary['postage_stamp'])
 
         # This operation is costly. Only do it if include_lc_plots stamps is true
         if self.include_lc_plots:
@@ -574,7 +585,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
         # Loop through all of the filters
         for j, f in enumerate(ztf_filters):
             canvas[j,:,:] = examples[f"{f}_reference"]
-        canvas = torch.from_numpy(canvas*255)
+    
         return canvas
 
     def get_postage_stamp_plot(self, examples):
@@ -674,7 +685,7 @@ def augment_panstarss(img, channel_dropout_p=0):
 
     return img
 
-def truncate_BTS_light_curve_by_days_since_trigger(x_ts, x_static, d=None, add_jitter=False, normalize_flux=False):
+def truncate_BTS_light_curve_by_days_since_trigger(x_ts, x_static, x_img, d=None, add_jitter=False, normalize_flux=False):
     """
     Truncate the BTS light curve based on the number of days since the first trigger.
     This function selects observations from the time-series data (x_ts) that occur within a specified number of days (d) from the first detection (trigger).
@@ -697,7 +708,7 @@ def truncate_BTS_light_curve_by_days_since_trigger(x_ts, x_static, d=None, add_j
         tuple: A tuple containing:
             - x_ts (numpy.ndarray): The truncated time-dependent features array.
             - x_static (numpy.ndarray): The static features array.
-
+            - x_img (numpy.ndarray): The image features array.
     Note:
         - The function assumes that the dataset does not contain any non-detections.
     """
@@ -725,6 +736,18 @@ def truncate_BTS_light_curve_by_days_since_trigger(x_ts, x_static, d=None, add_j
     x_ts = x_ts[idx, :]
     x_static = x_static[idx, :]
 
+    final_alert_filter_wavelength = float(x_ts[-1, time_dependent_feature_list.index('fid')].numpy().tolist())
+
+    # if the wavelength is approximitely 620 (r band), zero out g and i. If the wavelength is approximately 480 (g band), zero out r and i. If the wavelength is approximately 750 (i band), zero out g and r
+    if abs(final_alert_filter_wavelength - 0.476) < 0.01:
+        x_img[[1,2],:,:] = 0.0
+    elif abs(final_alert_filter_wavelength - 0.621) < 0.01:
+        x_img[[0,2],:,:] = 0.0
+    elif abs(final_alert_filter_wavelength - 0.7545) < 0.01:
+        x_img[[0,1],:,:] = 0.0
+    else:
+        print("No matching filter found")
+
     # Normalize the time series
     if normalize_flux:
 
@@ -736,7 +759,7 @@ def truncate_BTS_light_curve_by_days_since_trigger(x_ts, x_static, d=None, add_j
         else:
             x_ts[:, flux_index] = (x_ts[:, flux_index] - mean)
 
-    return x_ts, x_static
+    return x_ts, x_static, x_img
 
 def custom_collate_BTS(batch):
     """
@@ -830,7 +853,7 @@ def custom_collate_BTS(batch):
         
     return d
 
-def show_batch(images, labels, n=16):
+def show_batch(images, labels, id, n=16):
     """
     Display a grid of images with corresponding labels.
     This function creates a visual representation of the first n images from the provided dataset.
@@ -855,18 +878,38 @@ def show_batch(images, labels, n=16):
     grid_size = int(n ** 0.5)
     fig, axes = plt.subplots(grid_size, grid_size, figsize=(8, 8))
 
+    from astropy.visualization import SqrtStretch, ImageNormalize, ZScaleInterval
+    from astropy.visualization import AsinhStretch, LinearStretch, LogStretch
+
+    interval = ZScaleInterval(contrast = 0.1)
+
     for i, ax in enumerate(axes.flat):
         img = images[i]
         label = labels[i]
+        ztfid = id[i]
         if img.shape[0] == 1:  # grayscale
             img = img.squeeze(0)
             img = img.numpy().astype(int) 
             ax.imshow(img, cmap='gray')
-        else:  # RGB
+        else:  # 3-channel color composite
             img = img.permute(1, 2, 0)  # (C, H, W) -> (H, W, C)
-            ax.imshow(img)
 
-        ax.set_title(f"{label}", fontsize=8) 
+            # Normalize each channel independently to [0, 1]
+            img_np = img.detach().cpu().numpy().astype(np.float32)
+            rgb = np.zeros_like(img_np)
+
+            for c in range(3):
+                channel = img_np[:, :, c]
+                finite = np.isfinite(channel)
+                if np.any(finite):
+                    lo, hi = np.percentile(channel[finite], (1, 99))
+                    if hi > lo:
+                        rgb[:, :, c] = np.clip((channel - lo) / (hi - lo), 0, 1)
+                    else:
+                        rgb[:, :, c] = 0.0
+
+            ax.imshow(rgb, origin='lower')
+        ax.set_title(f"{ztfid}: {label}", fontsize=8) 
 
     plt.tight_layout()
     plt.show()
@@ -875,7 +918,7 @@ if __name__=='__main__':
     
     # <--- Example usage of the dataset --->
 
-    dataset = BTS_LC_Dataset(BTS_val_parquet_path, include_postage_stamps=False, include_PS_images=True, transform=truncate_BTS_light_curve_by_days_since_trigger, img_transform=augment_panstarss, max_n_per_class=1000)
+    dataset = BTS_LC_Dataset(BTS_val_parquet_path, include_postage_stamps=True, include_PS_images=False, transform=truncate_BTS_light_curve_by_days_since_trigger, img_transform=augment_panstarss, max_n_per_class=1000)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, collate_fn=custom_collate_BTS, shuffle=True)
 
     for batch in tqdm(dataloader):
@@ -886,7 +929,8 @@ if __name__=='__main__':
             print(f"{k}: \t{batch[k].shape}")
 
         if 'postage_stamp' in batch.keys():
-            show_batch(batch['postage_stamp'], batch['label'])
+            print(batch['id'])
+            show_batch(batch['postage_stamp'], batch['label'], id=batch['id'])
         
         # if 'lc_plot' in batch.keys():
         #     show_batch(batch['lc_plot'], batch['label'])

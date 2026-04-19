@@ -189,14 +189,14 @@ def get_train_loader(model_choice, batch_size, max_n_per_class, gamma, excluded_
 
         # Load the training set
         transform = partial(truncate_BTS_light_curve_by_days_since_trigger, add_jitter=True)
-        train_dataset = BTS_LC_Dataset(BTS_train_parquet_path, max_n_per_class=max_n_per_class, include_PS_images=True, transform=transform, img_transform=augment_panstarss, excluded_classes=excluded_classes)
+        train_dataset = BTS_LC_Dataset(BTS_train_parquet_path, max_n_per_class=max_n_per_class, include_postage_stamps=True, transform=transform, img_transform=augment_panstarss, excluded_classes=excluded_classes)
         collate_fn = custom_collate_BTS
     
     elif model_choice == "BTSv2_PSonly":
 
         # Load the training set
         transform = partial(truncate_BTS_light_curve_by_days_since_trigger, add_jitter=True)
-        train_dataset = BTS_LC_Dataset(BTS_train_parquet_path, include_PS_images=True, max_n_per_class=max_n_per_class, transform=transform, img_transform=augment_panstarss, excluded_classes=excluded_classes)
+        train_dataset = BTS_LC_Dataset(BTS_train_parquet_path, include_postage_stamps=True, max_n_per_class=max_n_per_class, transform=transform, img_transform=augment_panstarss, excluded_classes=excluded_classes)
         collate_fn = custom_collate_BTS
 
     elif model_choice == "MALLORN":
@@ -351,7 +351,7 @@ def get_val_loader(model_choice, batch_size, val_truncation_days, max_n_per_clas
         val_dataset = []
         for d in val_truncation_days:
             transform = partial(truncate_BTS_light_curve_by_days_since_trigger, d=d)
-            val_dataset.append(BTS_LC_Dataset(BTS_val_parquet_path, transform=transform,  include_PS_images=True, excluded_classes=excluded_classes))
+            val_dataset.append(BTS_LC_Dataset(BTS_val_parquet_path, transform=transform,  include_postage_stamps=True, excluded_classes=excluded_classes))
         concatenated_val_dataset = ConcatDataset(val_dataset)
         collate_func = custom_collate_BTS
 
@@ -361,7 +361,7 @@ def get_val_loader(model_choice, batch_size, val_truncation_days, max_n_per_clas
         val_dataset = []
         for d in [1024]:
             transform = partial(truncate_BTS_light_curve_by_days_since_trigger, d=d)
-            val_dataset.append(BTS_LC_Dataset(BTS_val_parquet_path, include_PS_images=True, transform=transform,  excluded_classes=excluded_classes))
+            val_dataset.append(BTS_LC_Dataset(BTS_val_parquet_path, include_postage_stamps=True, transform=transform,  excluded_classes=excluded_classes))
         concatenated_val_dataset = ConcatDataset(val_dataset)
         collate_func = custom_collate_BTS
 
@@ -500,7 +500,7 @@ def get_test_loaders(model_choice, batch_size, max_n_per_class, days_list, exclu
         for d in days_list:
             
             # Set the custom transform and recreate dataloader
-            test_dataset = BTS_LC_Dataset(BTS_test_parquet_path, include_PS_images=True, max_n_per_class=max_n_per_class, excluded_classes=excluded_classes, mapper=mapper)
+            test_dataset = BTS_LC_Dataset(BTS_test_parquet_path, include_postage_stamps=True, max_n_per_class=max_n_per_class, excluded_classes=excluded_classes, mapper=mapper)
             test_dataset.transform = partial(truncate_BTS_light_curve_by_days_since_trigger, d=d)
             test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_BTS, generator=generator)
             test_loaders.append(test_dataloader)
@@ -512,7 +512,7 @@ def get_test_loaders(model_choice, batch_size, max_n_per_class, days_list, exclu
         for d in [1024]:
             
             # Set the custom transform and recreate dataloader
-            test_dataset = BTS_LC_Dataset(BTS_test_parquet_path, include_PS_images=True, max_n_per_class=max_n_per_class, excluded_classes=excluded_classes, mapper=mapper)
+            test_dataset = BTS_LC_Dataset(BTS_test_parquet_path, include_postage_stamps=True, max_n_per_class=max_n_per_class, excluded_classes=excluded_classes, mapper=mapper)
             test_dataset.transform = partial(truncate_BTS_light_curve_by_days_since_trigger, d=d)
             test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_BTS, generator=generator)
             test_loaders.append(test_dataloader)

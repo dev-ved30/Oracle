@@ -753,7 +753,7 @@ class GRU_MD_MM_Improved(Hierarchical_classifier):
 
     def __init__(self, taxonomy: Taxonomy,
                  lc_md_model_dir="models/BTSv2/stilted-elevator-551/",
-                 image_model_dir="models/BTSv2_PSonly/lilac-dew-556/"):
+                 image_model_dir="models/BTSv2_PSonly/stoic-sweep-6/"):
         
         super().__init__(taxonomy)
 

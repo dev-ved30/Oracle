@@ -30,9 +30,12 @@ def load_cutout(field):
     raw = gzip.decompress(base64.b64decode(b64))
     with fits.open(io.BytesIO(raw)) as hdul:
 
-        #NOTE: @Sushant this is where any new normalization code would go.
+        image_template = hdul[0].data.astype(float)
+        norm = np.linalg.norm(image_template)
+        if norm != 0:
+            image_template /= norm
 
-        return torch.from_numpy(hdul[0].data.astype(float))
+        return torch.from_numpy(image_template)
 
 path = Path("alert_aux.json")
 prv_cand = None

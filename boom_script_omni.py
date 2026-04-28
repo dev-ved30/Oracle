@@ -1,8 +1,14 @@
 #load json
+import base64
 import json
 import torch
 import astropy
+import numpy as np
+import gzip
+import io
+from astropy.io import fits
 
+from oracle.custom_datasets.BTS import show_batch
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,14 +16,28 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from PIL import Image
 
 from oracle.custom_datasets.BTS import ZTF_passband_to_wavelengths
 from oracle.custom_datasets.BTS import time_dependent_feature_list, time_independent_feature_list, meta_data_feature_list, flag_value
 
 from oracle.presets import get_model
+from astropy.visualization import ImageNormalize, ZScaleInterval, LinearStretch
+
+def load_cutout(field):
+    """Decode one {'$binary': {'base64': ...}} field into a 2D numpy array."""
+    b64 = field["$binary"]["base64"]
+    raw = gzip.decompress(base64.b64decode(b64))
+    with fits.open(io.BytesIO(raw)) as hdul:
+
+        #NOTE: @Sushant this is where any new normalization code would go.
+
+        return torch.from_numpy(hdul[0].data.astype(float))
 
 path = Path("alert_aux.json")
 prv_cand = None
+
+image_path = Path("test.json")
 
 # Loading the model
 Oracle2_omni = get_model("BTSv2-pro")
@@ -32,6 +52,8 @@ with open(path, "r") as f:
     prv_cand = pd.DataFrame(prv_cand)
     prv_cand.sort_values('jd', inplace=True)
 
+    final_alert_band = prv_cand['band'].values[-1]
+
     # convert the jd to time since first detection 
     prv_cand['jd'] = prv_cand['jd'] - prv_cand['jd'].min()
 
@@ -43,6 +65,19 @@ with open(path, "r") as f:
     prv_cand['l'] = coords.galactic.l
     prv_cand['b'] = coords.galactic.b
 
+
+    with open("test.json", "r") as f:
+        cutouts = json.load(f)
+
+    image_tensor = torch.zeros((1, 3, 63, 63))  # Dummy image tensor (1, C, H, W)
+    if final_alert_band == 'g':
+        image_tensor[0,0,:,:] = load_cutout(cutouts['cutoutTemplate'])# put the image here
+    elif final_alert_band == 'r':
+        image_tensor[0,1,:,:] = load_cutout(cutouts['cutoutTemplate'])# put the image here
+    elif final_alert_band == 'i':
+        image_tensor[0,2,:,:] = load_cutout(cutouts['cutoutTemplate'])# put the image here
+
+
     # Add the wise colors for nearest source within 2.75" 
     # prv_cand['W1mag'] = data['cross_matches']['AllWISE'][0]['w1mpro']  # Default value   
     # prv_cand['W2mag'] = data['cross_matches']['AllWISE'][0]['w2mpro']  # Default value
@@ -52,17 +87,6 @@ with open(path, "r") as f:
     # prv_cand['W2_minus_W3'] = prv_cand['W2mag'] - prv_cand['W3mag']  # Default value
 
     
-    image_tensor = torch.zeros((1, 3, 63, 63))  # Dummy image tensor (1, C, H, W)
-    
-    # NOTE: @sushant this is where the reference image data would go.
-    # if img_filter == 'g':
-    #     image_tensor[:,0,:,:] = # put the image here
-    # elif img_filter == 'r':
-    #     image_tensor[:,1,:,:] = # put the image here
-    # elif img_filter == 'i':
-    #     image_tensor[:,2,:,:] = # put the image here
-
-
     # 1 is the batch size
     ts_tensor = torch.zeros((1, len(prv_cand), len(time_dependent_feature_list) + 1))
     for i, col in enumerate(time_dependent_feature_list):

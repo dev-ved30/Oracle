@@ -1,23 +1,10 @@
 import time 
-
-import matplotlib.pyplot as plt
+import torch
 import numpy as np
+import pandas as pd
 
 from oracle.architectures import GRU_MD_Improved, GRU_MD_MM_Improved, GRU_Improved, ConvNeXt
 from oracle.taxonomies import BTS_Taxonomy, ORACLE_Taxonomy
-
-import os
-import psutil
-
-os.environ["OMP_NUM_THREADS"] = "8"
-os.environ["MKL_NUM_THREADS"] = "8"
-os.environ["VECLIB_MAXIMUM_THREADS"] = "8"  # especially relevant on macOS
-
-import torch
-torch.set_num_threads(8)
-
-print(torch.get_num_threads())
-print(torch.get_num_interop_threads())
 
 
 def argparse():
@@ -103,9 +90,6 @@ def main(model_choice):
             mean_throughput[m] = np.mean(throughput)
             std_throughput[m] = np.std(throughput)
 
-    # make a table of the results
-    import pandas as pd
-
     results_df = pd.DataFrame({
         'Model': list(models.keys()),
         'Mean Inference Time (s)': [mean_times[m] for m in models],
@@ -122,7 +106,6 @@ def main(model_choice):
 
 
     print(results_df)
-
     print(results_df.to_latex(index=False))
 
 if __name__ == "__main__":

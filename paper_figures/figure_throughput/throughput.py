@@ -41,12 +41,13 @@ def main(model_choice):
     elif model_choice == "elasticc_oracle2":
         model = GRU_MD_Improved(elasticc_taxonomy, static_feature_dim=18)
     elif model_choice == "elasticc_oracle2_lite":
-        model = GRU_Improved(elasticc_taxonomy, static_feature_dim=18)
+        model = GRU_Improved(elasticc_taxonomy)
     elif model_choice == "image_backbone":
         model = ConvNeXt(taxonomy)
     else:
         raise ValueError("Invalid model choice")
     
+    model.to('cpu')
     model.eval()
 
     models = {
@@ -76,13 +77,13 @@ def main(model_choice):
             sequence_length = 174
 
         batch = {
-            "ts": torch.randn(batch_size, sequence_length, 5, dtype=torch.float32),  # (batch_size, seq_len, num_features)
-            "static": torch.randn(batch_size, static_dim, dtype=torch.float32),
-            "length": torch.from_numpy(np.array([sequence_length] * batch_size)),  # (batch_size,)
+            "ts": torch.randn(batch_size, sequence_length, 5, dtype=torch.float32).to('cpu'),  # (batch_size, seq_len, num_features)
+            "static": torch.randn(batch_size, static_dim, dtype=torch.float32).to('cpu'),
+            "length": torch.from_numpy(np.array([sequence_length] * batch_size)).to('cpu'),  # (batch_size,)
         }
 
         if m == "image_backbone" or m == "bts_oracle2_omni":
-            batch["postage_stamp"] = torch.randn(batch_size, 3, 63, 63, dtype=torch.float32)  # (batch_size, num_channels, height, width)
+            batch["postage_stamp"] = torch.randn(batch_size, 3, 63, 63, dtype=torch.float32).to('cpu')  # (batch_size, num_channels, height, width)
 
 
         model = models[m].eval()

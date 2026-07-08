@@ -1,4 +1,4 @@
-﻿oracle.presets
+oracle.presets
 ==============
 
 .. automodule:: oracle.presets

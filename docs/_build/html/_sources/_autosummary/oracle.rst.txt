@@ -16,6 +16,7 @@
    loss
    presets
    pretrained
+   sweep
    taxonomies
    test
    tester

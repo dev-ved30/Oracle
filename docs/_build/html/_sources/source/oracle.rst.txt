@@ -21,6 +21,7 @@ Submodules
    oracle.constants
    oracle.loss
    oracle.presets
+   oracle.sweep
    oracle.taxonomies
    oracle.test
    oracle.tester

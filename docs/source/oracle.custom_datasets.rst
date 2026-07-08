@@ -9,6 +9,7 @@ Submodules
 
    oracle.custom_datasets.BTS
    oracle.custom_datasets.ELAsTiCC
+   oracle.custom_datasets.MALLORN
    oracle.custom_datasets.ZTF_sims
 
 Module contents

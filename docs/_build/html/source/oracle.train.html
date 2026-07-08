@@ -73,6 +73,12 @@
 <span id="oracle-train-module"></span><h1>oracle.train module<a class="headerlink" href="#module-oracle.train" title="Link to this heading"></a></h1>
 <p>Interface for training models in the ORACLE framework.</p>
 <dl class="py function">
+<dt class="sig sig-object py" id="oracle.train.get_git_info">
+<span class="sig-prename descclassname"><span class="pre">oracle.train.</span></span><span class="sig-name descname"><span class="pre">get_git_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.train.get_git_info" title="Link to this definition"></a></dt>
+<dd><p>Returns the current git branch and commit hash for reproducibility.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="oracle.train.get_wandb_run">
 <span class="sig-prename descclassname"><span class="pre">oracle.train.</span></span><span class="sig-name descname"><span class="pre">get_wandb_run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.train.get_wandb_run" title="Link to this definition"></a></dt>
 <dd><p>Initializes and returns a Weights &amp; Biases (wandb) run with the specified configuration.</p>
@@ -133,7 +139,8 @@
 6. gamma (float): Hyperparameter used during training (specific purpose defined by model’s setup).
 7. dir (str): Directory path for saving the model and other related artifacts.
 8. model (str): Identifier to select which model architecture to use.
-9. load_weights (str or None): Path to pretrained model weights. If provided, these weights are loaded into the model.</p>
+9. load_weights (str or None): Path to pretrained model weights. If provided, these weights are loaded into the model.
+10. warmup_epochs (int or None): Number of warmup epochs before unfreezing all the model layers for training.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>

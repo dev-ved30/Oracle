@@ -73,6 +73,50 @@
 <span id="oracle-architectures-module"></span><h1>oracle.architectures module<a class="headerlink" href="#module-oracle.architectures" title="Link to this heading"></a></h1>
 <p>Top-level module for defining various neural network architectures for hierarchical classification.</p>
 <dl class="py class">
+<dt class="sig sig-object py" id="oracle.architectures.ConvNeXt">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.architectures.</span></span><span class="sig-name descname"><span class="pre">ConvNeXt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taxonomy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="oracle.taxonomies.html#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><span class="pre">Taxonomy</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.ConvNeXt" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oracle.architectures.Hierarchical_classifier" title="oracle.architectures.Hierarchical_classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hierarchical_classifier</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.ConvNeXt.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#oracle.architectures.ConvNeXt.forward" title="Link to this definition"></a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.ConvNeXt.get_latent_space_embeddings">
+<span class="sig-name descname"><span class="pre">get_latent_space_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.ConvNeXt.get_latent_space_embeddings" title="Link to this definition"></a></dt>
+<dd><p>Compute the latent space embeddings for a given batch of data.</p>
+<p>This method should be implemented by subclasses to transform the input batch into a latent representation.
+The exact nature of the embedding (e.g., dimensionality, transformation mechanism) depends on the specific architecture.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch</strong> (<em>dictionary</em>) – A batch of input data on which to compute the latent embeddings. The expected format and type should
+be defined by the implementing subclass.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The latent space embeddings corresponding to the provided batch. The structure and type of the embeddings
+is determined by the subclass implementation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – If the method is not implemented by the subclass.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="oracle.architectures.GRU">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.architectures.</span></span><span class="sig-name descname"><span class="pre">GRU</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taxonomy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="oracle.taxonomies.html#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><span class="pre">Taxonomy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts_feature_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#oracle.architectures.Hierarchical_classifier" title="oracle.architectures.Hierarchical_classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hierarchical_classifier</span></code></a></p>
@@ -112,6 +156,90 @@ connected output layer.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="oracle.architectures.GRU_Improved">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.architectures.</span></span><span class="sig-name descname"><span class="pre">GRU_Improved</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taxonomy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="oracle.taxonomies.html#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><span class="pre">Taxonomy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts_feature_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gru_hidden</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gru_layers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_Improved" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oracle.architectures.Hierarchical_classifier" title="oracle.architectures.Hierarchical_classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hierarchical_classifier</span></code></a></p>
+<p>Improved GRU-based neural network architecture with multi-dimensional static features for hierarchical classification.</p>
+<dl class="simple">
+<dt>Key differences vs original:</dt><dd><ul class="simple">
+<li><p>Bidirectional GRU with attention pooling over time (gives richer sequence summary).</p></li>
+<li><p>LayerNorm / BatchNorm and Dropout for regularisation &amp; stability.</p></li>
+<li><p>Residual connections in the MLP head.</p></li>
+<li><p>Configurable hidden sizes and dropout.</p></li>
+<li><p>GELU activations in the head for smoother gradients.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.GRU_Improved.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_Improved.forward" title="Link to this definition"></a></dt>
+<dd><p>Forward pass: get latent embedding and compute logits.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.GRU_Improved.get_latent_space_embeddings">
+<span class="sig-name descname"><span class="pre">get_latent_space_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_Improved.get_latent_space_embeddings" title="Link to this definition"></a></dt>
+<dd><p>Generates the latent embedding for a batch (time-series + static).
+batch keys:</p>
+<blockquote>
+<div><p>‘ts’     -&gt; (batch, seq_len, n_ts_features)
+‘length’ -&gt; (batch,)
+‘static’ -&gt; (batch, n_static_features)</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor of shape (batch, 16) – the latent representation before final classifier.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="oracle.architectures.GRU_MALLORN">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.architectures.</span></span><span class="sig-name descname"><span class="pre">GRU_MALLORN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taxonomy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="oracle.taxonomies.html#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><span class="pre">Taxonomy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_model_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'models/ELAsTiCC-lite/revived-star-159/'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MALLORN" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oracle.architectures.Hierarchical_classifier" title="oracle.architectures.Hierarchical_classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hierarchical_classifier</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.GRU_MALLORN.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MALLORN.forward" title="Link to this definition"></a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.GRU_MALLORN.get_latent_space_embeddings">
+<span class="sig-name descname"><span class="pre">get_latent_space_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MALLORN.get_latent_space_embeddings" title="Link to this definition"></a></dt>
+<dd><p>Compute the latent space embeddings for a given batch of data.</p>
+<p>This method should be implemented by subclasses to transform the input batch into a latent representation.
+The exact nature of the embedding (e.g., dimensionality, transformation mechanism) depends on the specific architecture.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch</strong> (<em>dictionary</em>) – A batch of input data on which to compute the latent embeddings. The expected format and type should
+be defined by the implementing subclass.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The latent space embeddings corresponding to the provided batch. The structure and type of the embeddings
+is determined by the subclass implementation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – If the method is not implemented by the subclass.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -164,6 +292,46 @@ This method performs the following steps:</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="oracle.architectures.GRU_MD_Improved">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.architectures.</span></span><span class="sig-name descname"><span class="pre">GRU_MD_Improved</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taxonomy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="oracle.taxonomies.html#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><span class="pre">Taxonomy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts_feature_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_feature_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gru_hidden</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gru_layers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MD_Improved" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oracle.architectures.Hierarchical_classifier" title="oracle.architectures.Hierarchical_classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hierarchical_classifier</span></code></a></p>
+<p>Improved GRU-based neural network architecture with multi-dimensional static features for hierarchical classification.</p>
+<dl class="simple">
+<dt>Key differences vs original:</dt><dd><ul class="simple">
+<li><p>Bidirectional GRU with attention pooling over time (gives richer sequence summary).</p></li>
+<li><p>LayerNorm / BatchNorm and Dropout for regularisation &amp; stability.</p></li>
+<li><p>Residual connections in the MLP head.</p></li>
+<li><p>Configurable hidden sizes and dropout.</p></li>
+<li><p>GELU activations in the head for smoother gradients.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.GRU_MD_Improved.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MD_Improved.forward" title="Link to this definition"></a></dt>
+<dd><p>Forward pass: get latent embedding and compute logits.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.GRU_MD_Improved.get_latent_space_embeddings">
+<span class="sig-name descname"><span class="pre">get_latent_space_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MD_Improved.get_latent_space_embeddings" title="Link to this definition"></a></dt>
+<dd><p>Generates the latent embedding for a batch (time-series + static).
+batch keys:</p>
+<blockquote>
+<div><p>‘ts’     -&gt; (batch, seq_len, n_ts_features)
+‘length’ -&gt; (batch,)
+‘static’ -&gt; (batch, n_static_features)</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor of shape (batch, 16) – the latent representation before final classifier.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -229,10 +397,59 @@ The function performs the following steps:</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="oracle.architectures.GRU_MD_MM_Improved">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.architectures.</span></span><span class="sig-name descname"><span class="pre">GRU_MD_MM_Improved</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taxonomy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="oracle.taxonomies.html#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><span class="pre">Taxonomy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">lc_md_model_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'models/BTSv2/stilted-elevator-551/'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_model_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'models/BTSv2_PSonly/stoic-sweep-6/'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MD_MM_Improved" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oracle.architectures.Hierarchical_classifier" title="oracle.architectures.Hierarchical_classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hierarchical_classifier</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.GRU_MD_MM_Improved.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MD_MM_Improved.forward" title="Link to this definition"></a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.GRU_MD_MM_Improved.get_latent_space_embeddings">
+<span class="sig-name descname"><span class="pre">get_latent_space_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.GRU_MD_MM_Improved.get_latent_space_embeddings" title="Link to this definition"></a></dt>
+<dd><p>Compute the latent space embeddings for a given batch of data.</p>
+<p>This method should be implemented by subclasses to transform the input batch into a latent representation.
+The exact nature of the embedding (e.g., dimensionality, transformation mechanism) depends on the specific architecture.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch</strong> (<em>dictionary</em>) – A batch of input data on which to compute the latent embeddings. The expected format and type should
+be defined by the implementing subclass.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The latent space embeddings corresponding to the provided batch. The structure and type of the embeddings
+is determined by the subclass implementation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – If the method is not implemented by the subclass.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.architectures.</span></span><span class="sig-name descname"><span class="pre">Hierarchical_classifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taxonomy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="oracle.taxonomies.html#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><span class="pre">Taxonomy</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <a class="reference internal" href="oracle.trainer.html#oracle.trainer.Trainer" title="oracle.trainer.Trainer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trainer</span></code></a>, <a class="reference internal" href="oracle.tester.html#oracle.tester.Tester" title="oracle.tester.Tester"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tester</span></code></a></p>
 <p>Base class for hierarchical classification architectures.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier.count_parameters">
+<span class="sig-name descname"><span class="pre">count_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier.count_parameters" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.architectures.Hierarchical_classifier.embed">
 <span class="sig-name descname"><span class="pre">embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.Hierarchical_classifier.embed" title="Link to this definition"></a></dt>
@@ -417,6 +634,50 @@ columns for the nodes at that depth.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>KeyError</strong> – If expected node columns (from self.taxonomy.get_nodes_by_depth()) are not present in the DataFrame returned by predict_full_scores().</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="oracle.architectures.MaxViT">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.architectures.</span></span><span class="sig-name descname"><span class="pre">MaxViT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taxonomy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="oracle.taxonomies.html#oracle.taxonomies.Taxonomy" title="oracle.taxonomies.Taxonomy"><span class="pre">Taxonomy</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.MaxViT" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oracle.architectures.Hierarchical_classifier" title="oracle.architectures.Hierarchical_classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hierarchical_classifier</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.MaxViT.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#oracle.architectures.MaxViT.forward" title="Link to this definition"></a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.architectures.MaxViT.get_latent_space_embeddings">
+<span class="sig-name descname"><span class="pre">get_latent_space_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.architectures.MaxViT.get_latent_space_embeddings" title="Link to this definition"></a></dt>
+<dd><p>Compute the latent space embeddings for a given batch of data.</p>
+<p>This method should be implemented by subclasses to transform the input batch into a latent representation.
+The exact nature of the embedding (e.g., dimensionality, transformation mechanism) depends on the specific architecture.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch</strong> (<em>dictionary</em>) – A batch of input data on which to compute the latent embeddings. The expected format and type should
+be defined by the implementing subclass.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The latent space embeddings corresponding to the provided batch. The structure and type of the embeddings
+is determined by the subclass implementation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – If the method is not implemented by the subclass.</p>
 </dd>
 </dl>
 </dd></dl>

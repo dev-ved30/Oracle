@@ -12,4 +12,5 @@ oracle.custom\_datasets
 
    BTS
    ELAsTiCC
+   MALLORN
    ZTF_sims

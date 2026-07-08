@@ -156,7 +156,7 @@ otherwise False.</p>
 <p>Top-level class providing training functionalities for hierarchical classification models.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.trainer.Trainer.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.trainer.Trainer.fit" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.trainer.Trainer.fit" title="Link to this definition"></a></dt>
 <dd><p>Train the model for a specified number of epochs.</p>
 <p>This method moves the model to the designated device and iterates over the given number
 of epochs. During each epoch, it trains the model on the training data and evaluates it on
@@ -170,6 +170,7 @@ is met.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>train_loader</strong> (<em>DataLoader</em>) – DataLoader providing batches of training data.</p></li>
 <li><p><strong>val_loader</strong> (<em>DataLoader</em>) – DataLoader providing batches of validation data.</p></li>
+<li><p><strong>warmup_epochs</strong> (<em>int</em>) – Number of epochs to train with a warmup strategy before unfreezing the whole model.</p></li>
 <li><p><strong>num_epochs</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of epochs to train for. Defaults to 5.</p></li>
 </ul>
 </dd>

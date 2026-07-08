@@ -14,5 +14,6 @@ oracle.visualization
       plot_plain_cf
       plot_roc_curves
       plot_train_val_history
+      plot_trajectory_umaps
       plot_umap
    

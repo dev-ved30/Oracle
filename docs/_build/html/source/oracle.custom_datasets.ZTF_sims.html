@@ -74,7 +74,7 @@
 <p>Custom dataset class for the simulated ZTF light curve dataset.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.custom_datasets.ZTF_sims.</span></span><span class="sig-name descname"><span class="pre">ZTF_SIM_LC_Dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parquet_file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_per_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_lc_plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset" title="Link to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oracle.custom_datasets.ZTF_sims.</span></span><span class="sig-name descname"><span class="pre">ZTF_SIM_LC_Dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parquet_file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_per_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_lc_plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excluded_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset.clean_up_dataset">
@@ -125,6 +125,26 @@ is set to 1 (indicating detection) and 0 otherwise.</p></li>
 </li>
 </ul>
 <p>The method updates the parquet_df in place and prints progress messages for each step.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset.exclude_classes">
+<span class="sig-name descname"><span class="pre">exclude_classes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oracle.custom_datasets.ZTF_sims.ZTF_SIM_LC_Dataset.exclude_classes" title="Link to this definition"></a></dt>
+<dd><p>Exclude specified classes from the dataset.
+This method filters the dataset contained in <cite>self.parquet_df</cite> by removing any rows whose
+‘class’ value is present in the <cite>self.excluded_classes</cite> list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>Assumes that the dataframe <cite>self.parquet_df</cite> has a column named ‘class’.</p></li>
+<li><p>The method leverages the filtering function of the dataframe library (e.g., Polars).</p></li>
+</ul>
+</div>
 </dd></dl>
 
 <dl class="py method">

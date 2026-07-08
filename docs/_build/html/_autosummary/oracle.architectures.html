@@ -52,6 +52,7 @@
 <li class="toctree-l3"><a class="reference internal" href="oracle.loss.html">oracle.loss</a></li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.presets.html">oracle.presets</a></li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.pretrained.html">oracle.pretrained</a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.sweep.html">oracle.sweep</a></li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.taxonomies.html">oracle.taxonomies</a></li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.test.html">oracle.test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.tester.html">oracle.tester</a></li>
@@ -97,17 +98,35 @@
 <p class="rubric">Classes</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="../source/oracle.architectures.html#oracle.architectures.GRU" title="oracle.architectures.GRU"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GRU</span></code></a>(taxonomy[, ts_feature_dim])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../source/oracle.architectures.html#oracle.architectures.ConvNeXt" title="oracle.architectures.ConvNeXt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConvNeXt</span></code></a>(taxonomy)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../source/oracle.architectures.html#oracle.architectures.GRU" title="oracle.architectures.GRU"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GRU</span></code></a>(taxonomy[, ts_feature_dim])</p></td>
 <td><p>GRU-based neural network architecture for hierarchical classification.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../source/oracle.architectures.html#oracle.architectures.GRU_MD" title="oracle.architectures.GRU_MD"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GRU_MD</span></code></a>(taxonomy[, ts_feature_dim, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../source/oracle.architectures.html#oracle.architectures.GRU_Improved" title="oracle.architectures.GRU_Improved"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GRU_Improved</span></code></a>(taxonomy[, ts_feature_dim, ...])</p></td>
+<td><p>Improved GRU-based neural network architecture with multi-dimensional static features for hierarchical classification.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../source/oracle.architectures.html#oracle.architectures.GRU_MALLORN" title="oracle.architectures.GRU_MALLORN"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GRU_MALLORN</span></code></a>(taxonomy[, base_model_dir])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../source/oracle.architectures.html#oracle.architectures.GRU_MD" title="oracle.architectures.GRU_MD"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GRU_MD</span></code></a>(taxonomy[, ts_feature_dim, ...])</p></td>
 <td><p>GRU-based neural network architecture with multi-dimensional static features for hierarchical classification.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../source/oracle.architectures.html#oracle.architectures.GRU_MD_Improved" title="oracle.architectures.GRU_MD_Improved"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GRU_MD_Improved</span></code></a>(taxonomy[, ts_feature_dim, ...])</p></td>
+<td><p>Improved GRU-based neural network architecture with multi-dimensional static features for hierarchical classification.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="../source/oracle.architectures.html#oracle.architectures.GRU_MD_MM" title="oracle.architectures.GRU_MD_MM"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GRU_MD_MM</span></code></a>(output_dim[, ts_feature_dim, ...])</p></td>
 <td><p>GRU-based neural network architecture with multi-dimensional static features and multi-modal inputs for hierarchical classification.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../source/oracle.architectures.html#oracle.architectures.Hierarchical_classifier" title="oracle.architectures.Hierarchical_classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Hierarchical_classifier</span></code></a>(taxonomy)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../source/oracle.architectures.html#oracle.architectures.GRU_MD_MM_Improved" title="oracle.architectures.GRU_MD_MM_Improved"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GRU_MD_MM_Improved</span></code></a>(taxonomy[, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../source/oracle.architectures.html#oracle.architectures.Hierarchical_classifier" title="oracle.architectures.Hierarchical_classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Hierarchical_classifier</span></code></a>(taxonomy)</p></td>
 <td><p>Base class for hierarchical classification architectures.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../source/oracle.architectures.html#oracle.architectures.MaxViT" title="oracle.architectures.MaxViT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MaxViT</span></code></a>(taxonomy)</p></td>
+<td><p></p></td>
 </tr>
 </tbody>
 </table>

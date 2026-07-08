@@ -51,12 +51,14 @@
 <li class="toctree-l3 current"><a class="reference internal" href="oracle.custom_datasets.html">oracle.custom_datasets</a><ul class="current">
 <li class="toctree-l4 current"><a class="current reference internal" href="#">oracle.custom_datasets.BTS</a></li>
 <li class="toctree-l4"><a class="reference internal" href="oracle.custom_datasets.ELAsTiCC.html">oracle.custom_datasets.ELAsTiCC</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oracle.custom_datasets.MALLORN.html">oracle.custom_datasets.MALLORN</a></li>
 <li class="toctree-l4"><a class="reference internal" href="oracle.custom_datasets.ZTF_sims.html">oracle.custom_datasets.ZTF_sims</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.loss.html">oracle.loss</a></li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.presets.html">oracle.presets</a></li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.pretrained.html">oracle.pretrained</a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.sweep.html">oracle.sweep</a></li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.taxonomies.html">oracle.taxonomies</a></li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.test.html">oracle.test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.tester.html">oracle.tester</a></li>
@@ -103,13 +105,16 @@
 <p class="rubric">Functions</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="../source/oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.custom_collate_BTS" title="oracle.custom_datasets.BTS.custom_collate_BTS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">custom_collate_BTS</span></code></a>(batch)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../source/oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.augment_panstarss" title="oracle.custom_datasets.BTS.augment_panstarss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">augment_panstarss</span></code></a>(img[, channel_dropout_p])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../source/oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.custom_collate_BTS" title="oracle.custom_datasets.BTS.custom_collate_BTS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">custom_collate_BTS</span></code></a>(batch)</p></td>
 <td><p>Collate function for batching BTS dataset samples. This function takes a list of sample dictionaries and collates them into a single batch dictionary suitable for training or inference. It pads the time-series data, concatenates static and meta features, and properly stacks optional image data (postage_stamp and lc_plot) if they are present in the sample dictionaries. :param batch: A list where each element is a dictionary containing the following keys:               Required keys:                   - 'ts' (numpy.ndarray): Time-series data for the sample. - 'label': Label corresponding to the sample. - 'ZTFID': Identifier for the sample. - 'bts_class': Raw label or class of the sample. - 'meta' (numpy.ndarray): Meta features array from which the last row is used. - 'static' (numpy.ndarray): Static features for the sample. Optional keys:                   - 'postage_stamp': Tensor representing the postage stamp image. - 'lc_plot': Tensor representing the light curve plot image. :type batch: list of dict.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../source/oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.show_batch" title="oracle.custom_datasets.BTS.show_batch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">show_batch</span></code></a>(images, labels[, n])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../source/oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.show_batch" title="oracle.custom_datasets.BTS.show_batch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">show_batch</span></code></a>(images, labels, id[, n])</p></td>
 <td><p>Display a grid of images with corresponding labels.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../source/oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.truncate_BTS_light_curve_by_days_since_trigger" title="oracle.custom_datasets.BTS.truncate_BTS_light_curve_by_days_since_trigger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">truncate_BTS_light_curve_by_days_since_trigger</span></code></a>(...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../source/oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.truncate_BTS_light_curve_by_days_since_trigger" title="oracle.custom_datasets.BTS.truncate_BTS_light_curve_by_days_since_trigger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">truncate_BTS_light_curve_by_days_since_trigger</span></code></a>(...)</p></td>
 <td><p>Truncate the BTS light curve based on the number of days since the first trigger.</p></td>
 </tr>
 </tbody>

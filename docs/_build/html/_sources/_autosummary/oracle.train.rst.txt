@@ -8,6 +8,7 @@ oracle.train
 
    .. autosummary::
    
+      get_git_info
       get_wandb_run
       main
       parse_args

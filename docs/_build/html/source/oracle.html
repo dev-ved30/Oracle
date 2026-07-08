@@ -79,6 +79,7 @@
 <li class="toctree-l2"><a class="reference internal" href="oracle.custom_datasets.html#submodules">Submodules</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.BTS.html">oracle.custom_datasets.BTS module</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.BTS_LC_Dataset"><code class="docutils literal notranslate"><span class="pre">BTS_LC_Dataset</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.augment_panstarss"><code class="docutils literal notranslate"><span class="pre">augment_panstarss()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.custom_collate_BTS"><code class="docutils literal notranslate"><span class="pre">custom_collate_BTS()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.show_batch"><code class="docutils literal notranslate"><span class="pre">show_batch()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="oracle.custom_datasets.BTS.html#oracle.custom_datasets.BTS.truncate_BTS_light_curve_by_days_since_trigger"><code class="docutils literal notranslate"><span class="pre">truncate_BTS_light_curve_by_days_since_trigger()</span></code></a></li>
@@ -90,6 +91,12 @@
 <li class="toctree-l4"><a class="reference internal" href="oracle.custom_datasets.ELAsTiCC.html#oracle.custom_datasets.ELAsTiCC.show_batch"><code class="docutils literal notranslate"><span class="pre">show_batch()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="oracle.custom_datasets.ELAsTiCC.html#oracle.custom_datasets.ELAsTiCC.truncate_ELAsTiCC_light_curve_by_days_since_trigger"><code class="docutils literal notranslate"><span class="pre">truncate_ELAsTiCC_light_curve_by_days_since_trigger()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="oracle.custom_datasets.ELAsTiCC.html#oracle.custom_datasets.ELAsTiCC.truncate_ELAsTiCC_light_curve_fractionally"><code class="docutils literal notranslate"><span class="pre">truncate_ELAsTiCC_light_curve_fractionally()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.MALLORN.html">oracle.custom_datasets.MALLORN module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oracle.custom_datasets.MALLORN.html#oracle.custom_datasets.MALLORN.MALLORN_Dataset"><code class="docutils literal notranslate"><span class="pre">MALLORN_Dataset</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="oracle.custom_datasets.MALLORN.html#oracle.custom_datasets.MALLORN.custom_collate_MALLORN"><code class="docutils literal notranslate"><span class="pre">custom_collate_MALLORN()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="oracle.custom_datasets.MALLORN.html#oracle.custom_datasets.MALLORN.visualize_batch_light_curves"><code class="docutils literal notranslate"><span class="pre">visualize_batch_light_curves()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.custom_datasets.ZTF_sims.html">oracle.custom_datasets.ZTF_sims module</a><ul>
@@ -145,14 +152,48 @@
 <li class="toctree-l4"><a class="reference internal" href="oracle.utils.ZTF_sim_fits_to_parquet.html#oracle.utils.ZTF_sim_fits_to_parquet.parse_args"><code class="docutils literal notranslate"><span class="pre">parse_args()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.utils.add_wise_columns.html">oracle.utils.add_wise_columns module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oracle.utils.add_wise_columns.html#oracle.utils.add_wise_columns.get_wise_magnitudes"><code class="docutils literal notranslate"><span class="pre">get_wise_magnitudes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="oracle.utils.add_wise_columns.html#oracle.utils.add_wise_columns.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="oracle.utils.add_wise_columns.html#oracle.utils.add_wise_columns.parse_args"><code class="docutils literal notranslate"><span class="pre">parse_args()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.utils.add_ztf_images.html">oracle.utils.add_ztf_images module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.utils.bts_csv_to_parquet.html">oracle.utils.bts_csv_to_parquet module</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="oracle.utils.bts_csv_to_parquet.html#oracle.utils.bts_csv_to_parquet.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="oracle.utils.bts_csv_to_parquet.html#oracle.utils.bts_csv_to_parquet.parse_args"><code class="docutils literal notranslate"><span class="pre">parse_args()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.utils.cross_match_BTS_variabels.html">oracle.utils.cross_match_BTS_variabels module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.utils.fetch_Fritz_candidates.html">oracle.utils.fetch_Fritz_candidates module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oracle.utils.fetch_Fritz_candidates.html#oracle.utils.fetch_Fritz_candidates.get_all_candidates"><code class="docutils literal notranslate"><span class="pre">get_all_candidates()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.utils.fetch_PanSTARR_img.html">oracle.utils.fetch_PanSTARR_img module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oracle.utils.fetch_PanSTARR_img.html#oracle.utils.fetch_PanSTARR_img.download_image_batch"><code class="docutils literal notranslate"><span class="pre">download_image_batch()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="oracle.utils.fetch_PanSTARR_img.html#oracle.utils.fetch_PanSTARR_img.get_ps_image_table"><code class="docutils literal notranslate"><span class="pre">get_ps_image_table()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="oracle.utils.fetch_PanSTARR_img.html#oracle.utils.fetch_PanSTARR_img.get_ps_url"><code class="docutils literal notranslate"><span class="pre">get_ps_url()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="oracle.utils.fetch_PanSTARR_img.html#oracle.utils.fetch_PanSTARR_img.process_dataset"><code class="docutils literal notranslate"><span class="pre">process_dataset()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="oracle.utils.fetch_PanSTARR_img.html#oracle.utils.fetch_PanSTARR_img.query_images"><code class="docutils literal notranslate"><span class="pre">query_images()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.utils.make_MALLORN_parquets.html">oracle.utils.make_MALLORN_parquets module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oracle.utils.make_MALLORN_parquets.html#oracle.utils.make_MALLORN_parquets.make_parquet"><code class="docutils literal notranslate"><span class="pre">make_parquet()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.utils.make_superphot_cuts.html">oracle.utils.make_superphot_cuts module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oracle.utils.make_superphot_cuts.html#oracle.utils.make_superphot_cuts.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="oracle.utils.make_superphot_cuts.html#oracle.utils.make_superphot_cuts.parse_args"><code class="docutils literal notranslate"><span class="pre">parse_args()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.utils.split_parquet.html">oracle.utils.split_parquet module</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="oracle.utils.split_parquet.html#oracle.utils.split_parquet.parse_args"><code class="docutils literal notranslate"><span class="pre">parse_args()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="oracle.utils.split_parquet.html#oracle.utils.split_parquet.split_parquet"><code class="docutils literal notranslate"><span class="pre">split_parquet()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.utils.split_parquet_bts.html">oracle.utils.split_parquet_bts module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oracle.utils.split_parquet_bts.html#oracle.utils.split_parquet_bts.parse_args"><code class="docutils literal notranslate"><span class="pre">parse_args()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="oracle.utils.split_parquet_bts.html#oracle.utils.split_parquet_bts.split_parquet"><code class="docutils literal notranslate"><span class="pre">split_parquet()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -168,9 +209,24 @@
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="oracle.architectures.html">oracle.architectures module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.ConvNeXt"><code class="docutils literal notranslate"><span class="pre">ConvNeXt</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.ConvNeXt.forward"><code class="docutils literal notranslate"><span class="pre">ConvNeXt.forward()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.ConvNeXt.get_latent_space_embeddings"><code class="docutils literal notranslate"><span class="pre">ConvNeXt.get_latent_space_embeddings()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU"><code class="docutils literal notranslate"><span class="pre">GRU</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU.forward"><code class="docutils literal notranslate"><span class="pre">GRU.forward()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU.get_latent_space_embeddings"><code class="docutils literal notranslate"><span class="pre">GRU.get_latent_space_embeddings()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU_Improved"><code class="docutils literal notranslate"><span class="pre">GRU_Improved</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU_Improved.forward"><code class="docutils literal notranslate"><span class="pre">GRU_Improved.forward()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU_Improved.get_latent_space_embeddings"><code class="docutils literal notranslate"><span class="pre">GRU_Improved.get_latent_space_embeddings()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU_MALLORN"><code class="docutils literal notranslate"><span class="pre">GRU_MALLORN</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU_MALLORN.forward"><code class="docutils literal notranslate"><span class="pre">GRU_MALLORN.forward()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU_MALLORN.get_latent_space_embeddings"><code class="docutils literal notranslate"><span class="pre">GRU_MALLORN.get_latent_space_embeddings()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU_MD"><code class="docutils literal notranslate"><span class="pre">GRU_MD</span></code></a><ul>
@@ -178,12 +234,23 @@
 <li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU_MD.get_latent_space_embeddings"><code class="docutils literal notranslate"><span class="pre">GRU_MD.get_latent_space_embeddings()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU_MD_Improved"><code class="docutils literal notranslate"><span class="pre">GRU_MD_Improved</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU_MD_Improved.forward"><code class="docutils literal notranslate"><span class="pre">GRU_MD_Improved.forward()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU_MD_Improved.get_latent_space_embeddings"><code class="docutils literal notranslate"><span class="pre">GRU_MD_Improved.get_latent_space_embeddings()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU_MD_MM"><code class="docutils literal notranslate"><span class="pre">GRU_MD_MM</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU_MD_MM.forward"><code class="docutils literal notranslate"><span class="pre">GRU_MD_MM.forward()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU_MD_MM.get_latent_space_embeddings"><code class="docutils literal notranslate"><span class="pre">GRU_MD_MM.get_latent_space_embeddings()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU_MD_MM_Improved"><code class="docutils literal notranslate"><span class="pre">GRU_MD_MM_Improved</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU_MD_MM_Improved.forward"><code class="docutils literal notranslate"><span class="pre">GRU_MD_MM_Improved.forward()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.GRU_MD_MM_Improved.get_latent_space_embeddings"><code class="docutils literal notranslate"><span class="pre">GRU_MD_MM_Improved.get_latent_space_embeddings()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.Hierarchical_classifier"><code class="docutils literal notranslate"><span class="pre">Hierarchical_classifier</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.Hierarchical_classifier.count_parameters"><code class="docutils literal notranslate"><span class="pre">Hierarchical_classifier.count_parameters()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.Hierarchical_classifier.embed"><code class="docutils literal notranslate"><span class="pre">Hierarchical_classifier.embed()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.Hierarchical_classifier.get_latent_space_embeddings"><code class="docutils literal notranslate"><span class="pre">Hierarchical_classifier.get_latent_space_embeddings()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.Hierarchical_classifier.predict"><code class="docutils literal notranslate"><span class="pre">Hierarchical_classifier.predict()</span></code></a></li>
@@ -193,6 +260,11 @@
 <li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.Hierarchical_classifier.predict_conditional_probabilities_df"><code class="docutils literal notranslate"><span class="pre">Hierarchical_classifier.predict_conditional_probabilities_df()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.Hierarchical_classifier.predict_full_scores"><code class="docutils literal notranslate"><span class="pre">Hierarchical_classifier.predict_full_scores()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.Hierarchical_classifier.score"><code class="docutils literal notranslate"><span class="pre">Hierarchical_classifier.score()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.MaxViT"><code class="docutils literal notranslate"><span class="pre">MaxViT</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.MaxViT.forward"><code class="docutils literal notranslate"><span class="pre">MaxViT.forward()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oracle.architectures.html#oracle.architectures.MaxViT.get_latent_space_embeddings"><code class="docutils literal notranslate"><span class="pre">MaxViT.get_latent_space_embeddings()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -216,8 +288,15 @@
 <li class="toctree-l2"><a class="reference internal" href="oracle.presets.html#oracle.presets.worker_init_fn"><code class="docutils literal notranslate"><span class="pre">worker_init_fn()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="oracle.sweep.html">oracle.sweep module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oracle.sweep.html#oracle.sweep.SweepArgs"><code class="docutils literal notranslate"><span class="pre">SweepArgs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="oracle.sweep.html#oracle.sweep.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="oracle.sweep.html#oracle.sweep.sweep_train"><code class="docutils literal notranslate"><span class="pre">sweep_train()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="oracle.taxonomies.html">oracle.taxonomies module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="oracle.taxonomies.html#oracle.taxonomies.BTS_Taxonomy"><code class="docutils literal notranslate"><span class="pre">BTS_Taxonomy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="oracle.taxonomies.html#oracle.taxonomies.MALLORN_Taxonomy"><code class="docutils literal notranslate"><span class="pre">MALLORN_Taxonomy</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="oracle.taxonomies.html#oracle.taxonomies.ORACLE_Taxonomy"><code class="docutils literal notranslate"><span class="pre">ORACLE_Taxonomy</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="oracle.taxonomies.html#oracle.taxonomies.Taxonomy"><code class="docutils literal notranslate"><span class="pre">Taxonomy</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="oracle.taxonomies.html#oracle.taxonomies.Taxonomy.get_class_probabilities"><code class="docutils literal notranslate"><span class="pre">Taxonomy.get_class_probabilities()</span></code></a></li>
@@ -257,6 +336,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="oracle.train.html">oracle.train module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oracle.train.html#oracle.train.get_git_info"><code class="docutils literal notranslate"><span class="pre">get_git_info()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="oracle.train.html#oracle.train.get_wandb_run"><code class="docutils literal notranslate"><span class="pre">get_wandb_run()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="oracle.train.html#oracle.train.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="oracle.train.html#oracle.train.parse_args"><code class="docutils literal notranslate"><span class="pre">parse_args()</span></code></a></li>
@@ -292,6 +372,7 @@
 <li class="toctree-l2"><a class="reference internal" href="oracle.visualization.html#oracle.visualization.plot_plain_cf"><code class="docutils literal notranslate"><span class="pre">plot_plain_cf()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="oracle.visualization.html#oracle.visualization.plot_roc_curves"><code class="docutils literal notranslate"><span class="pre">plot_roc_curves()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="oracle.visualization.html#oracle.visualization.plot_train_val_history"><code class="docutils literal notranslate"><span class="pre">plot_train_val_history()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="oracle.visualization.html#oracle.visualization.plot_trajectory_umaps"><code class="docutils literal notranslate"><span class="pre">plot_trajectory_umaps()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="oracle.visualization.html#oracle.visualization.plot_umap"><code class="docutils literal notranslate"><span class="pre">plot_umap()</span></code></a></li>
 </ul>
 </li>

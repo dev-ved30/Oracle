@@ -38,14 +38,14 @@ ELAsTiCC_to_Astrophysical_mappings = {
 
 BTS_to_Astrophysical_mappings = {
     'AGN': 'AGN',
-    'AGN?': 'Anomaly',
+    'AGN?': 'AGN',
     'CLAGN': 'AGN',
     'bogus?': 'Anomaly',
     'rock': 'Anomaly',
     'CV': 'CV',
-    'CV?': 'Anomaly',
+    'CV?': 'CV',
     'AM CVn': 'CV',
-    'varstar': 'Anomaly',
+    'varstar': 'Varstar',
     "Cataclysmic": 'CV',
     'QSO': 'AGN', # AGN?
     'QSO?': 'AGN', # AGN?
@@ -67,9 +67,9 @@ BTS_to_Astrophysical_mappings = {
     'SLSN-I': 'SLSN',
     'SLSN-I.5': 'SLSN',
     'SLSN-I?': 'SLSN',
-    'SLSN-II': 'SLSN',
+    'SLSN-II': 'SN-II',
     'SN II': 'SN-II',
-    'SN II-SL': 'SLSN',
+    'SN II-SL': 'SN-II',
     'SN II-norm': 'SN-II',
     'SN II-pec': 'SN-II',
     'SN II?': 'SN-II',
@@ -125,7 +125,7 @@ BTS_to_Astrophysical_mappings_AD = {
     'CV': 'CV',
     'CV?': 'CV',
     'AM CVn': 'CV',
-    'varstar': 'Anomaly',
+    'varstar': 'Varstar',
     "Cataclysmic": 'CV',
     'QSO': 'AGN', # AGN?
     'QSO?': 'AGN', # AGN?
@@ -183,7 +183,7 @@ BTS_to_Astrophysical_mappings_AD = {
     'SN Ic': 'SN-Ib/c',
     'SN Ic-BL': 'Anomaly',
     'SN Ic-BL?': 'Anomaly',
-    'SN Ic-SL': 'SLSN',
+    'SN Ic-SL': 'Anomaly',
     'SN Ic?': 'SN-Ib/c',
     'SN Icn': 'Anomaly',
     'TDE': 'Anomaly',

@@ -96,12 +96,14 @@ class Trainer:
 
         self.alpha = alpha
         self.gamma = gamma
+        self.lr = lr
         
         # Set up criterion for training and validation. These need to be different because the class weights can be different
         self.train_criterion = WHXE_Loss(self.taxonomy, train_labels, self.alpha, self.gamma)
         self.val_criterion = WHXE_Loss(self.taxonomy, val_labels, self.alpha)
 
-        self.optimizer = optim.Adam(self.parameters(), lr=lr)
+        # Only compute grads on unfrozen params
+        self.optimizer = optim.Adam(filter(lambda p: p.requires_grad, self.parameters()), lr=lr)
         self.model_dir = model_dir
         self.device = device
         self.wandb_run = wandb_run
@@ -182,8 +184,8 @@ class Trainer:
         all_true_labels = []
         all_pred_labels = []
 
-        leaf_labels = self.taxonomy.get_leaf_nodes()
-        leaf_mask = np.where(np.array([c in leaf_labels for c in self.taxonomy.get_level_order_traversal()])==True)[0]
+        nodes_by_level = self.taxonomy.get_nodes_by_depth()
+        leaf_nodes = nodes_by_level[-1]
 
         with torch.no_grad():
             for i, batch in enumerate(tqdm(val_loader, desc='Validation')):
@@ -200,15 +202,16 @@ class Trainer:
                 loss = self.val_criterion(logits, label_encodings)
                 val_loss_values.append(loss.item())
 
-                # Record everything for computing F1, accuracy, etc.
-                all_true_labels.append(np.argmax(label_encodings[:, leaf_mask].cpu().numpy(), axis=1))
-                all_pred_labels.append(np.argmax(logits[:, leaf_mask].cpu().numpy(), axis=1))
+                pred_df = self.predict_class_probabilities_df(batch)[leaf_nodes]
 
-        all_true_labels = np.concatenate(all_true_labels)
+                # Record everything for computing F1, accuracy, etc.
+                all_true_labels += batch['label'].tolist()
+                all_pred_labels.append(leaf_nodes[np.argmax(pred_df.to_numpy(), axis=1)])
+
         all_pred_labels = np.concatenate(all_pred_labels)
 
-        cf = confusion_matrix(all_true_labels, all_pred_labels, normalize='true')
-        disp = ConfusionMatrixDisplay(cf, display_labels=leaf_labels)
+        cf = confusion_matrix(all_true_labels, all_pred_labels, labels=leaf_nodes, normalize='true')
+        disp = ConfusionMatrixDisplay(cf, display_labels=leaf_nodes)
         fig, ax = plt.subplots(figsize=(6, 6))
         disp.plot(ax=ax, cmap="Blues", values_format=".2g", colorbar=False)
 
@@ -281,7 +284,7 @@ class Trainer:
         np.save(f"{self.model_dir}/val_loss_history.npy", np.array(val_loss_history))
         np.save(f"{self.model_dir}/f1_history.npy", np.array(f1_history))
 
-    def fit(self, train_loader, val_loader, num_epochs=5):
+    def fit(self, train_loader, val_loader, warmup_epochs, num_epochs=5):
         """
         Train the model for a specified number of epochs.
 
@@ -296,6 +299,7 @@ class Trainer:
         Parameters:
             train_loader (DataLoader): DataLoader providing batches of training data.
             val_loader (DataLoader): DataLoader providing batches of validation data.
+            warmup_epochs (int): Number of epochs to train with a warmup strategy before unfreezing the whole model.
             num_epochs (int, optional): Number of epochs to train for. Defaults to 5.
 
         Returns:
@@ -310,11 +314,22 @@ class Trainer:
 
         print(f"==========\nBEGINNING TRAINING\n")
 
+        self.count_parameters()
+
         for epoch in range(num_epochs):
 
             print(f"----------\nStarting epoch {epoch+1}/{num_epochs}...")
 
             start_time = time.time()
+
+            if epoch == warmup_epochs:
+                print("Warmup epochs complete. Unfreezing all model layers for training.")
+                for param in self.parameters():
+                    param.requires_grad = True
+
+                # Re-initialize optimizer and scheduler to include the new parameters
+                self.optimizer = optim.Adam(self.parameters(), lr=self.lr/10) # Lower lr after warmup
+                self.scheduler = ReduceLROnPlateau(self.optimizer, patience=20, factor=0.8, threshold=self.lr/100)
 
             train_loss = self.train_one_epoch(train_loader)
             val_stats = self.validate_one_epoch(val_loader)

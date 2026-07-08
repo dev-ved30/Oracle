@@ -1,0 +1,2 @@
+model,num_epochs,batch_size,lr,max_n_per_class,alpha,gamma,dir,load_weights,warmup_epochs
+BTSv2_PSonly,2000,128,4e-05,,0.49,1,,,

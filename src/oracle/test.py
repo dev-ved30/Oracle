@@ -1,22 +1,17 @@
 """
 Interface for testing saved models in the ORACLE framework."""
-import os
-import time
 import torch
 import argparse
 
-from tqdm import tqdm
 from pathlib import Path    
-from torch.utils.data import DataLoader
 
-from oracle.loss import WHXE_Loss
-from oracle.taxonomies import ORACLE_Taxonomy, BTS_Taxonomy
 from oracle.constants import BTS_to_Astrophysical_mappings_AD
 from oracle.architectures import *
 from oracle.custom_datasets.ELAsTiCC import *
 from oracle.custom_datasets.BTS import *
 from oracle.custom_datasets.ZTF_sims import *
 from oracle.presets import get_model, get_test_loaders
+from oracle.visualization import plot_trajectory_umaps
 
 # <----- Defaults for training the models ----->
 default_batch_size = 1024
@@ -91,7 +86,7 @@ def run_testing_loop(args):
     model = model.to(device)
     model.setup_testing(model_dir, device)
 
-    # Get the test dataset augmented to different days
+    # # Get the test dataset augmented to different days
     test_loaders = get_test_loaders(model_choice, batch_size, max_n_per_class, defaults_days_list, excluded_classes=['Anomaly'])
     for d, test_dataloader in zip(defaults_days_list, test_loaders):
         model.run_all_analysis(test_dataloader, d)
@@ -104,6 +99,8 @@ def run_testing_loop(args):
     model.create_loss_history_plot()
     model.create_metric_phase_plots()
     model.merge_performance_tables([1, 2, 4, 8, 16, 32, 64, 128, 512, 1024])
+
+    plot_trajectory_umaps(model_dir, defaults_days_list)
 
 def main():
     args = parse_args()

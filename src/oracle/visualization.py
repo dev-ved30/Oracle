@@ -83,6 +83,7 @@ def plot_confusion_matrix(y_true, y_pred, labels, normalize='true', title=None, 
 
     if img_file:
         plt.savefig(img_file)
+        np.save(img_file.replace('.pdf','.npy'), cm)
 
     plt.close()
 
@@ -129,7 +130,6 @@ def plot_plain_cf(y_true, y_pred, labels, normalize='true', title=None, img_file
     ax.set_xlabel('')
     ax.set_ylabel('')
 
-    # 🔹 Remove spines
     for spine in ax.spines.values():
         spine.set_visible(False)    
     
@@ -393,11 +393,12 @@ def plot_umap(embeddings, classes, bts_classes, id, d, model_dir=None):
     plt.close('all')
     plt.style.use(['default'])
 
-    reducer = umap.UMAP(random_state=42)
+    reducer = umap.UMAP(n_components=3, random_state=42)
     umap_embedding = reducer.fit_transform(embeddings)
 
     x = umap_embedding[:, 0]
     y = umap_embedding[:, 1]
+    x = umap_embedding[:, 2]
 
     for c in np.unique(classes):
 
@@ -420,13 +421,87 @@ def plot_umap(embeddings, classes, bts_classes, id, d, model_dir=None):
 
     plt.close()
 
-    df = pd.DataFrame(umap_embedding, columns=['umap1','umap2'])
+    df = pd.DataFrame(umap_embedding, columns=['umap1','umap2','umap3'])
     df['class'] = classes
     df['raw_class'] = bts_classes
     df['id'] = id
-    fig = px.scatter(df, x='umap1', y='umap2', color=f"class", hover_data=['class', 'raw_class', 'id'])#, cmap='viridis', marker=markers[i])
-    fig.write_html(f"{model_dir}/plots/umap/umap_trigger+{d}.html")
+    df['fritz_link'] = ["https://fritz.science/source/" + str(i) for i in id]
+
+    js_on_click = """
+    var plot = document.getElementsByClassName('plotly-graph-div')[0];
+    plot.on('plotly_click', function(data) {
+        var url = data.points[0].customdata[3];
+        if (url) {
+            window.open(url, '_blank');
+        }
+    });
+    """
+
+    fig = px.scatter_3d(df, x='umap1', y='umap2', z='umap3', color=f"class", hover_data=['class', 'raw_class', 'id', 'fritz_link'])#, cmap='viridis', marker=markers[i])
+    fig.write_html(f"{model_dir}/plots/umap/umap_trigger+{d}.html",  post_script=[js_on_click])
 
         
 
-        
+def plot_trajectory_umaps(model_dir, days_list):
+    """
+    Load embedding files from model_dir and plot 2D UMAP features over time (days) in a 3D Plotly plot.
+    The Z-axis represents time (days), and lines connect points with the same ID.
+
+    Parameters:
+        model_dir (str): Directory where the embedding files are stored.
+        days_list (list): List of days (int or float) to load embeddings for.
+    """
+    import os
+
+    all_dfs = []
+    for d in days_list:
+        file_path = os.path.join(model_dir, "embeddings", f"embeddings+{d}.csv")
+        if os.path.exists(file_path):
+            df = pd.read_csv(file_path)
+            df['days'] = d
+            all_dfs.append(df)
+        else:
+            print(f"Warning: {file_path} not found.")
+    
+    if not all_dfs:
+        print("No embedding files found.")
+        return
+
+    full_df = pd.concat(all_dfs, ignore_index=True)
+    
+    # Identify embedding columns (all columns except metadata)
+    metadata_cols = ['class', 'raw_class', 'id', 'days']
+    embedding_cols = [c for c in full_df.columns if c not in metadata_cols]
+    
+    embeddings = full_df[embedding_cols].to_numpy()
+    ids = full_df['id']
+    days = full_df['days']
+    class_list = full_df['class']
+
+    # Compute 2D UMAP
+    reducer = umap.UMAP(n_components=2, random_state=42)
+    umap_embedding = reducer.fit_transform(embeddings)
+
+    # Create a DataFrame for plotting
+    plot_df = pd.DataFrame(umap_embedding, columns=['umap1', 'umap2'])
+    plot_df['id'] = ids
+    plot_df['days'] = days
+    plot_df['class'] = class_list
+
+    # Sort by id and days to ensure lines are drawn correctly
+    plot_df = plot_df.sort_values(['id', 'days'])
+
+    # Create 3D plot: X=umap1, Y=umap2, Z=days
+    fig = px.line_3d(plot_df, x='umap1', y='umap2', z='days', color='class',
+                     line_group='id',
+                     hover_data=['id', 'days', 'class'],
+                     title="UMAP Trajectories (2D UMAP + Time)")
+
+    # Set the time axis (Z-axis) to log scale
+    fig.update_layout(scene=dict(zaxis=dict(type='log')))
+
+    subdir = "umap_AD" if "Anomaly" in np.unique(class_list) else "umap"
+    out_dir = os.path.join(model_dir, "plots", subdir)
+    os.makedirs(out_dir, exist_ok=True)
+    fig.write_html(os.path.join(out_dir, "umap_trajectories.html"))
+

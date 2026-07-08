@@ -310,6 +310,8 @@ class Taxonomy(nx.DiGraph):
             # (1 - mask) * y_pred gets the logits for all the values not in this mask and zeros out the values in the mask. Add those back so that we can repeat the process for other masks.
             logits = softmax + ((1 - mask) * logits)
 
+        logits[:, 0] = 1.0 # Set the root node to have a probability of 1 since it is the root node and should always be 1.
+        
         return logits
     
     def get_nodes_by_depth(self):
@@ -411,7 +413,7 @@ class BTS_Taxonomy(Taxonomy):
         self.add_nodes_from(level_1_nodes)
         self.add_edges_from([(root_label, node) for node in level_1_nodes])
 
-        level_2a_nodes = ['AGN','CV']
+        level_2a_nodes = ['AGN','CV', 'Varstar']
         self.add_nodes_from(level_2a_nodes)
         self.add_edges_from([('Persistent', node) for node in level_2a_nodes])
 
@@ -464,6 +466,20 @@ class ORACLE_Taxonomy(Taxonomy):
         self.add_nodes_from(level_3d_nodes)
         self.add_edges_from([('Periodic', level_3d_node) for level_3d_node in level_3d_nodes])
 
+class MALLORN_Taxonomy(Taxonomy):
+    """Class to represent the MALLORN taxonomy as a directed graph."""
+
+    def __init__(self, **attr):
+
+        super().__init__(**attr)
+        self.add_node(root_label)
+
+        # Level 1
+        level_1_nodes = ['TDE', 'Not TDE']
+        self.add_nodes_from(level_1_nodes)
+        self.add_edges_from([(root_label, level_1_node) for level_1_node in level_1_nodes])
+
+
 if __name__=='__main__':
 
     #<-- Example usage of the taxonomy class -->
@@ -493,4 +509,7 @@ if __name__=='__main__':
     print(taxonomy.get_class_probabilities(np.random.rand(10, len(taxonomy.nodes()))))
     print(taxonomy.get_conditional_probabilities(torch.from_numpy(np.random.rand(10, len(taxonomy.nodes())))))
 
+    taxonomy.plot_taxonomy()
+
+    taxonomy = MALLORN_Taxonomy()
     taxonomy.plot_taxonomy()

@@ -4,6 +4,7 @@ Interface for training models in the ORACLE framework.
 import torch
 import wandb
 import argparse
+import subprocess
 
 from pathlib import Path    
 from torch.utils.data import DataLoader, ConcatDataset
@@ -21,9 +22,10 @@ default_alpha = 0.0
 default_max_n_per_class = None
 default_model_dir = None
 default_gamma = 1
+default_warmup_epochs = None
 
 # <----- Config for the model ----->
-model_choices = ["BTS-lite", "BTS", "ZTF_Sims-lite", "ELAsTiCC", "ELAsTiCC-lite"]
+model_choices = ["BTS-lite", "BTS", "ZTF_Sims-lite", "ELAsTiCC", "ELAsTiCC-lite", "ELAsTiCCv2", "ELAsTiCCv2-lite", "BTSv2",  "BTSv2-lite", "BTSv2_PSonly", "BTSv2-pro", "MALLORN"]
 default_model_type = "BTS"
 
 # Switch device to GPU if available
@@ -33,6 +35,16 @@ print(f"Using {device} device")
 torch.set_default_device(device)
 
 val_truncation_days = 2 ** np.array(range(11))
+
+# Function to get git info
+def get_git_info():
+    """Returns the current git branch and commit hash for reproducibility."""
+    try:
+        branch = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).decode("utf-8").strip()
+        commit_hash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
+        return branch, commit_hash
+    except Exception:
+        return "unknown", "unknown"
 
 def parse_args():
     '''
@@ -48,6 +60,7 @@ def parse_args():
     parser.add_argument('--gamma', type=float, default=default_gamma, help='Exponent for the training weights.')
     parser.add_argument('--dir', type=Path, default=default_model_dir, help='Directory for saving the models and best model during training.')
     parser.add_argument('--load_weights', type=Path, default=None, help='Path to model which should be loaded before training stars.')
+    parser.add_argument('--warmup_epochs', type=int, default=default_warmup_epochs, help='Number of warmup epochs to use before unfreezing the entire model for training. This only applies to certain model architectures where layers are initially frozen.')
 
     args = parser.parse_args()
     return args
@@ -89,6 +102,9 @@ def get_wandb_run(args):
         A wandb run instance initialized with the given configuration, which logs metadata and hyperparameters.
     """
 
+    # Get the git branch and hash for reproducibility
+    git_branch, git_hash = get_git_info()
+
     run = wandb.init(
         # Set the wandb entity where your project will be logged (generally your team name).
         entity="vedshah-email-northwestern-university",
@@ -105,6 +121,9 @@ def get_wandb_run(args):
             "model_dir": args.dir,
             "model_choice": args.model,
             "pretrained_model_path": args.load_weights,
+            "warmup_epochs": args.warmup_epochs,
+            "git_hash": git_hash,
+            "git_branch": git_branch,
         },
     )
     return run    
@@ -133,6 +152,7 @@ def run_training_loop(args):
             7. dir (str): Directory path for saving the model and other related artifacts.
             8. model (str): Identifier to select which model architecture to use.
             9. load_weights (str or None): Path to pretrained model weights. If provided, these weights are loaded into the model.
+            10. warmup_epochs (int or None): Number of warmup epochs before unfreezing all the model layers for training.
 
     Returns:
         None
@@ -149,12 +169,18 @@ def run_training_loop(args):
     model_dir = args.dir
     model_choice = args.model
     pretrained_model_path = args.load_weights
+    warmup_epochs = args.warmup_epochs
+
+    if warmup_epochs != None:
+        print(f"Using {warmup_epochs} warmup epochs before unfreezing the model.")
+    else: 
+        warmup_epochs = num_epochs + 1 # Set to a value larger than num_epochs to disable warmup
 
     # Get the model
     model = get_model(model_choice)
 
     # Get the train and validation datasets
-    train_dataloader, train_labels = get_train_loader(model_choice, batch_size, max_n_per_class, ['Anomaly'])
+    train_dataloader, train_labels = get_train_loader(model_choice, batch_size, max_n_per_class, gamma, ['Anomaly'])
     val_dataloader, val_labels = get_val_loader(model_choice, batch_size, val_truncation_days, max_n_per_class_val, ['Anomaly'])
 
     # This is used to log data
@@ -173,7 +199,7 @@ def run_training_loop(args):
     # Fit the model
     model = model.to(device)
     model.setup_training(alpha, gamma, lr, train_labels, val_labels, model_dir, device, wandb_run)
-    model.fit(train_dataloader, val_dataloader, num_epochs)
+    model.fit(train_dataloader, val_dataloader, warmup_epochs, num_epochs)
 
     # End the logging run with WandB and upload the model
     model.save_model_in_wandb()

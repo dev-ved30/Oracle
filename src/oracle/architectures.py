@@ -2,6 +2,7 @@
 Top-level module for defining various neural network architectures for hierarchical classification.
 """
 import torch
+import timm
 
 import torch.nn as nn
 import pandas as pd
@@ -10,7 +11,7 @@ import numpy as np
 from torchvision.models import swin_v2_b
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
-from oracle.taxonomies import Taxonomy, ORACLE_Taxonomy
+from oracle.taxonomies import Taxonomy, ORACLE_Taxonomy, BTS_Taxonomy
 from oracle.trainer import Trainer
 from oracle.tester import Tester
 
@@ -34,6 +35,18 @@ class Hierarchical_classifier(nn.Module, Trainer, Tester):
         nn.Module.__init__(self)
         self.taxonomy = taxonomy
         self.n_nodes = len(taxonomy.get_level_order_traversal())
+
+    def count_parameters(self):
+        total = 0
+        trainable = 0
+        for p in self.parameters():
+            num = p.numel()
+            total += num
+            if p.requires_grad:
+                trainable += num
+        print("Total:", total)
+        print("Trainable:", trainable)
+        return total, trainable
 
     def predict_conditional_probabilities(self, batch):
         """
@@ -600,8 +613,552 @@ class GRU_MD_MM(Hierarchical_classifier):
         logits = self.fc_out(x)
 
         return logits
+    
+class MaxViT(Hierarchical_classifier):
+
+    def __init__(self, taxonomy: Taxonomy):
+
+        super(MaxViT, self).__init__(taxonomy)
+
+        self.output_dim = self.n_nodes
+        self.latent_space_dim = 128
+
+        model_kind = "hf_hub:mwalmsley/baseline-encoder-regression-maxvit_tiny"
+        self.image_size = 224
+        self.maxvit = timm.create_model(model_kind, pretrained=True)
+
+        self.maxvit.head = nn.Sequential(
+            self.maxvit.head.global_pool,
+            nn.Linear(self.maxvit.head.in_features, 256),
+            nn.GELU(),
+            nn.Dropout(0.2),
+            nn.Linear(256, self.latent_space_dim),
+        )
+
+        self.final_out = nn.Sequential(
+            nn.GELU(),
+            nn.Linear(self.latent_space_dim, self.output_dim),
+        )
+
+
+    def get_latent_space_embeddings(self, batch):
+
+        input_data = batch['postage_stamp']
+
+        if input_data.shape[-1] != self.image_size or input_data.shape[-2] != self.image_size:
+            input_data = torch.nn.functional.interpolate(
+                input_data,
+                size=(self.image_size, self.image_size),
+                mode='bilinear',
+                align_corners=False
+            )
+        return self.maxvit(input_data)
+
+    def forward(self, batch) -> torch.Tensor:
+
+        # Get the latent space embedding
+        x = self.get_latent_space_embeddings(batch)
+
+        # Final step to produce logits
+        logits = self.final_out(x)
+
+
+        return logits
+
+class ConvNeXt(Hierarchical_classifier):
+    def __init__(self, taxonomy: Taxonomy):
+        super(ConvNeXt, self).__init__(taxonomy)
+
+        self.output_dim = self.n_nodes
+        self.latent_space_dim = 16
+
+        model_kind = "hf_hub:mwalmsley/zoobot-encoder-convnext_pico" 
+        self.image_size = 224
+        self.convnext = timm.create_model(model_kind, pretrained=True)
+
+        self.convnext.head = nn.Sequential(
+            self.convnext.head.global_pool,
+            self.convnext.head.norm,
+            self.convnext.head.flatten,
+            nn.Linear(self.convnext.head.in_features, 256), nn.GELU(), nn.Dropout(0.3),
+            nn.Linear(256,64), nn.GELU(), nn.Dropout(0.3),
+            nn.Linear(64,self.latent_space_dim),
+        )
+
+        self.final_out = nn.Sequential(
+            nn.GELU(),
+            nn.Linear(self.latent_space_dim, self.output_dim),
+        )
+
+    def get_latent_space_embeddings(self, batch):
+
+        input_data = batch['postage_stamp']
+
+        if input_data.shape[-1] != self.image_size or input_data.shape[-2] != self.image_size:
+            input_data = torch.nn.functional.interpolate(
+                input_data,
+                size=(self.image_size, self.image_size),
+                mode='bilinear',
+                align_corners=False
+            )
+        return self.convnext(input_data)
+
+    def forward(self, batch) -> torch.Tensor:
+
+        # Get the latent space embedding
+        x = self.get_latent_space_embeddings(batch)
+
+        # Final step to produce logits
+        logits = self.final_out(x)
+
+        return logits
+
+class GRU_MALLORN(Hierarchical_classifier):
+
+    def __init__(self, taxonomy: Taxonomy,
+                 base_model_dir="models/ELAsTiCC-lite/revived-star-159/"):
+        
+        super().__init__(taxonomy)
+        self.output_dim = self.n_nodes
+
+        # Create the base GRU model and load the weights
+        self.base_model = GRU(ORACLE_Taxonomy())
+        self.base_model.load_state_dict(torch.load(f'{base_model_dir}/best_model_f1.pth', map_location=torch.device('cpu')), strict=False)
+        
+        # Freeze only the GRU backbone
+        for p in self.base_model.gru.parameters():
+            p.requires_grad = False
+
+        self.final_out = nn.Sequential(
+            nn.ReLU(),  # Match the base model's activation
+            nn.Linear(16, self.output_dim),
+        )
+
+    def get_latent_space_embeddings(self, batch):
+        
+        x = self.base_model.get_latent_space_embeddings(batch)
+        return x
+    
+    def forward(self, batch):
+
+        # Get the latent space embedding
+        x = self.get_latent_space_embeddings(batch)
+
+        # Final step to produce logits
+        logits = self.final_out(x)
+
+        return logits
+    
+class GRU_MD_MM_Improved(Hierarchical_classifier):
+
+    def __init__(self, taxonomy: Taxonomy,
+                 lc_md_model_dir="models/BTSv2/stilted-elevator-551/",
+                 image_model_dir="models/BTSv2_PSonly/stoic-sweep-6/"):
+        
+        super().__init__(taxonomy)
+
+        self.output_dim = self.n_nodes
+        self.latent_space_dim = 16
+
+        # Create the LC + MD model and load the weights
+        self.lc_md_spine = GRU_MD_Improved(taxonomy)
+        if lc_md_model_dir is not None:
+            self.lc_md_spine.load_state_dict(torch.load(f'{lc_md_model_dir}/best_model_f1.pth', map_location=torch.device('cpu')), strict=False)
+
+
+        # Create the image only model and load the weights
+        self.image_spine = ConvNeXt(taxonomy)
+        if image_model_dir is not None:
+            self.image_spine.load_state_dict(torch.load(f'{image_model_dir}/best_model_f1.pth', map_location=torch.device('cpu')), strict=False)
+
+        self.mlp_head_in_dim = self.lc_md_spine.latent_space_dim + self.image_spine.latent_space_dim
+
+        # MLP head to connect 
+        self.mlp_head = nn.Sequential(
+            nn.Linear(self.mlp_head_in_dim, self.latent_space_dim),
+        )
+
+        self.final_out = nn.Sequential(
+            nn.GELU(),
+            nn.Linear(self.latent_space_dim, self.output_dim),
+        )
+
+        # Freeze all the weights and use them as encoders
+        for p in self.lc_md_spine.parameters():
+            p.requires_grad = False
+
+        for p in self.image_spine.parameters():
+            p.requires_grad = False
+
+
+    def get_latent_space_embeddings(self, batch):
+        
+        lc_md_out = self.lc_md_spine.get_latent_space_embeddings(batch)
+        image_out = self.image_spine.get_latent_space_embeddings(batch)
+
+        combined_embeddings = torch.cat([lc_md_out, image_out], dim=1)
+        x = self.mlp_head(combined_embeddings)
+
+        return x
+    
+    def forward(self, batch):
+
+        # Get the latent space embedding
+        x = self.get_latent_space_embeddings(batch)
+
+        # Final step to produce logits
+        logits = self.final_out(x)
+
+        return logits
+    
+class GRU_MD_Improved(Hierarchical_classifier):
+    """
+    Improved GRU-based neural network architecture with multi-dimensional static features for hierarchical classification.
+
+    Key differences vs original:
+        - Bidirectional GRU with attention pooling over time (gives richer sequence summary).
+        - LayerNorm / BatchNorm and Dropout for regularisation & stability.
+        - Residual connections in the MLP head.
+        - Configurable hidden sizes and dropout.
+        - GELU activations in the head for smoother gradients.
+    """
+    def __init__(self,
+                 taxonomy: Taxonomy,
+                 ts_feature_dim: int = 5,
+                 static_feature_dim: int = 30,
+                 gru_hidden: int = 128,
+                 gru_layers: int = 2,
+                 dropout: float = 0.2):
+        """
+        Args:
+            taxonomy (Taxonomy): hierarchical taxonomy (used to determine output dim via self.n_nodes).
+            ts_feature_dim (int): dimensionality of time-series features.
+            static_feature_dim (int): dimensionality of static features.
+            gru_hidden (int): hidden size of the (per-direction) GRU.
+            gru_layers (int): number of GRU layers.
+            dropout (float): dropout probability for regularisation.
+        """
+        super(GRU_MD_Improved, self).__init__(taxonomy)
+
+        self.ts_feature_dim = ts_feature_dim
+        self.static_feature_dim = static_feature_dim
+        self.output_dim = self.n_nodes
+        self.latent_space_dim = 16
+
+        # recurrent backbone: bidirectional for richer encoding
+        self.gru_hidden = gru_hidden
+        self.gru_layers = gru_layers
+        self.num_directions = 2  # bidirectional
+        self.gru = nn.GRU(input_size=ts_feature_dim,
+                          hidden_size=gru_hidden,
+                          num_layers=gru_layers,
+                          batch_first=True,
+                          bidirectional=True,
+                          dropout=dropout if gru_layers > 1 else 0.0)
+
+        # attention pooling on top of per-timestep outputs
+        # attention: score = v^T tanh(W h_t + b)
+        self.attn_W = nn.Linear(gru_hidden * self.num_directions, gru_hidden, bias=True)
+        self.attn_v = nn.Linear(gru_hidden, 1, bias=False)
+
+        # post-GRU dense on time-series path
+        self.ts_proj = nn.Linear(gru_hidden * self.num_directions, 128)
+        self.ts_ln = nn.LayerNorm(128)
+        self.ts_dropout = nn.Dropout(dropout)
+        self.residual_proj = nn.Linear(128, 64, bias=False)  # for residual connection in head
+
+        # dense on static path
+        self.static_proj = nn.Linear(static_feature_dim, 64)
+        self.static_bn = nn.BatchNorm1d(64)
+        self.static_dropout = nn.Dropout(dropout)
+
+        # merge & head with residual blocks
+        merge_in = 128 + 64
+        self.merge_proj = nn.Linear(merge_in, 128)
+
+        # head (residual MLP blocks)
+        self.head_fc1 = nn.Linear(128, 128)
+        self.head_fc2 = nn.Linear(128, 64)
+        self.head_fc3 = nn.Linear(64, 32)
+
+        # small bottleneck before output
+        self.latent_proj = nn.Linear(32, self.latent_space_dim)
+
+        self.fc_out = nn.Linear(self.latent_space_dim, self.output_dim)
+
+        # activations
+        self.tanh = nn.Tanh()
+        self.relu = nn.ReLU()
+        self.gelu = nn.GELU()
+
+        # dropout and layernorm in head
+        self.head_dropout = nn.Dropout(dropout)
+        self.head_ln1 = nn.LayerNorm(128)
+        self.head_ln2 = nn.LayerNorm(64)
+
+    def _attention_pool(self, packed_outputs, lengths):
+        """
+        Attention pooling over time.
+        packed_outputs: output from GRU (PackedSequence)
+        lengths: tensor of true lengths (batch,)
+        returns: (batch, hidden_size * num_directions)
+        """
+
+        outputs, _ = pad_packed_sequence(packed_outputs, batch_first=True)  # (batch, max_seq, feat)
+        # compute attention scores
+        attn_hidden = torch.tanh(self.attn_W(outputs))  # (batch, max_seq, gru_hidden)
+        attn_scores = self.attn_v(attn_hidden).squeeze(-1)  # (batch, max_seq)
+        # mask padding positions
+        max_len = outputs.size(1)
+        device = outputs.device
+        mask = torch.arange(max_len, device=device).unsqueeze(0) >= lengths.unsqueeze(1)  # True for padding
+        attn_scores = attn_scores.masked_fill(mask, float('-inf'))
+        attn_weights = torch.softmax(attn_scores, dim=1).unsqueeze(-1)  # (batch, max_seq, 1)
+        context = torch.sum(attn_weights * outputs, dim=1)  # (batch, feat)
+        return context
+
+    def get_latent_space_embeddings(self, batch):
+        """
+        Generates the latent embedding for a batch (time-series + static).
+        batch keys:
+            'ts'     -> (batch, seq_len, n_ts_features)
+            'length' -> (batch,)
+            'static' -> (batch, n_static_features)
+        Returns:
+            torch.Tensor of shape (batch, 16) -- the latent representation before final classifier.
+        """
+        x_ts = batch['ts']                  # (batch, seq_len, ts_features)
+        lengths = batch['length']           # (batch,)
+        x_static = batch['static']          # (batch, static_features)
+
+        # pack padded sequences so GRU ignores padding
+        packed = pack_padded_sequence(x_ts, lengths.cpu(), batch_first=True, enforce_sorted=False)
+
+        # initialize h0 properly: (num_layers * num_directions, batch, hidden_size)
+        batch_size = x_ts.shape[0]
+        h0 = torch.zeros(self.gru_layers * self.num_directions, batch_size, self.gru_hidden, device=x_ts.device)
+
+        # GRU returns PackedSequence for outputs when input is packed
+        packed_outputs, hidden = self.gru(packed, h0)
+
+        # attention pooling over time using the packed_outputs
+        seq_repr = self._attention_pool(packed_outputs, lengths)  # (batch, gru_hidden * num_directions)
+
+        # ts path projection
+        ts = self.ts_proj(seq_repr)
+        ts = self.ts_ln(ts)
+        ts = self.gelu(ts)
+        ts = self.ts_dropout(ts)
+
+        # static path
+        static = self.static_proj(x_static)  # (batch, 64)
+        # batchnorm expects (batch, features). If batch==1, BN behaves strangely; keep as-is.
+        static = self.static_bn(static)
+        static = self.relu(static)
+        static = self.static_dropout(static)
+
+        # merge
+        x = torch.cat((ts, static), dim=1)
+        x = self.merge_proj(x)
+        x = self.gelu(x)
+
+        # head with residual connection
+        residual = x
+        x = self.head_fc1(x)
+        x = self.head_ln1(x)
+        x = self.gelu(x)
+        x = self.head_dropout(x)
+
+        x = self.head_fc2(x)
+        x = self.head_ln2(x)
+        x = self.gelu(x)
+        x = self.head_dropout(x)
+
+        # add residual
+        x = x + self.residual_proj(residual)
+
+        x = self.head_fc3(x)
+        x = self.gelu(x)
+
+        # final latent projection
+        latent = self.latent_proj(x)  # (batch, 16)
+
+        return latent
+
+    def forward(self, batch):
+        """
+        Forward pass: get latent embedding and compute logits.
+        """
+        x = self.get_latent_space_embeddings(batch)
+        x = self.gelu(x)
+        logits = self.fc_out(x)
+        return logits
+
+class GRU_Improved(Hierarchical_classifier):
+    """
+    Improved GRU-based neural network architecture with multi-dimensional static features for hierarchical classification.
+
+    Key differences vs original:
+        - Bidirectional GRU with attention pooling over time (gives richer sequence summary).
+        - LayerNorm / BatchNorm and Dropout for regularisation & stability.
+        - Residual connections in the MLP head.
+        - Configurable hidden sizes and dropout.
+        - GELU activations in the head for smoother gradients.
+    """
+    def __init__(self,
+                 taxonomy: Taxonomy,
+                 ts_feature_dim: int = 5,
+                 gru_hidden: int = 128,
+                 gru_layers: int = 2,
+                 dropout: float = 0.2):
+        """
+        Args:
+            taxonomy (Taxonomy): hierarchical taxonomy (used to determine output dim via self.n_nodes).
+            ts_feature_dim (int): dimensionality of time-series features.
+            static_feature_dim (int): dimensionality of static features.
+            gru_hidden (int): hidden size of the (per-direction) GRU.
+            gru_layers (int): number of GRU layers.
+            dropout (float): dropout probability for regularisation.
+        """
+        super(GRU_Improved, self).__init__(taxonomy)
+
+        self.ts_feature_dim = ts_feature_dim
+        self.output_dim = self.n_nodes
+        self.latent_space_dim = 16
+
+        # recurrent backbone: bidirectional for richer encoding
+        self.gru_hidden = gru_hidden
+        self.gru_layers = gru_layers
+        self.num_directions = 2  # bidirectional
+        self.gru = nn.GRU(input_size=ts_feature_dim,
+                          hidden_size=gru_hidden,
+                          num_layers=gru_layers,
+                          batch_first=True,
+                          bidirectional=True,
+                          dropout=dropout if gru_layers > 1 else 0.0)
+
+        # attention pooling on top of per-timestep outputs
+        # attention: score = v^T tanh(W h_t + b)
+        self.attn_W = nn.Linear(gru_hidden * self.num_directions, gru_hidden, bias=True)
+        self.attn_v = nn.Linear(gru_hidden, 1, bias=False)
+
+        # post-GRU dense on time-series path
+        self.ts_proj = nn.Linear(gru_hidden * self.num_directions, 128)
+        self.ts_ln = nn.LayerNorm(128)
+        self.ts_dropout = nn.Dropout(dropout)
+        self.residual_proj = nn.Linear(128, 64, bias=False)  # for residual connection in head
+
+
+        # head (residual MLP blocks)
+        self.head_fc1 = nn.Linear(128, 128)
+        self.head_fc2 = nn.Linear(128, 64)
+        self.head_fc3 = nn.Linear(64, 32)
+
+        # small bottleneck before output
+        self.latent_proj = nn.Linear(32, self.latent_space_dim)
+
+        self.fc_out = nn.Linear(self.latent_space_dim, self.output_dim)
+
+        # activations
+        self.tanh = nn.Tanh()
+        self.relu = nn.ReLU()
+        self.gelu = nn.GELU()
+
+        # dropout and layernorm in head
+        self.head_dropout = nn.Dropout(dropout)
+        self.head_ln1 = nn.LayerNorm(128)
+        self.head_ln2 = nn.LayerNorm(64)
+
+    def _attention_pool(self, packed_outputs, lengths):
+        """
+        Attention pooling over time.
+        packed_outputs: output from GRU (PackedSequence)
+        lengths: tensor of true lengths (batch,)
+        returns: (batch, hidden_size * num_directions)
+        """
+
+        outputs, _ = pad_packed_sequence(packed_outputs, batch_first=True)  # (batch, max_seq, feat)
+        # compute attention scores
+        attn_hidden = torch.tanh(self.attn_W(outputs))  # (batch, max_seq, gru_hidden)
+        attn_scores = self.attn_v(attn_hidden).squeeze(-1)  # (batch, max_seq)
+        # mask padding positions
+        max_len = outputs.size(1)
+        device = outputs.device
+        mask = torch.arange(max_len, device=device).unsqueeze(0) >= lengths.unsqueeze(1)  # True for padding
+        attn_scores = attn_scores.masked_fill(mask, float('-inf'))
+        attn_weights = torch.softmax(attn_scores, dim=1).unsqueeze(-1)  # (batch, max_seq, 1)
+        context = torch.sum(attn_weights * outputs, dim=1)  # (batch, feat)
+        return context
+
+    def get_latent_space_embeddings(self, batch):
+        """
+        Generates the latent embedding for a batch (time-series + static).
+        batch keys:
+            'ts'     -> (batch, seq_len, n_ts_features)
+            'length' -> (batch,)
+            'static' -> (batch, n_static_features)
+        Returns:
+            torch.Tensor of shape (batch, 16) -- the latent representation before final classifier.
+        """
+        x_ts = batch['ts']                  # (batch, seq_len, ts_features)
+        lengths = batch['length']           # (batch,)
+
+        # pack padded sequences so GRU ignores padding
+        packed = pack_padded_sequence(x_ts, lengths.cpu(), batch_first=True, enforce_sorted=False)
+
+        # initialize h0 properly: (num_layers * num_directions, batch, hidden_size)
+        batch_size = x_ts.shape[0]
+        h0 = torch.zeros(self.gru_layers * self.num_directions, batch_size, self.gru_hidden, device=x_ts.device)
+
+        # GRU returns PackedSequence for outputs when input is packed
+        packed_outputs, hidden = self.gru(packed, h0)
+
+        # attention pooling over time using the packed_outputs
+        seq_repr = self._attention_pool(packed_outputs, lengths)  # (batch, gru_hidden * num_directions)
+
+        # ts path projection
+        ts = self.ts_proj(seq_repr)
+        ts = self.ts_ln(ts)
+        ts = self.gelu(ts)
+        ts = self.ts_dropout(ts)
+
+        # head with residual connection
+        residual = ts
+        x = self.head_fc1(ts)
+        x = self.head_ln1(x)
+        x = self.gelu(x)
+        x = self.head_dropout(x)
+
+        x = self.head_fc2(x)
+        x = self.head_ln2(x)
+        x = self.gelu(x)
+        x = self.head_dropout(x)
+
+        # add residual
+        x = x + self.residual_proj(residual)
+
+        x = self.head_fc3(x)
+        x = self.gelu(x)
+
+        # final latent projection
+        latent = self.latent_proj(x)  # (batch, 16)
+
+        return latent
+
+    def forward(self, batch):
+        """
+        Forward pass: get latent embedding and compute logits.
+        """
+        x = self.get_latent_space_embeddings(batch)
+        x = self.gelu(x)
+        logits = self.fc_out(x)
+        return logits
+
+
 
 if __name__ == '__main__':
+
+    batch_size = 10
 
     taxonomy = ORACLE_Taxonomy()
     
@@ -609,11 +1166,24 @@ if __name__ == '__main__':
     model.eval()
 
     x = {
-        'ts': torch.rand(10, 256, 5),
-        'length': torch.from_numpy(np.array([256]*10))
+        'ts': torch.rand(batch_size, 256, 5),
+        'length': torch.from_numpy(np.array([256]*batch_size)),
+        'static': torch.rand(batch_size, 30),
+        'postage_stamp': torch.rand(batch_size, 3, 252, 252)
     }
 
     print(model.predict_conditional_probabilities_df(x))
     print(model.predict_class_probabilities_df(x))
 
-    print(model.state_dict())
+    model = ConvNeXt(taxonomy)
+    print(model.predict_conditional_probabilities_df(x))
+    print(model.predict_class_probabilities_df(x))
+
+    # taxonomy = BTS_Taxonomy()
+    # model = GRU_MD_MM_Improved(taxonomy)
+    # print(model.predict_conditional_probabilities_df(x))
+    # print(model.predict_class_probabilities_df(x))
+
+    model = GRU_Improved(taxonomy)
+    print(model.predict_conditional_probabilities_df(x))
+    print(model.predict_class_probabilities_df(x))

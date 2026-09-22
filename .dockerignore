@@ -1,0 +1,22 @@
+# Keep the build context (and image) to the runtime essentials: src, models,
+# packaging. Everything below is docs, papers or training byproducts.
+.git
+.github
+docs
+notebooks
+figures
+paper_figures
+boom_scripts
+wandb
+data
+**/__pycache__
+**/*.pyc
+src/oracle.egg-info
+# Training byproducts that sit next to the weights in models/.
+**/plots
+**/reports
+**/embeddings
+**/*.pdf
+**/*_history.npy
+*.out
+.DS_Store

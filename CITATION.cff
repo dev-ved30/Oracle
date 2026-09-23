@@ -15,6 +15,25 @@ archivePrefix = {arXiv},
       adsnote = {Provided by the SAO/NASA Astrophysics Data System}
 }
 
+@ARTICLE{oracle2,
+       author = {{Shah}, Ved G. and {Rehemtulla}, Nabeel and {Miller}, Adam A. and {Sharma Chaudhary}, Sushant and {Coughlin}, Michael W. and {Le Calloch}, Antoine and {Graham}, Matthew J. and {Castaneda Jaimes}, Joahan and {Jegou du Laz}, Theophile and {Mahabal}, Ashish A. and {Masci}, Frank J. and {Purdum}, Josiah and {Riddle}, Reed and {Sollerman}, Jesper and {Wei}, Anastasia and {Kasliwal}, Mansi M.},
+        title = "{Leveraging Multimodality for Real-Time Classification of Transients and Variables found by the Zwicky Transient Facility}",
+      journal = {arXiv e-prints},
+     keywords = {Instrumentation and Methods for Astrophysics, High Energy Astrophysical Phenomena, Machine Learning},
+         year = 2026,
+        month = jun,
+          eid = {arXiv:2607.00228},
+        pages = {arXiv:2607.00228},
+          doi = {10.48550/arXiv.2607.00228},
+archivePrefix = {arXiv},
+       eprint = {2607.00228},
+ primaryClass = {astro-ph.IM},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2026arXiv260700228S},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+}
+
+
+
 @software{oracle1-software,
   author       = {Shah, Ved and
                   Gagliano, Alexander and

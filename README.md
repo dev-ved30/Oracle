@@ -57,7 +57,14 @@ The repository contains the source code, data-processing tools, trained models, 
 
 ## ELAsTiCC data
 
-The data used to train and evaluate the ELAsTiCC models are available in [this Google Drive folder](https://drive.google.com/drive/u/2/folders/1M28MSkyVPL-YcONiBcIWLw24xHLSOBw-). The repository’s `data/ELAsTiCC/` directory contains the corresponding locally prepared dataset files and train/validation/test splits.
+The data used to train and evaluate the ELAsTiCC models are available in [this Google Drive folder](https://drive.google.com/drive/folders/1M28MSkyVPL-YcONiBcIWLw24xHLSOBw-). To download them into `data/ELAsTiCC/`, run from the repository root:
+
+```bash
+python -m pip install gdown
+bash scripts/download-elasticc.sh
+```
+
+The script can be rerun to resume interrupted downloads and skip completed files. The dataset loader expects `train.parquet`, `val.parquet`, and `test.parquet` directly in `data/ELAsTiCC/`.
 
 # Classification Taxonomy
 

@@ -22,7 +22,7 @@
 
         <form id="source-form" class="query-form">
           <label class="sr-only" for="source-id">ZTF object ID</label>
-          <input id="source-id" name="source-id" type="text" placeholder="ZTF object ID · e.g. ZTF18abmrfqv" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+          <input id="source-id" name="source-id" type="text" value="ZTF23aabidjl" placeholder="ZTF object ID" autocomplete="off" autocapitalize="off" spellcheck="false" required>
           <div class="query-actions">
             <label class="sr-only" for="model-select">Model</label>
             <div class="select-wrap"><select id="model-select" name="model" aria-label="Model">
@@ -84,7 +84,14 @@
           </section>
         </div>
       </main>
-      <footer class="footer"><span>ORACLE-2 · Local inference</span><span>Probabilities are model outputs for the fetched data.</span></footer>
+      <footer class="footer">
+        <span>ORACLE-2 · Local inference</span>
+        <span>Probabilities are model outputs for the fetched data.</span>
+        <nav class="footer-links" aria-label="Project links">
+          <a href="https://github.com/dev-ved30/Oracle" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+          <a href="https://dev-ved30.github.io/Oracle/" target="_blank" rel="noopener noreferrer">Docs ↗</a>
+        </nav>
+      </footer>
     </div>
   </body>
 </html>

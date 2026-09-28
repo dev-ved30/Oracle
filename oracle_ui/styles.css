@@ -55,3 +55,7 @@ html[data-theme="light"] .metadata-item span{color:#72839a}
 html[data-theme="light"] .metadata-item.missing strong{color:#aab6c3}
 html[data-theme="light"] .footer{color:#94a2b2}
 @media(max-width:640px){.theme-row{padding-top:15px}.intro{padding-top:24px}}
+.footer-links{display:flex;align-items:center;gap:18px;white-space:nowrap}
+.footer-links a{color:var(--muted);text-decoration:none;font-weight:650}
+.footer-links a:hover{color:var(--accent)}
+.footer-links a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}

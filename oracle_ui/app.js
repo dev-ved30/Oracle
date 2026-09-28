@@ -12,6 +12,27 @@ const modelDescriptions = { "BTSv2-pro": "Light curve + source context + ZTF ref
 const bandColors = { g: "#59d39a", r: "#ff8477", i: "#e9b66f" };
 const branches = { Persistent: ["AGN", "CV", "Varstar"], Transient: ["SN-Ia", "SN-II", "SN-Ib/c", "SLSN"] };
 const OOD_MAG_LIMIT = 18.5;
+function extractObjectId(raw) {
+  const match = String(raw).match(/ZTF\d{2}[a-z]+/i);
+  return match ? match[0] : String(raw).trim();
+}
+async function copyText(text, button) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const area = document.createElement("textarea");
+    area.value = text;
+    document.body.append(area);
+    area.select();
+    document.execCommand("copy");
+    area.remove();
+  }
+  const glyph = button.querySelector("span");
+  const original = glyph.textContent;
+  button.disabled = true;
+  glyph.textContent = "✓";
+  setTimeout(() => { glyph.textContent = original; button.disabled = false; }, 1200);
+}
 let source = null;
 let busy = false;
 let plotted = [];
@@ -86,8 +107,6 @@ function renderMetadata() {
   const items = source.metadata || [];
   const available = items.filter((item) => item.value !== null);
   $("metadata-rest").replaceChildren(...items.map(metadataCell));
-  $("metadata-details").open = false;
-  $("metadata-summary").textContent = source.metadata_error ? "Metadata unavailable" : `Show metadata (${items.length} fields)`;
   const unavailable = source.classification?.missing_context_features?.length;
   $("metadata-note").textContent = `${source.metadata_error || `${available.length} of ${items.length} values available.`}${unavailable ? ` ${unavailable} contextual features were unavailable and passed as −9.` : ""}`;
 }
@@ -612,8 +631,14 @@ function showClassifierPage() {
 }
 $("open-trends").addEventListener("click", showTrendsPage);
 $("trends-back").addEventListener("click", () => { showClassifierPage(); input.focus(); });
+$("copy-source-id").addEventListener("click", () => { if (source) copyText(source.source_id, $("copy-source-id")); });
+$("copy-position").addEventListener("click", () => {
+  if (source && Number.isFinite(Number(source.ra)) && Number.isFinite(Number(source.dec)))
+    copyText(`${source.ra} ${source.dec}`, $("copy-position"));
+});
 let trendsPieSlices = [];
 let trendsSkyPoints = [];
+const modelColors = { "BTSv2-pro": "#c19dff", BTSv2: "#76baff", "BTSv2-lite": "#74d6a5" };
 function sizeCanvas(canvas) {
   const rect = canvas.getBoundingClientRect();
   if (rect.width < 10 || rect.height < 10) return null;
@@ -643,6 +668,21 @@ function renderTrends() {
     const label = document.createElement("span"); label.textContent = name;
     const value = document.createElement("strong"); value.textContent = `${count} · ${percent(historyItems.length ? count / historyItems.length : 0)}`;
     row.append(dot, label, value); legend.append(row);
+  }
+  const modelSlices = Object.entries(historyItems.reduce((counts, item) => {
+    counts[item.model] = (counts[item.model] || 0) + 1;
+    return counts;
+  }, {})).sort((a, b) => b[1] - a[1]);
+  $("trends-models-empty").hidden = historyItems.length > 0;
+  const modelLegend = $("trends-model-legend");
+  modelLegend.replaceChildren();
+  modelLegend.hidden = !historyItems.length;
+  for (const [key, count] of modelSlices) {
+    const row = document.createElement("div"); row.className = "trends-legend-item";
+    const dot = document.createElement("span"); dot.className = "trends-legend-dot"; dot.style.background = modelColors[key] || "#aaa";
+    const label = document.createElement("span"); label.textContent = modelNames[key] || key;
+    const value = document.createElement("strong"); value.textContent = `${count} · ${percent(historyItems.length ? count / historyItems.length : 0)}`;
+    row.append(dot, label, value); modelLegend.append(row);
   }
   trendsSkyPoints = [];
   for (const item of historyItems) {
@@ -734,7 +774,8 @@ const historyReady = openHistoryDb().then(async (db) => {
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   if (busy) return;
-  const objectId = input.value.trim();
+  const objectId = extractObjectId(input.value);
+  input.value = objectId;
   if (!/^ZTF\d{2}[a-z]+$/i.test(objectId)) { message("Enter a ZTF object ID, such as ZTF18abmrfqv.", true); return; }
   source = null; rolling = null; rollingPlot = null; linkedIndex = null; xDomain = null; plotted = []; activeHistoryId = null;
   showClassifierPage();
@@ -759,7 +800,7 @@ $("zoom-out").addEventListener("click", () => zoom(1 / .7));
 $("zoom-reset").addEventListener("click", () => { xDomain = null; drawLightCurve(); });
 chart.addEventListener("dblclick", () => { xDomain = null; drawLightCurve(); });
 chart.addEventListener("wheel", (event) => {
-  if (!source || !plotBox) return;
+  if (!source || !plotBox || (!event.ctrlKey && !event.metaKey)) return;
   event.preventDefault();
   const rect = chart.getBoundingClientRect();
   const fraction = Math.max(0, Math.min(1, (event.clientX - rect.left - plotBox.left) / (plotBox.right - plotBox.left)));

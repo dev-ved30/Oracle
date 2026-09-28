@@ -52,13 +52,13 @@
         <div id="workspace" hidden>
           <section class="source-summary" aria-labelledby="source-title">
             <div class="source-heading">
-              <div><p class="eyebrow">Source</p><h2 id="source-title">—</h2><p id="source-subtitle" class="subtle"></p></div>
+              <div><p class="eyebrow">Source</p><div class="source-title-row"><h2 id="source-title">—</h2><button id="copy-source-id" class="copy-button" type="button" aria-label="Copy source ID" title="Copy source ID"><span aria-hidden="true">⧉</span></button></div><p id="source-subtitle" class="subtle"></p></div>
               <div class="source-links"><a id="broker-link" class="text-link" href="#" target="_blank" rel="noopener noreferrer">Open in Babamul ↗</a><a id="fritz-link" class="text-link" href="#" target="_blank" rel="noopener noreferrer">Open in Fritz ↗</a></div>
             </div>
             <div class="summary-strip" aria-label="Source summary">
               <div><span>Detections</span><strong id="metric-detections">—</strong></div>
               <div><span>Time span</span><strong id="metric-span">—</strong></div>
-              <div><span>RA / Dec</span><strong id="metric-position">—</strong></div>
+              <div><span>RA / Dec</span><span class="metric-value"><strong id="metric-position">—</strong><button id="copy-position" class="copy-button" type="button" aria-label="Copy coordinates" title="Copy coordinates"><span aria-hidden="true">⧉</span></button></span></div>
               <div><span>Latest band</span><strong id="metric-band">—</strong></div>
             </div>
           </section>
@@ -88,8 +88,8 @@
                   <div><p class="eyebrow">Photometry</p><h3 id="lightcurve-title">Light curve</h3></div>
                   <div class="chart-actions"><span class="band-legend" aria-label="ZTF bands"><span class="band-g">g</span><span class="band-r">r</span><span class="band-i">i</span></span><button id="zoom-in" type="button" aria-label="Zoom in on light curve" title="Zoom in">+</button><button id="zoom-out" type="button" aria-label="Zoom out on light curve" title="Zoom out">−</button><button id="zoom-reset" type="button" title="Reset zoom">Reset</button></div>
                 </div>
-                <div class="chart-wrap"><canvas id="lightcurve-chart" role="img" aria-label="ZTF light curve by filter. Scroll or use the controls to zoom; drag to pan; double click to reset."></canvas><div id="chart-tooltip" class="chart-tooltip" hidden></div></div>
-                <p class="figure-note">Magnitude · lower is brighter · days since first detection · scroll to zoom, drag to pan</p>
+              <div class="chart-wrap"><canvas id="lightcurve-chart" role="img" aria-label="ZTF light curve by filter. Hold control or command and scroll to zoom; drag to pan; double click to reset."></canvas><div id="chart-tooltip" class="chart-tooltip" hidden></div></div>
+              <p class="figure-note">Magnitude · lower is brighter · days since first detection · ctrl/cmd + scroll to zoom, drag to pan</p>
               </section>
               <section id="image-section" class="visual-section image-section" aria-labelledby="image-title">
                 <div class="section-head"><div><p class="eyebrow">Sky context</p><h3 id="image-title">Images</h3></div></div>
@@ -109,7 +109,7 @@
 
             <section class="metadata-section" aria-labelledby="metadata-title">
               <div class="section-head"><div><p class="eyebrow">Source context</p><h3 id="metadata-title">Metadata</h3></div></div>
-              <details id="metadata-details"><summary id="metadata-summary">Show metadata</summary><p id="metadata-note" class="figure-note"></p><div id="metadata-rest" class="metadata-list"></div></details>
+              <p id="metadata-note" class="figure-note"></p><div id="metadata-rest" class="metadata-list"></div>
             </section>
           </details>
         </div>
@@ -121,12 +121,19 @@
             <div class="trends-card"><span>Classes seen</span><strong id="trends-nclasses">0</strong></div>
           </div>
           <div class="trends-grid">
+            <div class="trends-col">
             <section class="trends-panel-block" aria-labelledby="trends-classes-title">
               <div class="section-head"><div><p class="eyebrow">Breakdown</p><h3 id="trends-classes-title">By class</h3></div></div>
               <div class="trends-pie-wrap"><canvas id="trends-pie" role="img" aria-label="Share of classified sources per predicted class"></canvas></div>
               <div id="trends-legend" class="trends-legend"></div>
               <p id="trends-classes-empty" class="history-empty" hidden>Classify a source to see the class breakdown.</p>
             </section>
+            <section class="trends-panel-block" aria-labelledby="trends-models-title">
+              <div class="section-head"><div><p class="eyebrow">Usage</p><h3 id="trends-models-title">By model</h3></div></div>
+              <div id="trends-model-legend" class="trends-legend"></div>
+              <p id="trends-models-empty" class="history-empty" hidden>Classify a source to see model usage.</p>
+            </section>
+            </div>
             <section class="trends-panel-block" aria-labelledby="trends-sky-title">
               <div class="section-head"><div><p class="eyebrow">Positions</p><h3 id="trends-sky-title">Sky distribution</h3></div></div>
               <div class="trends-sky-wrap"><canvas id="trends-sky" role="img" aria-label="Mollweide sky map of classified source positions"></canvas></div>

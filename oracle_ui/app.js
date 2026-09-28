@@ -11,6 +11,7 @@ const modelNames = { "BTSv2-pro": "ORACLE-2 Omni", BTSv2: "ORACLE-2", "BTSv2-lit
 const modelDescriptions = { "BTSv2-pro": "Light curve + source context + ZTF reference image", BTSv2: "Light curve + source context", "BTSv2-lite": "Light curve only" };
 const bandColors = { g: "#59d39a", r: "#ff8477", i: "#e9b66f" };
 const branches = { Persistent: ["AGN", "CV", "Varstar"], Transient: ["SN-Ia", "SN-II", "SN-Ib/c", "SLSN"] };
+const OOD_MAG_LIMIT = 18.5;
 let source = null;
 let busy = false;
 let plotted = [];
@@ -440,11 +441,21 @@ $("rolling-download").addEventListener("click", () => {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
 
+function isOodSource(sourceData) {
+  const mags = (sourceData?.photometry || []).map((p) => Number(p.mag)).filter(Number.isFinite);
+  return Boolean(mags.length) && Math.min(...mags) > OOD_MAG_LIMIT;
+}
+function updateOodWarning() {
+  const banner = $("ood-warning");
+  if (!banner) return;
+  banner.hidden = !isOodSource(source);
+}
 function renderResult(data, historyId = null) {
   source = data.source;
   source.classification = data.classification;
   activeHistoryId = historyId;
   renderSource();
+  updateOodWarning();
   if (data.classification) { renderTaxonomy(data.classification); renderMetadata(); }
   else $("prediction").hidden = true;
   renderRolling(data.rolling);
@@ -473,6 +484,8 @@ $("new-source").addEventListener("click", () => {
   $("workspace").hidden = true;
   $("empty-state").hidden = false;
   $("prediction").hidden = true;
+  const oodBanner = $("ood-warning");
+  if (oodBanner) oodBanner.hidden = true;
   $("rolling-section").hidden = true;
   resetRollingDataPanel();
   document.querySelector(".app-shell").classList.remove("has-result");
@@ -526,7 +539,13 @@ function renderHistory() {
     const topClass = document.createElement("strong"); topClass.textContent = item.top_class;
     const score = document.createElement("strong"); score.textContent = percent(item.top_probability);
     detail.append(topClass, score);
-    const time = document.createElement("small"); time.textContent = new Date(item.created_at).toLocaleString() + (item.rolling ? " · Rolling" : "");
+    const time = document.createElement("small"); time.textContent = new Date(item.created_at).toLocaleString();
+    if (item.ood ?? isOodSource(item.data?.source)) {
+      const warn = document.createElement("span"); warn.className = "history-ood"; warn.textContent = "⚠";
+      warn.title = "Out-of-distribution: no detection brighter than 18.5 mag";
+      warn.setAttribute("aria-label", "Out-of-distribution: no detection brighter than 18.5 mag");
+      time.prepend(warn, " · ");
+    }
     entry.append(heading, detail, time);
     entry.addEventListener("click", async () => {
       if (!historyDb || busy) return;
@@ -567,7 +586,7 @@ async function saveHistory(data) {
   const leaves = data.classification.probabilities_by_level?.["2"] || {};
   const [topClass, topProbability] = Object.entries(leaves).sort((a, b) => b[1] - a[1])[0] || ["—", 0];
   const item = { id: crypto.randomUUID(), created_at: new Date().toISOString(), source_id: data.source.source_id,
-    model: data.classification.model, top_class: topClass, top_probability: topProbability, rolling: Boolean(data.rolling), data };
+    model: data.classification.model, top_class: topClass, top_probability: topProbability, rolling: Boolean(data.rolling), ood: isOodSource(data.source), data };
   await historyTransaction("readwrite", (store) => store.put(item));
   activeHistoryId = item.id;
   historyItems.unshift(item);
@@ -586,6 +605,8 @@ form.addEventListener("submit", async (event) => {
   if (!/^ZTF\d{2}[a-z]+$/i.test(objectId)) { message("Enter a ZTF object ID, such as ZTF18abmrfqv.", true); return; }
   source = null; rolling = null; rollingPlot = null; linkedIndex = null; xDomain = null; plotted = []; activeHistoryId = null;
   $("workspace").hidden = true; $("empty-state").hidden = false;
+  const pendingOod = $("ood-warning");
+  if (pendingOod) pendingOod.hidden = true;
   resetRollingDataPanel();
   const useRolling = $("rolling-enabled").checked;
   setBusy(true); message(`Fetching ${objectId} and running ${modelNames[modelSelect.value]}${useRolling ? " after each observation" : ""}…`);
@@ -650,6 +671,22 @@ chart.addEventListener("pointercancel", endDrag);
 chart.addEventListener("pointerleave", () => { tooltip.hidden = true; setLinked(null); });
 if ("ResizeObserver" in window) new ResizeObserver(drawLightCurve).observe(document.querySelector(".chart-wrap"));
 else window.addEventListener("resize", drawLightCurve);
+const dataDetails = $("data-details");
+function syncDataToggle() {
+  if (!dataDetails) return;
+  const open = dataDetails.open;
+  const eyeOpen = $("eye-open"), eyeClosed = $("eye-closed");
+  if (eyeOpen) eyeOpen.toggleAttribute("hidden", !open);
+  if (eyeClosed) eyeClosed.toggleAttribute("hidden", open);
+  $("data-summary")?.setAttribute("aria-label", open ? "Hide input data" : "Show input data");
+}
+if (dataDetails) {
+  syncDataToggle();
+  dataDetails.addEventListener("toggle", () => {
+    syncDataToggle();
+    if (dataDetails.open) requestAnimationFrame(() => { drawLightCurve(); });
+  });
+}
 
 const themeToggle = $("theme-toggle");
 function applyTheme(theme) {

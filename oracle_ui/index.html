@@ -62,35 +62,7 @@
             </div>
           </section>
 
-          <div class="visual-grid">
-            <section class="visual-section lightcurve-section" aria-labelledby="lightcurve-title">
-              <div class="section-head">
-                <div><p class="eyebrow">Photometry</p><h3 id="lightcurve-title">Light curve</h3></div>
-                <div class="chart-actions"><span class="band-legend" aria-label="ZTF bands"><span class="band-g">g</span><span class="band-r">r</span><span class="band-i">i</span></span><button id="zoom-in" type="button" aria-label="Zoom in on light curve" title="Zoom in">+</button><button id="zoom-out" type="button" aria-label="Zoom out on light curve" title="Zoom out">−</button><button id="zoom-reset" type="button" title="Reset zoom">Reset</button></div>
-              </div>
-              <div class="chart-wrap"><canvas id="lightcurve-chart" role="img" aria-label="ZTF light curve by filter. Scroll or use the controls to zoom; drag to pan; double click to reset."></canvas><div id="chart-tooltip" class="chart-tooltip" hidden></div></div>
-              <p class="figure-note">Magnitude · lower is brighter · days since first detection · scroll to zoom, drag to pan</p>
-            </section>
-            <section id="image-section" class="visual-section image-section" aria-labelledby="image-title">
-              <div class="section-head"><div><p class="eyebrow">Sky context</p><h3 id="image-title">Images</h3></div></div>
-              <div id="image-grid" class="image-grid">
-                <figure id="ztf-image-entry" class="image-entry">
-                  <figcaption>ZTF reference <span id="image-band">—</span></figcaption>
-                  <div class="image-frame"><img id="reference-image" alt="ZTF reference cutout for the latest alert; green crosshair marks the center" hidden><span id="image-crosshair" class="image-crosshair" aria-hidden="true" hidden></span><p id="image-fallback" hidden></p></div>
-                </figure>
-                <figure class="image-entry">
-                  <figcaption>Pan-STARRS1 <span>g/r/i</span></figcaption>
-                  <div class="image-frame"><img id="ps-image" alt="Pan-STARRS1 color cutout centered on the source; green crosshair marks the center" hidden><span id="ps-crosshair" class="image-crosshair" aria-hidden="true" hidden></span><p id="ps-fallback" hidden></p></div>
-                </figure>
-              </div>
-              <p class="figure-note">ZTF template is the Omni model input · Pan-STARRS1 is shown for visual context</p>
-            </section>
-          </div>
-
-          <section class="metadata-section" aria-labelledby="metadata-title">
-            <div class="section-head"><div><p class="eyebrow">Source context</p><h3 id="metadata-title">Metadata</h3></div></div>
-            <details id="metadata-details"><summary id="metadata-summary">Show metadata</summary><p id="metadata-note" class="figure-note"></p><div id="metadata-rest" class="metadata-list"></div></details>
-          </section>
+          <div id="ood-warning" class="ood-warning" role="alert" hidden><span aria-hidden="true">⚠</span><p><strong>Out-of-distribution:</strong> no detection brighter than 18.5 mag. This source is fainter than the training set, so classification reliability may vary.</p></div>
 
           <section id="prediction" class="result-section" aria-labelledby="prediction-title" hidden>
             <div class="section-head"><div><p class="eyebrow">ORACLE-2 result</p><h3 id="prediction-title">Classification</h3></div><span id="prediction-model" class="subtle">—</span></div>
@@ -106,6 +78,39 @@
             <div class="rolling-data-actions"><button id="rolling-data-toggle" type="button" aria-expanded="false" aria-controls="rolling-data-panel">View data</button><button id="rolling-download" type="button">Download CSV ↓</button></div>
             <div id="rolling-data-panel" class="rolling-data-panel" hidden><div class="rolling-data-scroll"><table><caption class="sr-only">Class probabilities after each ZTF observation</caption><thead id="rolling-data-head"></thead><tbody id="rolling-data-body"></tbody></table></div></div>
           </section>
+
+          <details id="data-details" class="data-details result-section" open>
+            <summary id="data-summary" class="data-summary section-head" aria-label="Hide input data"><div><p class="eyebrow">Model input</p><h3>Input data</h3></div><span class="data-toggle" aria-hidden="true"><svg id="eye-open" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg><svg id="eye-closed" viewBox="0 0 24 24" hidden><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg></span></summary>
+            <div class="visual-grid">
+              <section class="visual-section lightcurve-section" aria-labelledby="lightcurve-title">
+                <div class="section-head">
+                  <div><p class="eyebrow">Photometry</p><h3 id="lightcurve-title">Light curve</h3></div>
+                  <div class="chart-actions"><span class="band-legend" aria-label="ZTF bands"><span class="band-g">g</span><span class="band-r">r</span><span class="band-i">i</span></span><button id="zoom-in" type="button" aria-label="Zoom in on light curve" title="Zoom in">+</button><button id="zoom-out" type="button" aria-label="Zoom out on light curve" title="Zoom out">−</button><button id="zoom-reset" type="button" title="Reset zoom">Reset</button></div>
+                </div>
+                <div class="chart-wrap"><canvas id="lightcurve-chart" role="img" aria-label="ZTF light curve by filter. Scroll or use the controls to zoom; drag to pan; double click to reset."></canvas><div id="chart-tooltip" class="chart-tooltip" hidden></div></div>
+                <p class="figure-note">Magnitude · lower is brighter · days since first detection · scroll to zoom, drag to pan</p>
+              </section>
+              <section id="image-section" class="visual-section image-section" aria-labelledby="image-title">
+                <div class="section-head"><div><p class="eyebrow">Sky context</p><h3 id="image-title">Images</h3></div></div>
+                <div id="image-grid" class="image-grid">
+                  <figure id="ztf-image-entry" class="image-entry">
+                    <figcaption>ZTF reference <span id="image-band">—</span></figcaption>
+                    <div class="image-frame"><img id="reference-image" alt="ZTF reference cutout for the latest alert; green crosshair marks the center" hidden><span id="image-crosshair" class="image-crosshair" aria-hidden="true" hidden></span><p id="image-fallback" hidden></p></div>
+                  </figure>
+                  <figure class="image-entry">
+                    <figcaption>Pan-STARRS1 <span>g/r/i</span></figcaption>
+                    <div class="image-frame"><img id="ps-image" alt="Pan-STARRS1 color cutout centered on the source; green crosshair marks the center" hidden><span id="ps-crosshair" class="image-crosshair" aria-hidden="true" hidden></span><p id="ps-fallback" hidden></p></div>
+                  </figure>
+                </div>
+                <p class="figure-note">ZTF template is the Omni model input · Pan-STARRS1 is shown for visual context</p>
+              </section>
+            </div>
+
+            <section class="metadata-section" aria-labelledby="metadata-title">
+              <div class="section-head"><div><p class="eyebrow">Source context</p><h3 id="metadata-title">Metadata</h3></div></div>
+              <details id="metadata-details"><summary id="metadata-summary">Show metadata</summary><p id="metadata-note" class="figure-note"></p><div id="metadata-rest" class="metadata-list"></div></details>
+            </section>
+          </details>
         </div>
       </main>
       <footer class="footer">

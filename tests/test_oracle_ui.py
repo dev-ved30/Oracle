@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 import numpy as np
 from astropy.io import fits
+from PIL import Image
 
 from oracle_ui import server
 
@@ -32,6 +33,7 @@ class TestOracleUi(unittest.TestCase):
     def test_fetch_and_classify_in_one_request(self):
         with patch.object(server, "read_source", return_value=(self.rows, self.context, "ZTF18abmrfqv")) as lookup, \
              patch.object(server, "_babamul_get", return_value={"cutoutTemplate": self.template}), \
+             patch.object(server, "_ps_preview", return_value="data:image/jpeg;base64,example"), \
              patch.object(server, "classify_source", return_value=self.result) as classify:
             response = self.client.post("/api/analyze", json={"object_id": "ZTF18abmrfqv", "model": "BTSv2-pro"})
         self.assertEqual(response.status_code, 200)
@@ -41,6 +43,7 @@ class TestOracleUi(unittest.TestCase):
         self.assertEqual(len(body["source"]["photometry"]), 2)
         self.assertEqual(len(body["source"]["metadata"]), 30)
         self.assertTrue(body["source"]["image"].startswith("data:image/png;base64,"))
+        self.assertTrue(body["source"]["ps_image"].startswith("data:image/jpeg;base64,"))
         self.assertEqual(body["classification"], self.result)
         lookup.assert_called_once_with("ZTF18abmrfqv")
         self.assertIs(classify.call_args.args[0], self.rows)
@@ -49,6 +52,7 @@ class TestOracleUi(unittest.TestCase):
     def test_classification_error_keeps_source_preview(self):
         with patch.object(server, "read_source", return_value=(self.rows, self.context, "ZTF18abmrfqv")), \
              patch.object(server, "_babamul_get", return_value={"cutoutTemplate": self.template}), \
+             patch.object(server, "_ps_preview", side_effect=ValueError("Pan-STARRS unavailable")), \
              patch.object(server, "classify_source", side_effect=ValueError("model failed")):
             response = self.client.post("/api/analyze", json={"object_id": "ZTF18abmrfqv", "model": "BTSv2-pro"})
         self.assertEqual(response.status_code, 200)
@@ -56,6 +60,19 @@ class TestOracleUi(unittest.TestCase):
         self.assertEqual(body["source"]["detections"], 2)
         self.assertIsNone(body["classification"])
         self.assertEqual(body["error"], "model failed")
+        self.assertIsNone(body["source"]["ps_image"])
+        self.assertEqual(body["source"]["ps_image_error"], "Pan-STARRS unavailable")
+
+    def test_ps_color_cutout_uses_gr_i_channels(self):
+        listing = b"filter filename\ng /g.fits\nr /r.fits\ni /i.fits\n"
+        output = io.BytesIO()
+        Image.new("RGB", (315, 315), (20, 30, 40)).save(output, format="JPEG")
+        with patch.object(server, "urlopen", side_effect=[io.BytesIO(listing), io.BytesIO(output.getvalue())]) as fetch:
+            image = server._ps_preview(151.0, 12.0)
+        self.assertTrue(image.startswith("data:image/jpeg;base64,"))
+        self.assertIn("red=%2Fi.fits", fetch.call_args_list[1].args[0])
+        self.assertIn("green=%2Fr.fits", fetch.call_args_list[1].args[0])
+        self.assertIn("blue=%2Fg.fits", fetch.call_args_list[1].args[0])
 
     def test_invalid_request(self):
         self.assertEqual(self.client.post("/api/analyze", json={"object_id": "../../etc/passwd", "model": "BTSv2-pro"}).status_code, 400)

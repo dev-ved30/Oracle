@@ -3,11 +3,15 @@
 import argparse
 import base64
 import io
+import math
 import re
 from pathlib import Path
+from urllib.parse import urlencode
+from urllib.request import urlopen
 
 import numpy as np
 import torch
+from astropy.table import Table
 from flask import Flask, jsonify, request, send_from_directory
 from PIL import Image
 
@@ -29,6 +33,8 @@ from oracle.infer_ztf import (
 
 UI_DIR = Path(__file__).resolve().parent
 SOURCE_ID_PATTERN = re.compile(r"ZTF\d{2}[a-z]+", re.IGNORECASE)
+
+
 def _preview_png(cutout):
     """Stretch a reference FITS cutout for display without changing model input."""
     image = _template_image(cutout)
@@ -51,6 +57,40 @@ def _fetch_template(context):
     if not cutouts.get("cutoutTemplate"):
         raise ValueError("Babamul has no reference cutout for this source")
     return cutouts["cutoutTemplate"]
+
+
+def _ps_preview(ra, dec):
+    """Fetch a Pan-STARRS1 g/r/i color cutout centered on the ZTF source."""
+    ra, dec = float(ra), float(dec)
+    if not math.isfinite(ra) or not math.isfinite(dec) or not 0 <= ra < 360 or not -90 <= dec <= 90:
+        raise ValueError("Pan-STARRS image needs valid source coordinates")
+    if dec < -30:
+        raise ValueError("This source is outside Pan-STARRS1 sky coverage")
+
+    service = "https://ps1images.stsci.edu/cgi-bin/"
+    filenames_url = service + "ps1filenames.py?" + urlencode({"ra": ra, "dec": dec, "filters": "gri"})
+    with urlopen(filenames_url, timeout=10) as response:
+        table_bytes = response.read(262145)
+    if len(table_bytes) > 262144:
+        raise ValueError("Pan-STARRS image listing is too large")
+    table = Table.read(io.BytesIO(table_bytes), format="ascii")
+    files = {str(row["filter"]): str(row["filename"]) for row in table}
+    if not all(band in files for band in ("g", "r", "i")):
+        raise ValueError("Pan-STARRS g/r/i images are unavailable at this position")
+
+    cutout_url = service + "fitscut.cgi?" + urlencode({
+        "ra": ra, "dec": dec, "size": 252, "format": "jpg", "output_size": 315,
+        "red": files["i"], "green": files["r"], "blue": files["g"],
+    })
+    with urlopen(cutout_url, timeout=15) as response:
+        jpeg = response.read(5000001)
+    if len(jpeg) > 5000000:
+        raise ValueError("Pan-STARRS image is too large")
+    with Image.open(io.BytesIO(jpeg)) as preview:
+        if preview.format != "JPEG":
+            raise ValueError("Pan-STARRS returned an unexpected image format")
+        preview.verify()
+    return "data:image/jpeg;base64," + base64.b64encode(jpeg).decode("ascii")
 
 
 def _source_preview(rows, context, source_id):
@@ -85,6 +125,13 @@ def _source_preview(rows, context, source_id):
     except (ValueError, KeyError) as exc:
         image_error = str(exc)
 
+    ps_image = None
+    ps_image_error = None
+    try:
+        ps_image = _ps_preview(latest.get("ra"), latest.get("dec"))
+    except (ValueError, OSError, KeyError) as exc:
+        ps_image_error = str(exc)
+
     return {
         "source_id": source_id,
         "detections": len(detections),
@@ -98,6 +145,8 @@ def _source_preview(rows, context, source_id):
         "metadata_error": metadata_error,
         "image": image,
         "image_error": image_error,
+        "ps_image": ps_image,
+        "ps_image_error": ps_image_error,
     }
 
 

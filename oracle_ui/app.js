@@ -72,9 +72,15 @@ function renderSource() {
   $("image-fallback").hidden = Boolean(source.image);
   if (source.image) image.src = source.image;
   else $("image-fallback").textContent = source.image_error || "No reference image available.";
+  const psImage = $("ps-image");
+  psImage.hidden = !source.ps_image;
+  $("ps-crosshair").hidden = !source.ps_image;
+  $("ps-fallback").hidden = Boolean(source.ps_image);
+  if (source.ps_image) psImage.src = source.ps_image;
+  else $("ps-fallback").textContent = source.ps_image_error || "No Pan-STARRS image available.";
   const omni = modelSelect.value === "BTSv2-pro";
-  $("image-section").hidden = !omni;
-  document.querySelector(".visual-grid").classList.toggle("single", !omni);
+  $("ztf-image-entry").hidden = !omni;
+  $("image-grid").classList.toggle("single", !omni);
   renderMetadata();
   $("empty-state").hidden = true;
   $("workspace").hidden = false;
@@ -184,6 +190,7 @@ function renderTaxonomy(result) {
   const missing = (result.missing_context_features || []).length;
   $("prediction-note").textContent = missing ? `${missing} contextual features were unavailable and passed as −9. Probabilities are model outputs.` : "Probabilities are model outputs.";
   $("prediction").hidden = false;
+  document.querySelector(".app-shell").classList.add("has-result");
 }
 form.addEventListener("submit", async (event) => {
   event.preventDefault();

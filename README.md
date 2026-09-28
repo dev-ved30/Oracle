@@ -68,7 +68,7 @@ For local Omni inference, `--cutout` accepts a Babamul cutouts JSON file contain
 
 ### Local web interface
 
-The [`oracle_ui`](oracle_ui/) app lets you enter a ZTF object ID, choose ORACLE-2 Omni, ORACLE-2, or ORACLE-2 Lite, and fetch and classify it in one action. It shows an interactive light curve (scroll to zoom, drag to pan), source metadata, the Omni reference image when selected, and hierarchical classification probabilities. The interface starts in dark mode and has a light-mode switch. From the repository root:
+The [`oracle_ui`](oracle_ui/) app lets you enter a ZTF object ID, choose ORACLE-2 Omni, ORACLE-2, or ORACLE-2 Lite, and fetch and classify it in one action. It shows an interactive light curve (scroll to zoom, drag to pan), source metadata, a Pan-STARRS1 color cutout, the ZTF reference image for Omni, and hierarchical classification probabilities. The interface starts in dark mode and has a light-mode switch. Pan-STARRS1 images are retrieved separately from the [PS1 image service](https://spacetelescope.github.io/mast_notebooks/notebooks/PanSTARRS/PS1_image/PS1_image.html), so a missing image does not prevent classification. From the repository root:
 
 ```bash
 conda activate VT

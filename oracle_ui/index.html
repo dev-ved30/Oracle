@@ -65,9 +65,18 @@
               <p class="figure-note">Magnitude · lower is brighter · days since first detection · scroll to zoom, drag to pan</p>
             </section>
             <section id="image-section" class="visual-section image-section" aria-labelledby="image-title">
-              <div class="section-head"><div><p class="eyebrow">Omni input</p><h3 id="image-title">Reference image</h3></div><span id="image-band" class="subtle">—</span></div>
-              <div class="image-frame"><img id="reference-image" alt="ZTF reference cutout for the latest alert; green crosshair marks the center" hidden><span id="image-crosshair" class="image-crosshair" aria-hidden="true" hidden></span><p id="image-fallback" hidden></p></div>
-              <p class="figure-note">63 × 63 pixel FITS cutout · display stretch for visibility</p>
+              <div class="section-head"><div><p class="eyebrow">Sky context</p><h3 id="image-title">Images</h3></div></div>
+              <div id="image-grid" class="image-grid">
+                <figure id="ztf-image-entry" class="image-entry">
+                  <figcaption>ZTF reference <span id="image-band">—</span></figcaption>
+                  <div class="image-frame"><img id="reference-image" alt="ZTF reference cutout for the latest alert; green crosshair marks the center" hidden><span id="image-crosshair" class="image-crosshair" aria-hidden="true" hidden></span><p id="image-fallback" hidden></p></div>
+                </figure>
+                <figure class="image-entry">
+                  <figcaption>Pan-STARRS1 <span>g/r/i</span></figcaption>
+                  <div class="image-frame"><img id="ps-image" alt="Pan-STARRS1 color cutout centered on the source; green crosshair marks the center" hidden><span id="ps-crosshair" class="image-crosshair" aria-hidden="true" hidden></span><p id="ps-fallback" hidden></p></div>
+                </figure>
+              </div>
+              <p class="figure-note">ZTF template is the Omni model input · Pan-STARRS1 is shown for visual context</p>
             </section>
           </div>
 

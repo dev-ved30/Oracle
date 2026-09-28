@@ -4,6 +4,7 @@ import argparse
 import base64
 import io
 import math
+import os
 import re
 from pathlib import Path
 from urllib.parse import urlencode
@@ -157,6 +158,10 @@ def create_app():
     @app.get("/")
     def index():
         return send_from_directory(UI_DIR, "index.html")
+
+    @app.get("/api/config")
+    def config():
+        return jsonify({"babamul_configured": bool(os.environ.get("BABAMUL_API_TOKEN"))})
 
     @app.post("/api/analyze")
     def analyze():

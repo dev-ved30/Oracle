@@ -56,6 +56,10 @@ function setBusy(value) {
 function updateModelDescription() { $("model-description").textContent = modelDescriptions[modelSelect.value] || ""; }
 modelSelect.addEventListener("change", updateModelDescription);
 updateModelDescription();
+fetch("/api/config")
+  .then((response) => response.json())
+  .then((config) => { $("babamul-warning").hidden = config.babamul_configured !== false; })
+  .catch(() => {});
 async function postJson(path, body) {
   const response = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   let data;

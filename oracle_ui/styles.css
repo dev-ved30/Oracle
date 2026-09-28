@@ -287,5 +287,6 @@ html[data-theme="light"] .data-summary:hover .data-toggle{background:#edf3fa}
 .ood-warning p{margin:0}
 .ood-warning strong{font-weight:750}
 html[data-theme="light"] .ood-warning{border-color:#f0b8b3;background:#fef0ef;color:#b3261e}
+.ood-warning.form-warning{max-width:870px;margin:0 0 12px}
 .history-entry .history-ood{color:#ff9b91;font-size:10px;line-height:1}
 html[data-theme="light"] .history-entry .history-ood{color:#b3261e}

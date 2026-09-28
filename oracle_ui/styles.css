@@ -141,6 +141,7 @@ html[data-theme="light"] .sidebar-toggle:hover{background:#eaf0f8;color:#2d4158}
 .history-entry-heading{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0}
 .history-entry-heading>strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
 .history-entry .history-model{flex:none;padding:3px 6px;border-radius:5px;background:color-mix(in srgb,var(--model-color,#8dc1ff) 17%,transparent);color:var(--model-color,#8dc1ff);font-size:9px;font-weight:700;line-height:1.2;white-space:nowrap}
+.history-entry .history-star{margin-left:4px;font-size:8px;line-height:1;vertical-align:1px;color:inherit;opacity:.9}
 .history-entry .history-result{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--class-color,var(--accent))}
 .history-entry .history-result strong{color:inherit;font-size:12px;font-weight:750;font-variant-numeric:tabular-nums}
 html[data-theme="light"] .new-source{color:#637386}

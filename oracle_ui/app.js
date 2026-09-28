@@ -516,6 +516,11 @@ function renderHistory() {
     const heading = document.createElement("span"); heading.className = "history-entry-heading";
     const title = document.createElement("strong"); title.textContent = item.source_id;
     const model = document.createElement("span"); model.className = "history-model"; model.textContent = modelNames[item.model] || item.model;
+    if (item.rolling) {
+      const star = document.createElement("span"); star.className = "history-star"; star.textContent = "★";
+      star.title = "Rolling mode"; star.setAttribute("aria-label", "Rolling mode");
+      model.append(star);
+    }
     heading.append(title, model);
     const detail = document.createElement("span"); detail.className = "history-result";
     const topClass = document.createElement("strong"); topClass.textContent = item.top_class;

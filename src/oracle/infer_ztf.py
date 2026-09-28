@@ -273,6 +273,28 @@ def _add_omni_image(batch, rows, context, cutout_path=None):
     batch["postage_stamp"] = torch.from_numpy(channels).unsqueeze(0)
 
 
+def _load_inference_model(model_choice, checkpoint):
+    checkpoint = Path(checkpoint) if checkpoint else DEFAULT_CHECKPOINTS[model_choice]
+    if not checkpoint.is_file():
+        raise FileNotFoundError(f"Checkpoint not found: {checkpoint}")
+    model = get_model(model_choice)
+    model.load_state_dict(torch.load(checkpoint, map_location="cpu", weights_only=True), strict=True)
+    model.eval()
+    return model, checkpoint
+
+
+def _probabilities_by_level(model, scores):
+    taxonomy = model.taxonomy
+    nodes = list(taxonomy.get_level_order_traversal())
+    by_level = {}
+    for depth, level_nodes in taxonomy.get_nodes_by_depth().items():
+        if depth <= 0:
+            continue
+        probabilities = {node: scores[nodes.index(node)] for node in level_nodes}
+        by_level[str(depth)] = dict(sorted(probabilities.items(), key=lambda pair: pair[1], reverse=True))
+    return by_level
+
+
 def classify_source(rows, context, source_id, model_choice="BTSv2-pro", checkpoint=None, cutout=None):
     """Run a selected checkpoint on an already fetched source."""
     if cutout and model_choice != "BTSv2-pro":
@@ -287,26 +309,81 @@ def classify_source(rows, context, source_id, model_choice="BTSv2-pro", checkpoi
         feature_names = time_independent_feature_list + meta_data_feature_list
         missing_features = [name for name, value in zip(feature_names, batch["static"][0].tolist())
                             if value == flag_value]
-    checkpoint = Path(checkpoint) if checkpoint else DEFAULT_CHECKPOINTS[model_choice]
-    if not checkpoint.is_file():
-        raise FileNotFoundError(f"Checkpoint not found: {checkpoint}")
-    model = get_model(model_choice)
-    model.load_state_dict(torch.load(checkpoint, map_location="cpu", weights_only=True), strict=True)
-    model.eval()
+    model, checkpoint = _load_inference_model(model_choice, checkpoint)
     with torch.inference_mode():
         scores = model.predict_class_probabilities(batch)[0].cpu().tolist()
-    taxonomy = model.taxonomy
-    nodes = list(taxonomy.get_level_order_traversal())
-    levels = taxonomy.get_nodes_by_depth()
-    by_level = {}
-    for depth, level_nodes in levels.items():
-        if depth <= 0:
-            continue
-        probabilities = {node: scores[nodes.index(node)] for node in level_nodes}
-        by_level[str(depth)] = dict(sorted(probabilities.items(), key=lambda pair: pair[1], reverse=True))
+    by_level = _probabilities_by_level(model, scores)
     return {"source_id": source_id, "detections": count, "model": model_choice,
             "checkpoint": str(checkpoint), "missing_context_features": missing_features,
             "probabilities_by_level": by_level}
+
+
+def classify_rolling_source(rows, context, source_id, model_choice="BTSv2-pro", checkpoint=None):
+    """Score every successive detected-observation prefix with one loaded checkpoint."""
+    torch.set_default_device("cpu")
+    detections = prepare_detections(rows)
+    model, checkpoint = _load_inference_model(model_choice, checkpoint)
+    fixed_image_embedding = None
+    if model_choice == "BTSv2-pro":
+        image_batch = {}
+        _add_omni_image(image_batch, rows, context)
+        with torch.inference_mode():
+            fixed_image_embedding = model.image_spine.get_latent_space_embeddings(image_batch)
+
+    points = []
+    missing_features = []
+    final_probabilities = None
+    for start in range(0, len(detections), 32):
+        prefix_batches = []
+        for count in range(start + 1, min(start + 32, len(detections)) + 1):
+            prefix_rows = [item[4] for item in detections[:count]]
+            prefix_batch, _ = make_batch(prefix_rows, context, model_choice)
+            prefix_batches.append(prefix_batch)
+
+        batch = {
+            "ts": torch.nn.utils.rnn.pad_sequence(
+                [item["ts"][0] for item in prefix_batches], batch_first=True),
+            "length": torch.tensor([item["length"].item() for item in prefix_batches], dtype=torch.int64),
+        }
+        if model_choice != "BTSv2-lite":
+            batch["static"] = torch.cat([item["static"] for item in prefix_batches])
+            feature_names = time_independent_feature_list + meta_data_feature_list
+            missing_features = [name for name, value in zip(feature_names, batch["static"][-1].tolist())
+                                if value == flag_value]
+
+        with torch.inference_mode():
+            if fixed_image_embedding is None:
+                scores = model.predict_class_probabilities(batch)
+            else:
+                light_curve_embedding = model.lc_md_spine.get_latent_space_embeddings(batch)
+                image_embedding = fixed_image_embedding.expand(light_curve_embedding.shape[0], -1)
+                logits = model.final_out(model.mlp_head(torch.cat((light_curve_embedding, image_embedding), dim=1)))
+                conditional = model.taxonomy.get_conditional_probabilities(logits)
+                scores = model.taxonomy.get_class_probabilities(conditional)
+        for offset, values in enumerate(scores.cpu().tolist()):
+            count = start + offset + 1
+            jd, _, _, fid, _ = detections[count - 1]
+            final_probabilities = _probabilities_by_level(model, values)
+            points.append({
+                "observation": count,
+                "jd": jd,
+                "days": jd - detections[0][0],
+                "band": {1: "g", 2: "r", 3: "i"}[fid],
+                "probabilities": final_probabilities.get("2", {}),
+            })
+
+    classification = {
+        "source_id": source_id, "detections": len(detections), "model": model_choice,
+        "checkpoint": str(checkpoint), "missing_context_features": missing_features,
+        "probabilities_by_level": final_probabilities,
+    }
+    note = ("Each step uses detections and per-alert metadata through that observation. "
+            "Current broker cross-matches and the latest ZTF reference image are reused at every step."
+            if model_choice == "BTSv2-pro" else
+            "Each step uses detections and per-alert metadata through that observation; current broker cross-matches are reused."
+            if model_choice == "BTSv2" else
+            "Each step uses only detections available through that observation.")
+    return {"classification": classification, "rolling": {"points": points, "note": note}}
 
 
 def classify(path, model_choice="BTSv2-pro", checkpoint=None, cutout=None):

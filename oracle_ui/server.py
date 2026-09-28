@@ -24,6 +24,7 @@ from oracle.infer_ztf import (
     DEFAULT_CHECKPOINTS,
     _babamul_get,
     _template_image,
+    classify_rolling_source,
     classify_source,
     make_batch,
     prepare_detections,
@@ -162,10 +163,13 @@ def create_app():
         payload = request.get_json(silent=True) or {}
         object_id = str(payload.get("object_id", "")).strip()
         model = payload.get("model")
+        rolling = payload.get("rolling", False)
         if not SOURCE_ID_PATTERN.fullmatch(object_id):
             return jsonify({"error": "Enter a ZTF object ID such as ZTF18abmrfqv."}), 400
         if model not in DEFAULT_CHECKPOINTS:
             return jsonify({"error": "Choose an ORACLE-2 model."}), 400
+        if not isinstance(rolling, bool):
+            return jsonify({"error": "Rolling classification must be on or off."}), 400
         try:
             rows, context, source_id = read_source(object_id)
             preview = _source_preview(rows, context, source_id)
@@ -173,11 +177,22 @@ def create_app():
             message = str(exc)
             status = 404 if "not found" in message.lower() else 400
             return jsonify({"error": message}), status
+        rolling_result = None
+        rolling_error = None
+        if rolling:
+            try:
+                bundle = classify_rolling_source(rows, context, source_id, model)
+                return jsonify({"source": preview, "classification": bundle["classification"],
+                                "rolling": bundle["rolling"], "rolling_error": None, "error": None})
+            except (ValueError, KeyError, FileNotFoundError, OSError, RuntimeError) as exc:
+                rolling_error = str(exc)
         try:
             result = classify_source(rows, context, source_id, model)
-        except (ValueError, KeyError, FileNotFoundError, OSError) as exc:
-            return jsonify({"source": preview, "classification": None, "error": str(exc)})
-        return jsonify({"source": preview, "classification": result, "error": None})
+        except (ValueError, KeyError, FileNotFoundError, OSError, RuntimeError) as exc:
+            return jsonify({"source": preview, "classification": None, "rolling": None,
+                            "rolling_error": rolling_error, "error": str(exc)})
+        return jsonify({"source": preview, "classification": result, "rolling": rolling_result,
+                        "rolling_error": rolling_error, "error": None})
 
     return app
 

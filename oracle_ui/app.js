@@ -5,7 +5,10 @@ const modelSelect = $("model-select");
 const button = $("analyze-button");
 const chart = $("lightcurve-chart");
 const tooltip = $("chart-tooltip");
+const rollingChart = $("rolling-chart");
+const rollingTooltip = $("rolling-tooltip");
 const modelNames = { "BTSv2-pro": "ORACLE-2 Omni", BTSv2: "ORACLE-2", "BTSv2-lite": "ORACLE-2 Lite" };
+const modelDescriptions = { "BTSv2-pro": "Light curve + source context + ZTF reference image", BTSv2: "Light curve + source context", "BTSv2-lite": "Light curve only" };
 const bandColors = { g: "#59d39a", r: "#ff8477", i: "#e9b66f" };
 const branches = { Persistent: ["AGN", "CV", "Varstar"], Transient: ["SN-Ia", "SN-II", "SN-Ib/c", "SLSN"] };
 let source = null;
@@ -14,6 +17,12 @@ let plotted = [];
 let xDomain = null;
 let plotBox = null;
 let drag = null;
+let rolling = null;
+let visibleClasses = new Set();
+let rollingPlot = null;
+let historyDb = null;
+let historyItems = [];
+let activeHistoryId = null;
 
 function message(value, error = false) {
   const target = $("app-message");
@@ -27,6 +36,9 @@ function setBusy(value) {
   modelSelect.disabled = value;
   button.innerHTML = value ? "Fetching & classifying…" : 'Classify <span aria-hidden="true">↗</span>';
 }
+function updateModelDescription() { $("model-description").textContent = modelDescriptions[modelSelect.value] || ""; }
+modelSelect.addEventListener("change", updateModelDescription);
+updateModelDescription();
 async function postJson(path, body) {
   const response = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   let data;
@@ -55,7 +67,8 @@ function renderMetadata() {
   $("metadata-rest").replaceChildren(...items.map(metadataCell));
   $("metadata-details").open = false;
   $("metadata-summary").textContent = source.metadata_error ? "Metadata unavailable" : `Show metadata (${items.length} fields)`;
-  $("metadata-note").textContent = source.metadata_error || `${available.length} of ${items.length} values available. Missing values are passed to the context models as −9.`;
+  const unavailable = source.classification?.missing_context_features?.length;
+  $("metadata-note").textContent = `${source.metadata_error || `${available.length} of ${items.length} values available.`}${unavailable ? ` ${unavailable} contextual features were unavailable and passed as −9.` : ""}`;
 }
 function renderSource() {
   $("source-title").textContent = source.source_id;
@@ -187,25 +200,183 @@ function renderTaxonomy(result) {
   $("top-class").textContent = topLeaf?.[0] || "—";
   $("top-probability").textContent = topLeaf ? percent(topLeaf[1]) : "—";
   $("prediction-model").textContent = modelNames[result.model] || result.model;
-  const missing = (result.missing_context_features || []).length;
-  $("prediction-note").textContent = missing ? `${missing} contextual features were unavailable and passed as −9. Probabilities are model outputs.` : "Probabilities are model outputs.";
+  $("prediction-note").textContent = "Probabilities are model outputs.";
   $("prediction").hidden = false;
   document.querySelector(".app-shell").classList.add("has-result");
 }
+const classColors = { AGN: "#0a84ff", CV: "#59d39a", Varstar: "#e9b66f", "SN-Ia": "#b395ff", "SN-II": "#ff8477", "SN-Ib/c": "#f2a5d8", SLSN: "#63cee2" };
+function renderRolling(data) {
+  rolling = data;
+  $("rolling-section").hidden = !data?.points?.length;
+  rollingTooltip.hidden = true;
+  if (!data?.points?.length) return;
+  const leaves = Object.keys(data.points.at(-1).probabilities);
+  visibleClasses = new Set([...leaves].sort((a, b) => data.points.at(-1).probabilities[b] - data.points.at(-1).probabilities[a]).slice(0, 3));
+  const legend = $("rolling-legend"); legend.replaceChildren();
+  for (const name of leaves) {
+    const label = document.createElement("label"); label.className = "rolling-legend-item";
+    const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.checked = visibleClasses.has(name);
+    checkbox.addEventListener("change", () => { if (checkbox.checked) visibleClasses.add(name); else visibleClasses.delete(name); drawRolling(); });
+    const dot = document.createElement("span"); dot.className = "rolling-legend-dot"; dot.style.background = classColors[name] || "#aaa";
+    const caption = document.createElement("span"); caption.textContent = name;
+    label.append(checkbox, dot, caption); legend.append(label);
+  }
+  $("rolling-note").textContent = data.note || "Class probabilities after each observation.";
+  requestAnimationFrame(drawRolling);
+}
+function drawRolling() {
+  if (!rolling?.points?.length || $("rolling-section").hidden) return;
+  const rect = rollingChart.getBoundingClientRect();
+  if (rect.width < 10 || rect.height < 10) return;
+  const ratio = window.devicePixelRatio || 1;
+  rollingChart.width = Math.round(rect.width * ratio); rollingChart.height = Math.round(rect.height * ratio);
+  const ctx = rollingChart.getContext("2d"); ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  const plot = { left: 46, right: rect.width - 16, top: 15, bottom: rect.height - 34 };
+  const points = rolling.points;
+  const maxDay = Math.max(1, points.at(-1).days);
+  const x = (point) => plot.left + (points.length === 1 ? .5 : point.days / maxDay) * (plot.right - plot.left);
+  const y = (probability) => plot.bottom - probability * (plot.bottom - plot.top);
+  rollingPlot = { plot, positions: points.map((point, index) => x(point, index)) };
+  const light = document.documentElement.dataset.theme === "light";
+  ctx.clearRect(0, 0, rect.width, rect.height);
+  ctx.font = "11px Inter, system-ui, sans-serif"; ctx.lineWidth = 1;
+  for (let tick = 0; tick <= 4; tick++) {
+    const yy = y(tick / 4), xx = plot.left + tick / 4 * (plot.right - plot.left);
+    ctx.strokeStyle = light ? "#e7edf5" : "#303238";
+    ctx.beginPath(); ctx.moveTo(plot.left, yy); ctx.lineTo(plot.right, yy); ctx.stroke();
+    ctx.fillStyle = light ? "#7d8c9b" : "#a8adb6";
+    ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillText(`${tick * 25}%`, plot.left - 8, yy);
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillText((maxDay * tick / 4).toFixed(maxDay < 10 ? 1 : 0), xx, plot.bottom + 10);
+  }
+  ctx.save(); ctx.beginPath(); ctx.rect(plot.left, plot.top, plot.right - plot.left, plot.bottom - plot.top); ctx.clip();
+  for (const name of visibleClasses) {
+    ctx.strokeStyle = classColors[name] || "#aaa"; ctx.lineWidth = 2; ctx.beginPath();
+    points.forEach((point, index) => index ? ctx.lineTo(x(point, index), y(point.probabilities[name] || 0)) : ctx.moveTo(x(point, index), y(point.probabilities[name] || 0)));
+    ctx.stroke();
+    if (points.length <= 50) for (let index = 0; index < points.length; index++) {
+      ctx.beginPath(); ctx.arc(x(points[index], index), y(points[index].probabilities[name] || 0), 2.4, 0, Math.PI * 2); ctx.fillStyle = classColors[name] || "#aaa"; ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+rollingChart.addEventListener("pointermove", (event) => {
+  if (!rollingPlot || !rolling?.points?.length) return;
+  const rect = rollingChart.getBoundingClientRect(), x = event.clientX - rect.left;
+  let index = 0;
+  for (let i = 1; i < rollingPlot.positions.length; i++) if (Math.abs(rollingPlot.positions[i] - x) < Math.abs(rollingPlot.positions[index] - x)) index = i;
+  const point = rolling.points[index];
+  if (Math.abs(rollingPlot.positions[index] - x) > 24) { rollingTooltip.hidden = true; return; }
+  const scores = [...visibleClasses].map((name) => `${name} ${percent(point.probabilities[name] || 0)}`).join(" · ");
+  rollingTooltip.textContent = `Obs ${point.observation} · JD ${number(point.jd, 5)}${scores ? ` · ${scores}` : ""}`;
+  rollingTooltip.hidden = false;
+  rollingTooltip.style.left = `${Math.max(5, Math.min(x + 12, rect.width - rollingTooltip.offsetWidth - 5))}px`;
+  rollingTooltip.style.top = "12px";
+});
+rollingChart.addEventListener("pointerleave", () => { rollingTooltip.hidden = true; });
+if ("ResizeObserver" in window) new ResizeObserver(drawRolling).observe(document.querySelector(".rolling-chart-wrap"));
+else window.addEventListener("resize", drawRolling);
+
+function renderResult(data, historyId = null) {
+  source = data.source;
+  source.classification = data.classification;
+  activeHistoryId = historyId;
+  renderSource();
+  if (data.classification) { renderTaxonomy(data.classification); renderMetadata(); }
+  else $("prediction").hidden = true;
+  renderRolling(data.rolling);
+  $("advanced-options").open = false;
+  renderHistory();
+}
+function setSidebar(open) {
+  document.body.classList.toggle("sidebar-open", open);
+  $("history-sidebar").inert = !open;
+  $("history-open").setAttribute("aria-expanded", String(open));
+  try { localStorage.setItem("oracle-history-open", String(open)); } catch {}
+  requestAnimationFrame(() => { drawLightCurve(); drawRolling(); });
+}
+$("history-open").addEventListener("click", () => setSidebar(true));
+$("history-close").addEventListener("click", () => setSidebar(false));
+let sidebarPreference = null;
+try { sidebarPreference = localStorage.getItem("oracle-history-open"); } catch {}
+setSidebar(sidebarPreference === null ? window.innerWidth > 900 : sidebarPreference === "true");
+function openHistoryDb() {
+  return new Promise((resolve, reject) => {
+    if (!("indexedDB" in window)) { reject(new Error("Browser storage unavailable")); return; }
+    const request = indexedDB.open("oracle-classification-history", 1);
+    request.onupgradeneeded = () => request.result.createObjectStore("runs", { keyPath: "id" });
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+function historyTransaction(mode, action) {
+  return new Promise((resolve, reject) => {
+    const transaction = historyDb.transaction("runs", mode);
+    const request = action(transaction.objectStore("runs"));
+    let result;
+    request.onsuccess = () => { result = request.result; };
+    transaction.oncomplete = () => resolve(result);
+    transaction.onerror = () => reject(transaction.error);
+    transaction.onabort = () => reject(transaction.error || new Error("Browser storage was interrupted."));
+  });
+}
+function renderHistory() {
+  const list = $("history-list"); list.replaceChildren();
+  if (!historyItems.length) { const empty = document.createElement("p"); empty.className = "history-empty"; empty.textContent = "Classified sources will appear here."; list.append(empty); return; }
+  for (const item of historyItems) {
+    const entry = document.createElement("button"); entry.type = "button"; entry.className = `history-entry${item.id === activeHistoryId ? " active" : ""}`;
+    const title = document.createElement("strong"); title.textContent = item.source_id;
+    const detail = document.createElement("span"); detail.textContent = `${modelNames[item.model] || item.model} · ${item.top_class} ${percent(item.top_probability)}`;
+    const time = document.createElement("small"); time.textContent = new Date(item.created_at).toLocaleString() + (item.rolling ? " · Rolling" : "");
+    entry.append(title, detail, time);
+    entry.addEventListener("click", async () => {
+      if (!historyDb || busy) return;
+      try {
+        const saved = await historyTransaction("readonly", (store) => store.get(item.id));
+        if (!saved) return;
+        input.value = saved.source_id; modelSelect.value = saved.model; updateModelDescription();
+        xDomain = null; renderResult(saved.data, saved.id);
+        message(`Showing saved ${saved.source_id} classification.`);
+        if (window.innerWidth <= 900) setSidebar(false);
+      } catch { message("Could not open this saved classification.", true); }
+    });
+    list.append(entry);
+  }
+}
+async function saveHistory(data) {
+  await historyReady;
+  if (!historyDb || !data.classification) return;
+  const leaves = data.classification.probabilities_by_level?.["2"] || {};
+  const [topClass, topProbability] = Object.entries(leaves).sort((a, b) => b[1] - a[1])[0] || ["—", 0];
+  const item = { id: crypto.randomUUID(), created_at: new Date().toISOString(), source_id: data.source.source_id,
+    model: data.classification.model, top_class: topClass, top_probability: topProbability, rolling: Boolean(data.rolling), data };
+  await historyTransaction("readwrite", (store) => store.put(item));
+  activeHistoryId = item.id;
+  historyItems.unshift(item);
+  renderHistory();
+}
+const historyReady = openHistoryDb().then(async (db) => {
+  historyDb = db;
+  historyItems = await historyTransaction("readonly", (store) => store.getAll());
+  historyItems.sort((a, b) => b.created_at.localeCompare(a.created_at));
+  renderHistory();
+}).catch(() => { $("history-list").textContent = "History is unavailable in this browser."; });
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   if (busy) return;
   const objectId = input.value.trim();
   if (!/^ZTF\d{2}[a-z]+$/i.test(objectId)) { message("Enter a ZTF object ID, such as ZTF18abmrfqv.", true); return; }
-  source = null; xDomain = null; plotted = [];
+  source = null; rolling = null; xDomain = null; plotted = []; activeHistoryId = null;
   $("workspace").hidden = true; $("empty-state").hidden = false;
-  setBusy(true); message(`Fetching ${objectId} and running ${modelNames[modelSelect.value]}…`);
+  const useRolling = $("rolling-enabled").checked;
+  setBusy(true); message(`Fetching ${objectId} and running ${modelNames[modelSelect.value]}${useRolling ? " after each observation" : ""}…`);
   try {
-    const data = await postJson("/api/analyze", { object_id: objectId, model: modelSelect.value });
-    source = data.source;
-    renderSource();
-    if (data.classification) { renderTaxonomy(data.classification); message(`${modelNames[data.classification.model]} classification complete.`); }
-    else { $("prediction").hidden = true; message(data.error || "Classification could not be completed.", true); }
+    const data = await postJson("/api/analyze", { object_id: objectId, model: modelSelect.value, rolling: useRolling });
+    renderResult(data);
+    if (data.classification) {
+      message(data.rolling_error ? `Classification complete. Rolling plot unavailable: ${data.rolling_error}` : `${modelNames[data.classification.model]} classification complete.`, Boolean(data.rolling_error));
+      try { await saveHistory(data); } catch { message("Classification complete, but browser history could not be saved.", true); }
+    } else message(data.error || "Classification could not be completed.", true);
   } catch (error) { message(error.message, true); }
   finally { setBusy(false); }
 });
@@ -264,6 +435,7 @@ function applyTheme(theme) {
   $("theme-label").textContent = light ? "Dark mode" : "Light mode";
   document.querySelector('meta[name="theme-color"]').content = light ? "#fafbfe" : "#000000";
   drawLightCurve();
+  drawRolling();
 }
 applyTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark");
 themeToggle.addEventListener("click", () => {

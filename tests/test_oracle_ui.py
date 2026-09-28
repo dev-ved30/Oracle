@@ -34,7 +34,8 @@ class TestOracleUi(unittest.TestCase):
         with patch.object(server, "read_source", return_value=(self.rows, self.context, "ZTF18abmrfqv")) as lookup, \
              patch.object(server, "_babamul_get", return_value={"cutoutTemplate": self.template}), \
              patch.object(server, "_ps_preview", return_value="data:image/jpeg;base64,example"), \
-             patch.object(server, "classify_source", return_value=self.result) as classify:
+             patch.object(server, "classify_source", return_value=self.result) as classify, \
+             patch.object(server, "classify_rolling_source") as rolling:
             response = self.client.post("/api/analyze", json={"object_id": "ZTF18abmrfqv", "model": "BTSv2-pro"})
         self.assertEqual(response.status_code, 200)
         body = response.get_json()
@@ -45,9 +46,25 @@ class TestOracleUi(unittest.TestCase):
         self.assertTrue(body["source"]["image"].startswith("data:image/png;base64,"))
         self.assertTrue(body["source"]["ps_image"].startswith("data:image/jpeg;base64,"))
         self.assertEqual(body["classification"], self.result)
+        self.assertIsNone(body["rolling"])
+        rolling.assert_not_called()
         lookup.assert_called_once_with("ZTF18abmrfqv")
         self.assertIs(classify.call_args.args[0], self.rows)
         self.assertEqual(classify.call_args.args[3], "BTSv2-pro")
+
+    def test_rolling_request_returns_series_and_final_classification(self):
+        series = {"points": [{"observation": 1, "days": 0, "probabilities": {"AGN": 0.8}}], "note": "Test"}
+        with patch.object(server, "read_source", return_value=(self.rows, self.context, "ZTF18abmrfqv")), \
+             patch.object(server, "_babamul_get", return_value={"cutoutTemplate": self.template}), \
+             patch.object(server, "_ps_preview", return_value=None), \
+             patch.object(server, "classify_rolling_source", return_value={"classification": self.result, "rolling": series}) as classify, \
+             patch.object(server, "classify_source") as regular:
+            response = self.client.post("/api/analyze", json={"object_id": "ZTF18abmrfqv", "model": "BTSv2-pro", "rolling": True})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["rolling"], series)
+        self.assertEqual(response.get_json()["classification"], self.result)
+        classify.assert_called_once()
+        regular.assert_not_called()
 
     def test_classification_error_keeps_source_preview(self):
         with patch.object(server, "read_source", return_value=(self.rows, self.context, "ZTF18abmrfqv")), \
@@ -77,6 +94,7 @@ class TestOracleUi(unittest.TestCase):
     def test_invalid_request(self):
         self.assertEqual(self.client.post("/api/analyze", json={"object_id": "../../etc/passwd", "model": "BTSv2-pro"}).status_code, 400)
         self.assertEqual(self.client.post("/api/analyze", json={"object_id": "ZTF18abmrfqv", "model": "other"}).status_code, 400)
+        self.assertEqual(self.client.post("/api/analyze", json={"object_id": "ZTF18abmrfqv", "model": "BTSv2", "rolling": "yes"}).status_code, 400)
 
 
 if __name__ == "__main__":

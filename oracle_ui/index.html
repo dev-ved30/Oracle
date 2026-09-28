@@ -11,9 +11,14 @@
     <script src="/assets/app.js" defer></script>
   </head>
   <body>
+    <aside id="history-sidebar" class="history-sidebar" aria-label="Past classifications">
+      <div class="history-head"><strong>History</strong><button id="history-close" type="button" aria-label="Hide history sidebar">×</button></div>
+      <p class="history-hint">Saved in this browser</p>
+      <div id="history-list" class="history-list"><p class="history-empty">Classified sources will appear here.</p></div>
+    </aside>
     <div class="app-shell">
       <main>
-        <div class="theme-row"><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to light mode" aria-pressed="false"><span id="theme-icon" aria-hidden="true">☀</span><span id="theme-label">Light mode</span></button></div>
+        <div class="theme-row"><button id="history-open" class="history-open" type="button" aria-label="Show history sidebar" aria-expanded="false">☰ <span>History</span></button><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to light mode" aria-pressed="false"><span id="theme-icon" aria-hidden="true">☀</span><span id="theme-label">Light mode</span></button></div>
         <section class="intro" aria-labelledby="page-title">
           <p class="eyebrow">ZTF source classifier</p>
           <h1 id="page-title">What's lighting up the sky?</h1>
@@ -21,17 +26,20 @@
         </section>
 
         <form id="source-form" class="query-form">
-          <label class="sr-only" for="source-id">ZTF object ID</label>
-          <input id="source-id" name="source-id" type="text" value="ZTF23aabidjl" placeholder="ZTF object ID" autocomplete="off" autocapitalize="off" spellcheck="false" required>
-          <div class="query-actions">
-            <label class="sr-only" for="model-select">Model</label>
-            <div class="select-wrap"><select id="model-select" name="model" aria-label="Model">
-              <option value="BTSv2-pro">ORACLE-2 Omni</option>
-              <option value="BTSv2">ORACLE-2</option>
-              <option value="BTSv2-lite">ORACLE-2 Lite</option>
-            </select><span aria-hidden="true">⌄</span></div>
-            <button id="analyze-button" type="submit" class="button-primary">Classify <span aria-hidden="true">↗</span></button>
+          <div class="query-main">
+            <label class="sr-only" for="source-id">ZTF object ID</label>
+            <input id="source-id" name="source-id" type="text" value="ZTF23aabidjl" placeholder="ZTF object ID" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+            <div class="query-actions">
+              <label class="sr-only" for="model-select">Model</label>
+              <div class="select-wrap"><select id="model-select" name="model" aria-label="Model" aria-describedby="model-description">
+                <option value="BTSv2-pro">ORACLE-2 Omni</option>
+                <option value="BTSv2">ORACLE-2</option>
+                <option value="BTSv2-lite">ORACLE-2 Lite</option>
+              </select><span aria-hidden="true">⌄</span></div>
+              <button id="analyze-button" type="submit" class="button-primary">Classify <span aria-hidden="true">↗</span></button>
+            </div>
           </div>
+          <div class="query-extras"><p id="model-description" class="model-description"></p><details id="advanced-options" class="advanced-options"><summary>Advanced mode</summary><label class="rolling-option"><input id="rolling-enabled" type="checkbox"><span><strong>Rolling classification</strong><small>Classify after each observation and plot class probabilities over time. This takes longer.</small></span></label></details></div>
         </form>
         <p class="query-help">Your Babamul API token stays on this machine.</p>
         <p id="app-message" class="app-message" role="status" aria-live="polite" hidden></p>
@@ -90,6 +98,12 @@
             <div class="prediction-lead"><div><span>Highest leaf probability</span><strong id="top-class">—</strong></div><strong id="top-probability">—</strong></div>
             <div id="taxonomy" class="taxonomy" aria-label="Classification probabilities"></div>
             <p id="prediction-note" class="figure-note"></p>
+          </section>
+          <section id="rolling-section" class="result-section rolling-section" aria-labelledby="rolling-title" hidden>
+            <div class="section-head"><div><p class="eyebrow">Advanced · Observation by observation</p><h3 id="rolling-title">Classification over time</h3></div></div>
+            <div id="rolling-legend" class="rolling-legend" aria-label="Show or hide classes"></div>
+            <div class="rolling-chart-wrap"><canvas id="rolling-chart" role="img" aria-label="Class probabilities after each observation over days since first detection"></canvas><div id="rolling-tooltip" class="chart-tooltip" hidden></div></div>
+            <p id="rolling-note" class="figure-note"></p>
           </section>
         </div>
       </main>

@@ -40,7 +40,7 @@
               <button id="analyze-button" type="submit" class="button-primary" aria-label="Classify source" title="Classify source"><span aria-hidden="true">↑</span></button>
             </div>
           </div>
-          <div class="query-extras"><p id="model-description" class="model-description"></p><label class="rolling-toggle" title="Classify every observation: plot class probabilities as the light curve grows. This takes longer and is on by default."><input id="rolling-enabled" type="checkbox" role="switch" aria-label="Rolling mode" checked><span class="rolling-toggle-text">Rolling mode</span><span class="rolling-switch" aria-hidden="true"></span></label></div>
+          <div class="query-extras"><p id="model-description" class="model-description"></p><label class="evolution-toggle" title="Evolution: score every observation in sequence to show how the classification changes as the light curve grows. This takes longer and is on by default."><input id="evolution-enabled" type="checkbox" role="switch" aria-label="Evolution mode" checked><span class="evolution-switch" aria-hidden="true"></span><span class="evolution-toggle-text">Evolution</span></label></div>
         </form>
         <p id="app-message" class="app-message" role="status" aria-live="polite" hidden><span id="message-dots" class="thinking-dots" aria-hidden="true"><i></i><i></i><i></i></span><span id="message-text"></span></p>
 
@@ -72,7 +72,7 @@
             <p id="prediction-note" class="figure-note"></p>
           </section>
           <section id="rolling-section" class="result-section rolling-section" aria-labelledby="rolling-title" hidden>
-            <div class="section-head"><div><p class="eyebrow">Advanced · Observation by observation</p><h3 id="rolling-title">Classification over time</h3></div></div>
+            <div class="section-head"><div><p class="eyebrow">Evolution · Observation by observation</p><h3 id="rolling-title">Evolution over time</h3></div></div>
             <div id="rolling-legend" class="rolling-legend" aria-label="Show or hide classes"></div>
             <div class="rolling-chart-wrap"><canvas id="rolling-chart" role="img" aria-label="Class probabilities after each observation over days since first detection"></canvas><div id="rolling-tooltip" class="chart-tooltip" hidden></div></div>
             <p id="rolling-note" class="figure-note"></p>

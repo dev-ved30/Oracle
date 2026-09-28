@@ -443,7 +443,7 @@ $("rolling-download").addEventListener("click", () => {
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
   const link = document.createElement("a");
   link.href = url;
-  link.download = `${source.source_id}_rolling_probabilities.csv`;
+  link.download = `${source.source_id}_evolution_probabilities.csv`;
   document.body.append(link);
   link.click();
   link.remove();
@@ -500,7 +500,7 @@ $("new-source").addEventListener("click", () => {
   resetRollingDataPanel();
   document.querySelector(".app-shell").classList.remove("has-result");
   input.value = "";
-  $("rolling-enabled").checked = true;
+  $("evolution-enabled").checked = true;
   message("");
   renderHistory();
   if (window.innerWidth <= 900) setSidebar(false);
@@ -550,7 +550,7 @@ function renderHistory() {
     const model = document.createElement("span"); model.className = "history-model"; model.textContent = modelNames[item.model] || item.model;
     if (item.rolling) {
       const star = document.createElement("span"); star.className = "history-star"; star.textContent = "★";
-      star.title = "Rolling mode"; star.setAttribute("aria-label", "Rolling mode");
+      star.title = "Evolution mode"; star.setAttribute("aria-label", "Evolution mode");
       model.append(star);
     }
     heading.append(title, model);
@@ -783,13 +783,13 @@ form.addEventListener("submit", async (event) => {
   const pendingOod = $("ood-warning");
   if (pendingOod) pendingOod.hidden = true;
   resetRollingDataPanel();
-  const useRolling = $("rolling-enabled").checked;
+  const useRolling = $("evolution-enabled").checked;
   setBusy(true); message(`Fetching ${objectId}…`);
   try {
     const data = await postJson("/api/analyze", { object_id: objectId, model: modelSelect.value, rolling: useRolling });
     renderResult(data);
     if (data.classification) {
-      message(data.rolling_error ? `Classification complete. Rolling plot unavailable: ${data.rolling_error}` : `${modelNames[data.classification.model]} classification complete.`, Boolean(data.rolling_error));
+      message(data.rolling_error ? `Classification complete. Evolution plot unavailable: ${data.rolling_error}` : `${modelNames[data.classification.model]} classification complete.`, Boolean(data.rolling_error));
       try { await saveHistory(data); } catch { message("Classification complete, but browser history could not be saved.", true); }
     } else message(data.error || "Classification could not be completed.", true);
   } catch (error) { message(error.message, true); }

@@ -168,13 +168,13 @@ def create_app():
         payload = request.get_json(silent=True) or {}
         object_id = str(payload.get("object_id", "")).strip()
         model = payload.get("model")
-        rolling = payload.get("rolling", False)
+        rolling = payload.get("evolution", payload.get("rolling", False))
         if not SOURCE_ID_PATTERN.fullmatch(object_id):
             return jsonify({"error": "Enter a ZTF object ID such as ZTF18abmrfqv."}), 400
         if model not in DEFAULT_CHECKPOINTS:
             return jsonify({"error": "Choose an ORACLE-2 model."}), 400
         if not isinstance(rolling, bool):
-            return jsonify({"error": "Rolling classification must be on or off."}), 400
+            return jsonify({"error": "Evolution mode must be on or off."}), 400
         try:
             rows, context, source_id = read_source(object_id)
             preview = _source_preview(rows, context, source_id)
@@ -202,11 +202,42 @@ def create_app():
     return app
 
 
+def _open_browser_when_ready(url, timeout=15.0):
+    """Open the GUI URL once the Flask server accepts connections."""
+    from urllib.request import urlopen as _urlopen
+
+    def _wait_and_open():
+        import time
+        import webbrowser
+
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            try:
+                with _urlopen(url, timeout=1):
+                    break
+            except OSError:
+                time.sleep(0.2)
+        else:
+            return
+        webbrowser.open(url)
+
+    import threading
+
+    threading.Thread(target=_wait_and_open, daemon=True).start()
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--host", type=str, default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--no-browser", action="store_true",
+                        help="Do not automatically open the GUI in a web browser.")
     args = parser.parse_args(argv)
-    create_app().run(host="127.0.0.1", port=args.port, debug=False, threaded=True)
+    url = f"http://{args.host}:{args.port}/"
+    if not args.no_browser:
+        _open_browser_when_ready(url)
+    print(f"ORACLE web serving {UI_DIR} at {url}")
+    create_app().run(host=args.host, port=args.port, debug=False, threaded=True)
 
 
 if __name__ == "__main__":

@@ -41,6 +41,43 @@ The ORACLE-2 models have also been demonstrated in real-time deployment on the Z
 
 Please refer to the documentation [here](https://dev-ved30.github.io/Oracle/) for installation instructions.
 
+## Classify a ZTF source by object ID
+
+The `oracle-infer-ztf` command fetches a source's detections and reference cutout from the [Babamul/BOOM object API](https://github.com/boom-astro/babamul), applies the BTS preprocessing, and runs an ORACLE-2 checkpoint. Set a [Babamul API token](https://babamul.caltech.edu/signup) in your environment first:
+
+```bash
+conda activate VT
+export BABAMUL_API_TOKEN="your_api_token"
+PYTHONPATH=src python -m oracle.infer_ztf ZTF18abmrfqv --output prediction.json
+```
+
+Replace `your_api_token` with your actual token. If you saved the export in `~/.zshrc`, open a new terminal or run `source ~/.zshrc` before the command. Run this from the repository root. If you install the repository with `python -m pip install -e .`, you can use the `oracle-infer-ztf` command instead.
+
+By default the command uses the **Omni** model (`BTSv2-pro`) at `models/BTSv2-pro/morning-feather-572/best_model_f1.pth`. It fills the reference-image channel for the latest alert's ZTF filter and leaves the other two image channels at zero, following `boom_scripts/boom_script_omni.py`. Use `--model BTSv2` for light curves plus metadata or `--model BTSv2-lite` for light curves only. To use another checkpoint of the selected architecture, pass `--checkpoint path/to/best_model_f1.pth`. These defaults are repository checkpoints; select the deployment checkpoint explicitly if you need to reproduce the deployed model's exact weights.
+
+The output gives probabilities at each taxonomy level and lists contextual features that were unavailable in the broker response and set to the training sentinel value (`-9`). Upper limits and forced photometry are excluded, as in the BTS light curve loader. The metadata and Omni models may be less reliable when many contextual features are missing.
+
+You can also classify a saved Babamul/BOOM alert JSON or a CSV file with one detection per row:
+
+```bash
+PYTHONPATH=src python -m oracle.infer_ztf path/to/alert.json --cutout path/to/cutouts.json
+PYTHONPATH=src python -m oracle.infer_ztf path/to/detections.csv --model BTSv2-lite
+```
+
+For local Omni inference, `--cutout` accepts a Babamul cutouts JSON file containing `cutoutTemplate`, or a FITS/FITS.gz reference cutout. A source JSON containing `cutoutTemplate` needs no separate cutout file. Each detection needs `jd`, `magpsf`, `sigmapsf`, and `fid` (1, 2, 3) or `band` (`g`, `r`, `i`). The metadata and Omni models also need `ra` and `dec` in the latest detection. Missing contextual fields use `-9`; WISE magnitudes can be supplied in a top-level `static` object in JSON.
+
+### Local web interface
+
+The [`oracle_ui`](oracle_ui/) app lets you enter a ZTF object ID, choose ORACLE-2 Omni, ORACLE-2, or ORACLE-2 Lite, and fetch and classify it in one action. It shows an interactive light curve (scroll to zoom, drag to pan), source metadata, the Omni reference image when selected, and the classification taxonomy. From the repository root:
+
+```bash
+conda activate VT
+source ~/.zshrc
+PYTHONPATH=src python -m oracle_ui.server
+```
+
+Open <http://127.0.0.1:8765> in your browser. The server listens on localhost and reads `BABAMUL_API_TOKEN` from its environment; the browser never receives the token. If Flask is missing from your environment, install the project dependencies with `python -m pip install -e .`.
+
 ## Repository structure
 
 The repository contains the source code, data-processing tools, trained models, and analysis materials for both ORACLE-1 and ORACLE-2:

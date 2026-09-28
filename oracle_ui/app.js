@@ -202,6 +202,8 @@ function renderTaxonomy(result) {
   root.append(columns);
   $("top-class").textContent = topLeaf?.[0] || "—";
   $("top-probability").textContent = topLeaf ? percent(topLeaf[1]) : "—";
+  $("prediction").dataset.model = result.model;
+  $("prediction").dataset.class = topLeaf?.[0] || "";
   $("prediction-model").textContent = modelNames[result.model] || result.model;
   $("prediction-note").textContent = "Probabilities are model outputs.";
   $("prediction").hidden = false;
@@ -295,10 +297,12 @@ function setSidebar(open) {
   document.body.classList.toggle("sidebar-open", open);
   $("history-sidebar").inert = !open;
   $("history-open").setAttribute("aria-expanded", String(open));
+  $("history-open").setAttribute("aria-label", open ? "Hide history sidebar" : "Show history sidebar");
+  $("history-open").title = open ? "Hide history sidebar" : "Show history sidebar";
   try { localStorage.setItem("oracle-history-open", String(open)); } catch {}
   requestAnimationFrame(() => { drawLightCurve(); drawRolling(); });
 }
-$("history-open").addEventListener("click", () => setSidebar(true));
+$("history-open").addEventListener("click", () => setSidebar(!document.body.classList.contains("sidebar-open")));
 $("history-close").addEventListener("click", () => setSidebar(false));
 $("new-source").addEventListener("click", () => {
   if (busy) return;
@@ -344,14 +348,18 @@ function renderHistory() {
   if (!historyItems.length) { const empty = document.createElement("p"); empty.className = "history-empty"; empty.textContent = "Classified sources will appear here."; list.append(empty); return; }
   for (const item of historyItems) {
     const entry = document.createElement("button"); entry.type = "button"; entry.className = `history-entry${item.id === activeHistoryId ? " active" : ""}`;
+    entry.dataset.model = item.model;
+    entry.dataset.class = item.top_class;
+    const heading = document.createElement("span"); heading.className = "history-entry-heading";
     const title = document.createElement("strong"); title.textContent = item.source_id;
     const model = document.createElement("span"); model.className = "history-model"; model.textContent = modelNames[item.model] || item.model;
+    heading.append(title, model);
     const detail = document.createElement("span"); detail.className = "history-result";
     const topClass = document.createElement("strong"); topClass.textContent = item.top_class;
     const score = document.createElement("strong"); score.textContent = percent(item.top_probability);
     detail.append(topClass, score);
     const time = document.createElement("small"); time.textContent = new Date(item.created_at).toLocaleString() + (item.rolling ? " · Rolling" : "");
-    entry.append(title, model, detail, time);
+    entry.append(heading, detail, time);
     entry.addEventListener("click", async () => {
       if (!historyDb || busy) return;
       try {

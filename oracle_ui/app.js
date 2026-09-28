@@ -477,7 +477,7 @@ $("new-source").addEventListener("click", () => {
   resetRollingDataPanel();
   document.querySelector(".app-shell").classList.remove("has-result");
   input.value = "";
-  $("rolling-enabled").checked = false;
+  $("rolling-enabled").checked = true;
   message("");
   renderHistory();
   if (window.innerWidth <= 900) setSidebar(false);

@@ -20,24 +20,51 @@ let drag = null;
 let rolling = null;
 let visibleClasses = new Set();
 let rollingPlot = null;
+let linkedIndex = null;
 let historyDb = null;
 let historyItems = [];
 let activeHistoryId = null;
+let currentMessage = "";
+let currentMessageError = false;
+let busyStartedAt = 0;
+let elapsedTimer = null;
 
-function message(value, error = false) {
+function elapsedText(ms) {
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  return minutes ? `${minutes}:${String(seconds % 60).padStart(2, "0")}` : `${seconds}s`;
+}
+function renderMessage() {
   const target = $("app-message");
-  target.textContent = value;
-  target.classList.toggle("error", error);
-  target.hidden = !value;
+  const elapsed = busy && busyStartedAt && currentMessage ? ` · ${elapsedText(Date.now() - busyStartedAt)}` : "";
+  $("message-dots").hidden = !(busy && currentMessage);
+  $("message-text").textContent = currentMessage + elapsed;
+  target.classList.toggle("error", currentMessageError);
+  target.hidden = !currentMessage;
+}
+function message(value, error = false) {
+  currentMessage = value;
+  currentMessageError = error;
+  renderMessage();
 }
 function setBusy(value) {
   busy = value;
+  document.querySelector(".app-shell").classList.toggle("is-busy", value);
   button.disabled = value;
   modelSelect.disabled = value;
   $("new-source").disabled = value;
   button.setAttribute("aria-label", value ? "Fetching and classifying source" : "Classify source");
   button.title = value ? "Fetching and classifying source" : "Classify source";
-  button.firstElementChild.textContent = value ? "…" : "↑";
+  button.setAttribute("aria-busy", String(value));
+  button.classList.toggle("is-loading", value);
+  button.firstElementChild.textContent = value ? "" : "↑";
+  clearInterval(elapsedTimer);
+  elapsedTimer = null;
+  if (value) {
+    busyStartedAt = Date.now();
+    elapsedTimer = setInterval(renderMessage, 500);
+  } else busyStartedAt = 0;
+  renderMessage();
 }
 function updateModelDescription() { $("model-description").textContent = modelDescriptions[modelSelect.value] || ""; }
 modelSelect.addEventListener("change", updateModelDescription);
@@ -77,6 +104,7 @@ function renderSource() {
   $("source-title").textContent = source.source_id;
   $("source-subtitle").textContent = `Babamul · Latest detection JD ${number(source.last_jd, 5)}`;
   $("broker-link").href = `https://babamul.caltech.edu/objects/ZTF/${encodeURIComponent(source.source_id)}`;
+  $("fritz-link").href = `https://fritz.science/source/${encodeURIComponent(source.source_id)}`;
   $("metric-detections").textContent = Number(source.detections).toLocaleString();
   $("metric-span").textContent = `${number(source.last_jd - source.first_jd, 1)} d`;
   $("metric-position").textContent = `${number(source.ra)}° / ${number(source.dec)}°`;
@@ -134,8 +162,10 @@ function drawLightCurve() {
   const plot = { left: 48, right: rect.width - 14, top: 12, bottom: rect.height - 32 };
   plotBox = plot;
   const [minDay, maxDay] = xDomain || fullXDomain();
-  const visible = source.photometry.filter((p) => p.days >= minDay && p.days <= maxDay);
-  const forY = visible.length ? visible : source.photometry;
+  const visible = source.photometry
+    .map((point, index) => ({ point, index }))
+    .filter(({ point }) => point.days >= minDay && point.days <= maxDay);
+  const forY = visible.length ? visible.map((entry) => entry.point) : source.photometry;
   const minMag = Math.min(...forY.map((p) => p.mag - p.error)) - .2;
   const maxMag = Math.max(...forY.map((p) => p.mag + p.error)) + .2;
   const magSpan = Math.max(.5, maxMag - minMag);
@@ -156,7 +186,7 @@ function drawLightCurve() {
     ctx.textAlign = "center"; ctx.textBaseline = "top";
     ctx.fillText((minDay + tick / 4 * (maxDay - minDay)).toFixed(maxDay - minDay < 10 ? 1 : 0), xx, plot.bottom + 9);
   }
-  plotted = visible.map((point) => ({ ...point, x: x(point.days), y: y(point.mag) }));
+  plotted = visible.map(({ point, index }) => ({ ...point, index, x: x(point.days), y: y(point.mag) }));
   ctx.save(); ctx.beginPath(); ctx.rect(plot.left, plot.top, plot.right - plot.left, plot.bottom - plot.top); ctx.clip();
   for (const band of ["g", "r", "i"]) {
     const series = plotted.filter((point) => point.band === band);
@@ -173,6 +203,15 @@ function drawLightCurve() {
     }
   }
   ctx.restore();
+  if (linkedIndex !== null) {
+    const target = plotted.find((point) => point.index === linkedIndex);
+    if (target) {
+      ctx.strokeStyle = lightTheme ? "#007aff" : "#0a84ff";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(target.x, target.y, 6.5, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(target.x, target.y, 2.8, 0, Math.PI * 2); ctx.fillStyle = ctx.strokeStyle; ctx.fill();
+    }
+  }
 }
 function renderTaxonomy(result) {
   const root = $("taxonomy"); root.replaceChildren();
@@ -212,8 +251,11 @@ function renderTaxonomy(result) {
 const classColors = { AGN: "#0a84ff", CV: "#59d39a", Varstar: "#e9b66f", "SN-Ia": "#b395ff", "SN-II": "#ff8477", "SN-Ib/c": "#f2a5d8", SLSN: "#63cee2" };
 function renderRolling(data) {
   rolling = data;
+  linkedIndex = null;
+  rollingPlot = null;
   $("rolling-section").hidden = !data?.points?.length;
   rollingTooltip.hidden = true;
+  resetRollingDataPanel();
   if (!data?.points?.length) return;
   const leaves = Object.keys(data.points.at(-1).probabilities);
   visibleClasses = new Set([...leaves].sort((a, b) => data.points.at(-1).probabilities[b] - data.points.at(-1).probabilities[a]).slice(0, 3));
@@ -264,23 +306,139 @@ function drawRolling() {
     }
   }
   ctx.restore();
+  if (linkedIndex !== null && points[linkedIndex]) {
+    const px = x(points[linkedIndex]);
+    ctx.save();
+    ctx.strokeStyle = light ? "#8ea4c0" : "#6f7c8f";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 4]);
+    ctx.beginPath(); ctx.moveTo(px, plot.top); ctx.lineTo(px, plot.bottom); ctx.stroke();
+    ctx.setLineDash([]);
+    for (const name of visibleClasses) {
+      const py = y(points[linkedIndex].probabilities[name] || 0);
+      ctx.beginPath(); ctx.arc(px, py, 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = light ? "#fafbfe" : "#0b0c0e"; ctx.fill();
+      ctx.strokeStyle = classColors[name] || "#aaa"; ctx.lineWidth = 2; ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+function rollingScoresLine(point) {
+  const names = [...visibleClasses].sort((a, b) => (point.probabilities[b] || 0) - (point.probabilities[a] || 0));
+  return names.map((name) => `${name} ${percent(point.probabilities[name] || 0)}`).join(" · ");
+}
+function rollingTooltipText(point) {
+  const scores = rollingScoresLine(point);
+  return `Obs ${point.observation} · JD ${number(point.jd, 5)}${scores ? ` · ${scores}` : ""}`;
+}
+function rollingIndexFor(point) {
+  if (!rolling?.points?.length) return null;
+  const candidate = rolling.points[point.index];
+  if (candidate && Math.abs(candidate.jd - point.jd) < 1e-6) return point.index;
+  const found = rolling.points.findIndex((entry) => Math.abs(entry.jd - point.jd) < 1e-6);
+  return found >= 0 ? found : null;
+}
+function setTooltipLines(element, lines) {
+  element.replaceChildren(...lines.map((line, index) => {
+    const row = document.createElement("div");
+    if (index) row.className = "tooltip-sub";
+    row.textContent = line;
+    return row;
+  }));
+}
+function syncRollingTooltip() {
+  const usable = linkedIndex !== null && rollingPlot && rollingPlot.positions[linkedIndex] !== undefined
+    && rolling?.points?.[linkedIndex] && !$("rolling-section").hidden;
+  if (!usable) { rollingTooltip.hidden = true; return; }
+  rollingTooltip.textContent = rollingTooltipText(rolling.points[linkedIndex]);
+  rollingTooltip.hidden = false;
+  const rect = rollingChart.getBoundingClientRect();
+  const px = rollingPlot.positions[linkedIndex];
+  rollingTooltip.style.left = `${Math.max(5, Math.min(px + 12, rect.width - rollingTooltip.offsetWidth - 5))}px`;
+  rollingTooltip.style.top = "12px";
+}
+function setLinked(index) {
+  const next = index === undefined ? null : index;
+  if (next !== linkedIndex) {
+    linkedIndex = next;
+    drawLightCurve();
+    drawRolling();
+  }
+  syncRollingTooltip();
 }
 rollingChart.addEventListener("pointermove", (event) => {
   if (!rollingPlot || !rolling?.points?.length) return;
-  const rect = rollingChart.getBoundingClientRect(), x = event.clientX - rect.left;
+  const rect = rollingChart.getBoundingClientRect(), px = event.clientX - rect.left;
   let index = 0;
-  for (let i = 1; i < rollingPlot.positions.length; i++) if (Math.abs(rollingPlot.positions[i] - x) < Math.abs(rollingPlot.positions[index] - x)) index = i;
-  const point = rolling.points[index];
-  if (Math.abs(rollingPlot.positions[index] - x) > 24) { rollingTooltip.hidden = true; return; }
-  const scores = [...visibleClasses].map((name) => `${name} ${percent(point.probabilities[name] || 0)}`).join(" · ");
-  rollingTooltip.textContent = `Obs ${point.observation} · JD ${number(point.jd, 5)}${scores ? ` · ${scores}` : ""}`;
-  rollingTooltip.hidden = false;
-  rollingTooltip.style.left = `${Math.max(5, Math.min(x + 12, rect.width - rollingTooltip.offsetWidth - 5))}px`;
-  rollingTooltip.style.top = "12px";
+  for (let i = 1; i < rollingPlot.positions.length; i++) if (Math.abs(rollingPlot.positions[i] - px) < Math.abs(rollingPlot.positions[index] - px)) index = i;
+  setLinked(Math.abs(rollingPlot.positions[index] - px) > 24 ? null : index);
 });
-rollingChart.addEventListener("pointerleave", () => { rollingTooltip.hidden = true; });
+rollingChart.addEventListener("pointerleave", () => setLinked(null));
 if ("ResizeObserver" in window) new ResizeObserver(drawRolling).observe(document.querySelector(".rolling-chart-wrap"));
 else window.addEventListener("resize", drawRolling);
+
+function rollingClassNames() {
+  return rolling?.points?.length ? Object.keys(rolling.points.at(-1).probabilities) : [];
+}
+function resetRollingDataPanel() {
+  $("rolling-data-panel").hidden = true;
+  $("rolling-data-head").replaceChildren();
+  $("rolling-data-body").replaceChildren();
+  const toggle = $("rolling-data-toggle");
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.textContent = "View data";
+}
+function buildRollingTable() {
+  const classes = rollingClassNames();
+  const header = document.createElement("tr");
+  for (const label of ["Obs", "JD", "Days", "Band", ...classes]) {
+    const cell = document.createElement("th");
+    cell.scope = "col";
+    cell.textContent = label;
+    header.append(cell);
+  }
+  $("rolling-data-head").replaceChildren(header);
+  const rows = rolling.points.map((point) => {
+    const row = document.createElement("tr");
+    const cells = [point.observation, number(point.jd, 5), number(point.days, 3), point.band,
+      ...classes.map((name) => percent(point.probabilities[name] ?? 0))];
+    cells.forEach((value) => {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      row.append(cell);
+    });
+    return row;
+  });
+  $("rolling-data-body").replaceChildren(...rows);
+}
+function csvCell(value) {
+  const text = String(value);
+  return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+$("rolling-data-toggle").addEventListener("click", () => {
+  const panel = $("rolling-data-panel");
+  const opening = panel.hidden;
+  if (opening) buildRollingTable();
+  panel.hidden = !opening;
+  $("rolling-data-toggle").setAttribute("aria-expanded", String(opening));
+  $("rolling-data-toggle").textContent = opening ? "Hide data" : "View data";
+});
+$("rolling-download").addEventListener("click", () => {
+  if (!source || !rolling?.points?.length) return;
+  const classes = rollingClassNames();
+  const rows = [["observation", "jd", "days", "band", ...classes],
+    ...rolling.points.map((point) => [point.observation, point.jd, point.days, point.band,
+      ...classes.map((name) => point.probabilities[name] ?? "")])];
+  const csv = rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${source.source_id}_rolling_probabilities.csv`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
 
 function renderResult(data, historyId = null) {
   source = data.source;
@@ -290,7 +448,6 @@ function renderResult(data, historyId = null) {
   if (data.classification) { renderTaxonomy(data.classification); renderMetadata(); }
   else $("prediction").hidden = true;
   renderRolling(data.rolling);
-  $("advanced-options").open = false;
   renderHistory();
 }
 function setSidebar(open) {
@@ -312,15 +469,15 @@ document.addEventListener("keydown", (event) => {
 });
 $("new-source").addEventListener("click", () => {
   if (busy) return;
-  source = null; rolling = null; rollingPlot = null; xDomain = null; plotted = []; activeHistoryId = null;
+  source = null; rolling = null; rollingPlot = null; linkedIndex = null; xDomain = null; plotted = []; activeHistoryId = null;
   $("workspace").hidden = true;
   $("empty-state").hidden = false;
   $("prediction").hidden = true;
   $("rolling-section").hidden = true;
+  resetRollingDataPanel();
   document.querySelector(".app-shell").classList.remove("has-result");
   input.value = "";
   $("rolling-enabled").checked = false;
-  $("advanced-options").open = false;
   message("");
   renderHistory();
   if (window.innerWidth <= 900) setSidebar(false);
@@ -377,8 +534,27 @@ function renderHistory() {
         if (window.innerWidth <= 900) setSidebar(false);
       } catch { message("Could not open this saved classification.", true); }
     });
-    list.append(entry);
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "history-delete";
+    remove.setAttribute("aria-label", `Delete saved classification for ${item.source_id}`);
+    remove.title = "Delete saved classification";
+    remove.textContent = "×";
+    remove.addEventListener("click", () => deleteHistoryItem(item));
+    const row = document.createElement("div");
+    row.className = "history-item";
+    row.append(remove, entry);
+    list.append(row);
   }
+}
+async function deleteHistoryItem(item) {
+  if (!historyDb || busy) return;
+  try {
+    await historyTransaction("readwrite", (store) => store.delete(item.id));
+    historyItems = historyItems.filter((entry) => entry.id !== item.id);
+    if (activeHistoryId === item.id) activeHistoryId = null;
+    renderHistory();
+  } catch { message("Could not delete this saved classification.", true); }
 }
 async function saveHistory(data) {
   await historyReady;
@@ -403,8 +579,9 @@ form.addEventListener("submit", async (event) => {
   if (busy) return;
   const objectId = input.value.trim();
   if (!/^ZTF\d{2}[a-z]+$/i.test(objectId)) { message("Enter a ZTF object ID, such as ZTF18abmrfqv.", true); return; }
-  source = null; rolling = null; xDomain = null; plotted = []; activeHistoryId = null;
+  source = null; rolling = null; rollingPlot = null; linkedIndex = null; xDomain = null; plotted = []; activeHistoryId = null;
   $("workspace").hidden = true; $("empty-state").hidden = false;
+  resetRollingDataPanel();
   const useRolling = $("rolling-enabled").checked;
   setBusy(true); message(`Fetching ${objectId} and running ${modelNames[modelSelect.value]}${useRolling ? " after each observation" : ""}…`);
   try {
@@ -449,16 +626,23 @@ chart.addEventListener("pointermove", (event) => {
     const candidate = Math.hypot(point.x - x, point.y - y);
     if (candidate < distance) { distance = candidate; nearest = point; }
   }
-  if (!nearest || distance > 14) { tooltip.hidden = true; return; }
-  tooltip.textContent = `${nearest.band} · JD ${nearest.jd.toFixed(5)} · ${nearest.mag.toFixed(2)} ± ${nearest.error.toFixed(2)} mag`;
+  if (!nearest || distance > 14) { tooltip.hidden = true; setLinked(null); return; }
+  const linked = rollingIndexFor(nearest);
+  setLinked(linked);
+  const lines = [`${nearest.band} · JD ${nearest.jd.toFixed(5)} · ${nearest.mag.toFixed(2)} ± ${nearest.error.toFixed(2)} mag`];
+  if (linked !== null) {
+    const scores = rollingScoresLine(rolling.points[linked]);
+    if (scores) lines.push(scores);
+  }
+  setTooltipLines(tooltip, lines);
   tooltip.hidden = false;
   tooltip.style.left = `${Math.max(5, Math.min(x + 12, rect.width - tooltip.offsetWidth - 5))}px`;
-  tooltip.style.top = `${Math.max(5, y - 35)}px`;
+  tooltip.style.top = `${Math.max(5, y - tooltip.offsetHeight - 6)}px`;
 });
 function endDrag() { drag = null; chart.classList.remove("dragging"); }
 chart.addEventListener("pointerup", endDrag);
 chart.addEventListener("pointercancel", endDrag);
-chart.addEventListener("pointerleave", () => { tooltip.hidden = true; });
+chart.addEventListener("pointerleave", () => { tooltip.hidden = true; setLinked(null); });
 if ("ResizeObserver" in window) new ResizeObserver(drawLightCurve).observe(document.querySelector(".chart-wrap"));
 else window.addEventListener("resize", drawLightCurve);
 

@@ -91,6 +91,10 @@ body.sidebar-open{padding-left:252px}
 .history-entry:hover{background:#171a1e}.history-entry.active{border-color:#315476;background:#122235}
 .history-entry strong{font-size:12px;font-weight:670}.history-entry span,.history-entry small{font-size:10px;color:var(--muted);line-height:1.4}.history-entry small{font-size:9px}
 .theme-row{justify-content:space-between}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.wordmark{color:var(--ink);font-size:13px;font-weight:780;letter-spacing:.13em;line-height:1;white-space:nowrap}
+.wordmark sup{color:var(--accent);font-size:9px;letter-spacing:0;margin-left:1px}
+.footer-heart{color:#ee8a9a;font-size:12px}
 .sidebar-toggle{display:grid;place-items:center;width:34px;height:34px;padding:3px;border:0;border-radius:7px;background:transparent;color:#aeb4bd;cursor:pointer}
 .sidebar-toggle svg{display:block;width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
 .sidebar-toggle:hover{background:#1d2025;color:var(--ink)}

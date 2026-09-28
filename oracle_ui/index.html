@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#fafbf9">
+    <meta name="theme-color" content="#fafbfe">
     <title>ORACLE · ZTF classifier</title>
     <meta name="description" content="Classify a ZTF source with ORACLE-2 using Babamul data.">
     <link rel="stylesheet" href="/assets/styles.css">
@@ -11,15 +11,10 @@
   </head>
   <body>
     <div class="app-shell">
-      <header class="topbar">
-        <a class="brand" href="/" aria-label="ORACLE home"><span class="brand-mark" aria-hidden="true">◌</span> ORACLE<span class="brand-version">2</span></a>
-        <span class="topbar-note"><span class="status-dot" aria-hidden="true"></span> Local inference</span>
-      </header>
-
       <main>
         <section class="intro" aria-labelledby="page-title">
           <p class="eyebrow">ZTF source classifier</p>
-          <h1 id="page-title">What is this source?</h1>
+          <h1 id="page-title">What's lighting up the sky?</h1>
           <p>Enter a ZTF object ID. ORACLE fetches its Babamul observations and runs the selected model.</p>
         </section>
 
@@ -82,14 +77,12 @@
           </section>
 
           <section class="metadata-section" aria-labelledby="metadata-title">
-            <div class="section-head"><div><p class="eyebrow">Source context</p><h3 id="metadata-title">Metadata</h3></div><span id="metadata-count" class="subtle">—</span></div>
-            <p id="metadata-note" class="figure-note"></p>
-            <div id="metadata-preview" class="metadata-list"></div>
-            <details id="metadata-details"><summary id="metadata-summary">Show all metadata</summary><div id="metadata-rest" class="metadata-list"></div></details>
+            <div class="section-head"><div><p class="eyebrow">Source context</p><h3 id="metadata-title">Metadata</h3></div></div>
+            <details id="metadata-details"><summary id="metadata-summary">Show metadata</summary><p id="metadata-note" class="figure-note"></p><div id="metadata-rest" class="metadata-list"></div></details>
           </section>
         </div>
       </main>
-      <footer class="footer"><span>ORACLE-2 · Local inference</span><span>Probabilities are model outputs for the fetched data.</span></footer>
+      <footer class="footer"><span>ORACLE-2 · ZTF source classifier</span><span>Probabilities are model outputs for the fetched data.</span></footer>
     </div>
   </body>
 </html>

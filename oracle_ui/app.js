@@ -52,15 +52,10 @@ function metadataCell(item) {
 function renderMetadata() {
   const items = source.metadata || [];
   const available = items.filter((item) => item.value !== null);
-  const highlights = available.slice(0, 3);
-  const rest = items.filter((item) => !highlights.includes(item));
-  $("metadata-preview").replaceChildren(...highlights.map(metadataCell));
-  $("metadata-rest").replaceChildren(...rest.map(metadataCell));
-  $("metadata-details").hidden = rest.length === 0;
+  $("metadata-rest").replaceChildren(...items.map(metadataCell));
   $("metadata-details").open = false;
-  $("metadata-summary").textContent = `Show all metadata (${rest.length} more)`;
-  $("metadata-count").textContent = source.metadata_error ? "Unavailable" : `${available.length} / ${items.length} available`;
-  $("metadata-note").textContent = source.metadata_error || "First three available values. Missing values are passed to the context models as −9.";
+  $("metadata-summary").textContent = source.metadata_error ? "Metadata unavailable" : `Show metadata (${items.length} fields)`;
+  $("metadata-note").textContent = source.metadata_error || `${available.length} of ${items.length} values available. Missing values are passed to the context models as −9.`;
 }
 function renderSource() {
   $("source-title").textContent = source.source_id;
@@ -125,7 +120,7 @@ function drawLightCurve() {
   const y = (mag) => plot.top + (mag - minMag) / magSpan * (plot.bottom - plot.top);
   ctx.clearRect(0, 0, rect.width, rect.height);
   ctx.font = "11px Inter, system-ui, sans-serif";
-  ctx.strokeStyle = "#eaf0e9"; ctx.fillStyle = "#839189"; ctx.lineWidth = 1;
+  ctx.strokeStyle = "#e8eef7"; ctx.fillStyle = "#8291a4"; ctx.lineWidth = 1;
   for (let tick = 0; tick <= 4; tick++) {
     const yy = plot.top + tick / 4 * (plot.bottom - plot.top);
     const magnitude = minMag + tick / 4 * magSpan;

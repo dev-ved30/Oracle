@@ -121,7 +121,10 @@ function drawLightCurve() {
   const y = (mag) => plot.top + (mag - minMag) / magSpan * (plot.bottom - plot.top);
   ctx.clearRect(0, 0, rect.width, rect.height);
   ctx.font = "11px Inter, system-ui, sans-serif";
-  ctx.strokeStyle = "#303238"; ctx.fillStyle = "#a8adb6"; ctx.lineWidth = 1;
+  const lightTheme = document.documentElement.dataset.theme === "light";
+  ctx.strokeStyle = lightTheme ? "#e7edf5" : "#303238";
+  ctx.fillStyle = lightTheme ? "#7d8c9b" : "#a8adb6";
+  ctx.lineWidth = 1;
   for (let tick = 0; tick <= 4; tick++) {
     const yy = plot.top + tick / 4 * (plot.bottom - plot.top);
     const magnitude = minMag + tick / 4 * magSpan;
@@ -135,11 +138,12 @@ function drawLightCurve() {
   ctx.save(); ctx.beginPath(); ctx.rect(plot.left, plot.top, plot.right - plot.left, plot.bottom - plot.top); ctx.clip();
   for (const band of ["g", "r", "i"]) {
     const series = plotted.filter((point) => point.band === band);
-    ctx.strokeStyle = bandColors[band] + "55"; ctx.lineWidth = 1.1;
+    const color = lightTheme ? { g: "#238468", r: "#c45d50", i: "#ac813f" }[band] : bandColors[band];
+    ctx.strokeStyle = color + "55"; ctx.lineWidth = 1.1;
     if (series.length > 1) {
       ctx.beginPath(); series.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke();
     }
-    ctx.strokeStyle = bandColors[band] + "99"; ctx.fillStyle = bandColors[band];
+    ctx.strokeStyle = color + "99"; ctx.fillStyle = color;
     for (const p of series) {
       const error = Math.max(2, Math.abs(y(p.mag + p.error) - p.y));
       ctx.beginPath(); ctx.moveTo(p.x, p.y - error); ctx.lineTo(p.x, p.y + error); ctx.stroke();
@@ -153,10 +157,10 @@ function renderTaxonomy(result) {
   const levels = result.probabilities_by_level || {};
   const parents = levels["1"] || {}, leaves = levels["2"] || {};
   const topLeaf = Object.entries(leaves).sort((a, b) => b[1] - a[1])[0];
-  const rootNode = document.createElement("div"); rootNode.className = "taxonomy-root"; rootNode.textContent = "Alert · 100%";
+  const topBranch = Object.entries(parents).sort((a, b) => b[1] - a[1])[0]?.[0];
   const columns = document.createElement("div"); columns.className = "taxonomy-branches";
   for (const [parent, children] of Object.entries(branches)) {
-    const branch = document.createElement("div"); branch.className = "taxonomy-branch";
+    const branch = document.createElement("div"); branch.className = `taxonomy-branch${parent === topBranch ? " leading" : ""}`;
     const header = document.createElement("div"); header.className = "branch-header";
     const label = document.createElement("span"); label.textContent = parent;
     const score = document.createElement("span"); score.textContent = percent(parents[parent] || 0);
@@ -173,7 +177,7 @@ function renderTaxonomy(result) {
     }
     branch.append(header, track, list); columns.append(branch);
   }
-  root.append(rootNode, columns);
+  root.append(columns);
   $("top-class").textContent = topLeaf?.[0] || "—";
   $("top-probability").textContent = topLeaf ? percent(topLeaf[1]) : "—";
   $("prediction-model").textContent = modelNames[result.model] || result.model;
@@ -242,3 +246,21 @@ chart.addEventListener("pointercancel", endDrag);
 chart.addEventListener("pointerleave", () => { tooltip.hidden = true; });
 if ("ResizeObserver" in window) new ResizeObserver(drawLightCurve).observe(document.querySelector(".chart-wrap"));
 else window.addEventListener("resize", drawLightCurve);
+
+const themeToggle = $("theme-toggle");
+function applyTheme(theme) {
+  const light = theme === "light";
+  document.documentElement.dataset.theme = light ? "light" : "dark";
+  themeToggle.setAttribute("aria-pressed", String(light));
+  themeToggle.setAttribute("aria-label", light ? "Switch to dark mode" : "Switch to light mode");
+  $("theme-icon").textContent = light ? "☾" : "☀";
+  $("theme-label").textContent = light ? "Dark mode" : "Light mode";
+  document.querySelector('meta[name="theme-color"]').content = light ? "#fafbfe" : "#000000";
+  drawLightCurve();
+}
+applyTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark");
+themeToggle.addEventListener("click", () => {
+  const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+  applyTheme(next);
+  try { localStorage.setItem("oracle-theme", next); } catch {}
+});

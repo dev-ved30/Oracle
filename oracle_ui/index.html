@@ -4,15 +4,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#000000">
-    <meta name="color-scheme" content="dark">
     <title>ORACLE · ZTF classifier</title>
     <meta name="description" content="Classify a ZTF source with ORACLE-2 using Babamul data.">
+    <script>try { if (localStorage.getItem("oracle-theme") === "light") { document.documentElement.dataset.theme = "light"; document.querySelector('meta[name="theme-color"]').content = "#fafbfe"; } } catch {}</script>
     <link rel="stylesheet" href="/assets/styles.css">
     <script src="/assets/app.js" defer></script>
   </head>
   <body>
     <div class="app-shell">
       <main>
+        <div class="theme-row"><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to light mode" aria-pressed="false"><span id="theme-icon" aria-hidden="true">☀</span><span id="theme-label">Light mode</span></button></div>
         <section class="intro" aria-labelledby="page-title">
           <p class="eyebrow">ZTF source classifier</p>
           <h1 id="page-title">What's lighting up the sky?</h1>
@@ -76,9 +77,9 @@
           </section>
 
           <section id="prediction" class="result-section" aria-labelledby="prediction-title" hidden>
-            <div class="section-head"><div><p class="eyebrow">ORACLE-2 result</p><h3 id="prediction-title">Classification taxonomy</h3></div><span id="prediction-model" class="subtle">—</span></div>
+            <div class="section-head"><div><p class="eyebrow">ORACLE-2 result</p><h3 id="prediction-title">Classification</h3></div><span id="prediction-model" class="subtle">—</span></div>
             <div class="prediction-lead"><div><span>Highest leaf probability</span><strong id="top-class">—</strong></div><strong id="top-probability">—</strong></div>
-            <div id="taxonomy" class="taxonomy" aria-label="Classification taxonomy"></div>
+            <div id="taxonomy" class="taxonomy" aria-label="Classification probabilities"></div>
             <p id="prediction-note" class="figure-note"></p>
           </section>
         </div>

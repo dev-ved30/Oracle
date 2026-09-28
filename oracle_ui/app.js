@@ -6,7 +6,7 @@ const button = $("analyze-button");
 const chart = $("lightcurve-chart");
 const tooltip = $("chart-tooltip");
 const modelNames = { "BTSv2-pro": "ORACLE-2 Omni", BTSv2: "ORACLE-2", "BTSv2-lite": "ORACLE-2 Lite" };
-const bandColors = { g: "#258765", r: "#c96459", i: "#a77c40" };
+const bandColors = { g: "#59d39a", r: "#ff8477", i: "#e9b66f" };
 const branches = { Persistent: ["AGN", "CV", "Varstar"], Transient: ["SN-Ia", "SN-II", "SN-Ib/c", "SLSN"] };
 let source = null;
 let busy = false;
@@ -68,6 +68,7 @@ function renderSource() {
   $("image-band").textContent = `${source.latest_band} band`;
   const image = $("reference-image");
   image.hidden = !source.image;
+  $("image-crosshair").hidden = !source.image;
   $("image-fallback").hidden = Boolean(source.image);
   if (source.image) image.src = source.image;
   else $("image-fallback").textContent = source.image_error || "No reference image available.";
@@ -120,7 +121,7 @@ function drawLightCurve() {
   const y = (mag) => plot.top + (mag - minMag) / magSpan * (plot.bottom - plot.top);
   ctx.clearRect(0, 0, rect.width, rect.height);
   ctx.font = "11px Inter, system-ui, sans-serif";
-  ctx.strokeStyle = "#e8eef7"; ctx.fillStyle = "#8291a4"; ctx.lineWidth = 1;
+  ctx.strokeStyle = "#303238"; ctx.fillStyle = "#a8adb6"; ctx.lineWidth = 1;
   for (let tick = 0; tick <= 4; tick++) {
     const yy = plot.top + tick / 4 * (plot.bottom - plot.top);
     const magnitude = minMag + tick / 4 * magSpan;

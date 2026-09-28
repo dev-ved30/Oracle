@@ -3,7 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#fafbfe">
+    <meta name="theme-color" content="#000000">
+    <meta name="color-scheme" content="dark">
     <title>ORACLE · ZTF classifier</title>
     <meta name="description" content="Classify a ZTF source with ORACLE-2 using Babamul data.">
     <link rel="stylesheet" href="/assets/styles.css">
@@ -64,10 +65,15 @@
             </section>
             <section id="image-section" class="visual-section image-section" aria-labelledby="image-title">
               <div class="section-head"><div><p class="eyebrow">Omni input</p><h3 id="image-title">Reference image</h3></div><span id="image-band" class="subtle">—</span></div>
-              <div class="image-frame"><img id="reference-image" alt="ZTF reference cutout for the latest alert" hidden><p id="image-fallback" hidden></p></div>
+              <div class="image-frame"><img id="reference-image" alt="ZTF reference cutout for the latest alert; green crosshair marks the center" hidden><span id="image-crosshair" class="image-crosshair" aria-hidden="true" hidden></span><p id="image-fallback" hidden></p></div>
               <p class="figure-note">63 × 63 pixel FITS cutout · display stretch for visibility</p>
             </section>
           </div>
+
+          <section class="metadata-section" aria-labelledby="metadata-title">
+            <div class="section-head"><div><p class="eyebrow">Source context</p><h3 id="metadata-title">Metadata</h3></div></div>
+            <details id="metadata-details"><summary id="metadata-summary">Show metadata</summary><p id="metadata-note" class="figure-note"></p><div id="metadata-rest" class="metadata-list"></div></details>
+          </section>
 
           <section id="prediction" class="result-section" aria-labelledby="prediction-title" hidden>
             <div class="section-head"><div><p class="eyebrow">ORACLE-2 result</p><h3 id="prediction-title">Classification taxonomy</h3></div><span id="prediction-model" class="subtle">—</span></div>
@@ -75,14 +81,9 @@
             <div id="taxonomy" class="taxonomy" aria-label="Classification taxonomy"></div>
             <p id="prediction-note" class="figure-note"></p>
           </section>
-
-          <section class="metadata-section" aria-labelledby="metadata-title">
-            <div class="section-head"><div><p class="eyebrow">Source context</p><h3 id="metadata-title">Metadata</h3></div></div>
-            <details id="metadata-details"><summary id="metadata-summary">Show metadata</summary><p id="metadata-note" class="figure-note"></p><div id="metadata-rest" class="metadata-list"></div></details>
-          </section>
         </div>
       </main>
-      <footer class="footer"><span>ORACLE-2 · ZTF source classifier</span><span>Probabilities are model outputs for the fetched data.</span></footer>
+      <footer class="footer"><span>ORACLE-2 · Local inference</span><span>Probabilities are model outputs for the fetched data.</span></footer>
     </div>
   </body>
 </html>

@@ -12,15 +12,15 @@
   </head>
   <body>
     <aside id="history-sidebar" class="history-sidebar" aria-label="Past classifications">
-      <div class="history-head"><strong>History</strong></div>
-      <p class="history-hint">Saved in this browser</p>
+      <div class="history-search"><input id="history-search" type="search" placeholder="Search history" aria-label="Search history" autocomplete="off"></div>
       <div id="history-list" class="history-list"><p class="history-empty">Classified sources will appear here.</p></div>
-      <div class="sidebar-foot"><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to light mode" aria-pressed="false" title="Switch to light mode"><span id="theme-icon" aria-hidden="true">☀</span></button></div>
+      <div class="sidebar-foot"><button id="open-trends" class="trends-open" type="button" aria-label="Show classification trends" title="Show classification trends"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></button><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to light mode" aria-pressed="false" title="Switch to light mode"><span id="theme-icon" aria-hidden="true">☀</span></button></div>
     </aside>
     <button id="sidebar-backdrop" class="sidebar-backdrop" type="button" aria-label="Close history sidebar" tabindex="-1"></button>
     <div class="app-shell">
       <main>
         <div class="theme-row"><div class="topbar-left"><button id="history-open" class="sidebar-toggle" type="button" aria-label="Show history sidebar" aria-expanded="false" aria-controls="history-sidebar" title="Show history sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="3.5" width="19" height="17" rx="2.5"></rect><path d="M8.5 3.5v17"></path><path d="M15.5 9l-2.5 2.5 2.5 2.5"></path></svg></button><button id="new-source" class="new-source" type="button" aria-label="New source" title="New source"><span aria-hidden="true">＋</span></button><span class="wordmark">ORACLE<sup>2</sup></span></div><span class="complete-badge"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.4l3.3 3.3L13 4.8"></path></svg>Completed</span></div>
+        <div id="classifier-view">
         <section class="intro" aria-labelledby="page-title">
           <h1 id="page-title">What's lighting up the sky?</h1>
         </section>
@@ -112,10 +112,32 @@
             </section>
           </details>
         </div>
+        </div>
+        <section id="trends-page" aria-labelledby="trends-page-title" hidden>
+          <div class="section-head"><div><p class="eyebrow">Overview</p><h2 id="trends-page-title">Trends</h2></div><button id="trends-back" class="trends-back" type="button">← Classifier</button></div>
+          <div class="trends-cards">
+            <div class="trends-card"><span>Sources classified</span><strong id="trends-count">0</strong></div>
+            <div class="trends-card"><span>Classes seen</span><strong id="trends-nclasses">0</strong></div>
+          </div>
+          <div class="trends-grid">
+            <section class="trends-panel-block" aria-labelledby="trends-classes-title">
+              <div class="section-head"><div><p class="eyebrow">Breakdown</p><h3 id="trends-classes-title">By class</h3></div></div>
+              <div class="trends-pie-wrap"><canvas id="trends-pie" role="img" aria-label="Share of classified sources per predicted class"></canvas></div>
+              <div id="trends-legend" class="trends-legend"></div>
+              <p id="trends-classes-empty" class="history-empty" hidden>Classify a source to see the class breakdown.</p>
+            </section>
+            <section class="trends-panel-block" aria-labelledby="trends-sky-title">
+              <div class="section-head"><div><p class="eyebrow">Positions</p><h3 id="trends-sky-title">Sky distribution</h3></div></div>
+              <div class="trends-sky-wrap"><canvas id="trends-sky" role="img" aria-label="Mollweide sky map of classified source positions"></canvas></div>
+              <p id="trends-sky-note" class="figure-note">Mollweide projection · RA 0° center</p>
+              <p id="trends-sky-empty" class="history-empty" hidden>No source positions available yet.</p>
+            </section>
+          </div>
+        </section>
       </main>
       <footer class="footer">
-        <span>ORACLE-2 · Local inference</span>
-        <span>Powered by the ORACLE family of models · Made with <span class="footer-heart" role="img" aria-label="heart">♥</span></span>
+        <span>Powered by the ORACLE · Local inference</span>
+        <span>Made with <span class="footer-heart" role="img" aria-label="heart">♥</span></span>
         <nav class="footer-links" aria-label="Project links">
           <a href="https://github.com/dev-ved30/Oracle" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
           <a href="https://dev-ved30.github.io/Oracle/" target="_blank" rel="noopener noreferrer">Docs ↗</a>

@@ -27,19 +27,11 @@ let historyItems = [];
 let activeHistoryId = null;
 let currentMessage = "";
 let currentMessageError = false;
-let busyStartedAt = 0;
-let elapsedTimer = null;
 
-function elapsedText(ms) {
-  const seconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(seconds / 60);
-  return minutes ? `${minutes}:${String(seconds % 60).padStart(2, "0")}` : `${seconds}s`;
-}
 function renderMessage() {
   const target = $("app-message");
-  const elapsed = busy && busyStartedAt && currentMessage ? ` · ${elapsedText(Date.now() - busyStartedAt)}` : "";
   $("message-dots").hidden = !(busy && currentMessage);
-  $("message-text").textContent = currentMessage + elapsed;
+  $("message-text").textContent = currentMessage;
   target.classList.toggle("error", currentMessageError);
   target.hidden = !currentMessage;
 }
@@ -59,12 +51,6 @@ function setBusy(value) {
   button.setAttribute("aria-busy", String(value));
   button.classList.toggle("is-loading", value);
   button.firstElementChild.textContent = value ? "" : "↑";
-  clearInterval(elapsedTimer);
-  elapsedTimer = null;
-  if (value) {
-    busyStartedAt = Date.now();
-    elapsedTimer = setInterval(renderMessage, 500);
-  } else busyStartedAt = 0;
   renderMessage();
 }
 function updateModelDescription() { $("model-description").textContent = modelDescriptions[modelSelect.value] || ""; }
@@ -481,6 +467,7 @@ document.addEventListener("keydown", (event) => {
 $("new-source").addEventListener("click", () => {
   if (busy) return;
   source = null; rolling = null; rollingPlot = null; linkedIndex = null; xDomain = null; plotted = []; activeHistoryId = null;
+  showClassifierPage();
   $("workspace").hidden = true;
   $("empty-state").hidden = false;
   $("prediction").hidden = true;
@@ -519,10 +506,19 @@ function historyTransaction(mode, action) {
     transaction.onabort = () => reject(transaction.error || new Error("Browser storage was interrupted."));
   });
 }
+let historyFilter = "";
+function historyMatches(item, query) {
+  if (!query) return true;
+  const haystack = `${item.source_id} ${item.top_class} ${modelNames[item.model] || item.model}`.toLowerCase();
+  return query.split(/\s+/).every((term) => haystack.includes(term));
+}
 function renderHistory() {
   const list = $("history-list"); list.replaceChildren();
-  if (!historyItems.length) { const empty = document.createElement("p"); empty.className = "history-empty"; empty.textContent = "Classified sources will appear here."; list.append(empty); return; }
-  for (const item of historyItems) {
+  if (!historyItems.length) { const empty = document.createElement("p"); empty.className = "history-empty"; empty.textContent = "Classified sources will appear here."; list.append(empty); renderTrends(); return; }
+  const query = historyFilter.trim().toLowerCase();
+  const visible = historyItems.filter((item) => historyMatches(item, query));
+  if (!visible.length) { const empty = document.createElement("p"); empty.className = "history-empty"; empty.textContent = `No matches for "${historyFilter.trim()}".`; list.append(empty); return; }
+  for (const item of visible) {
     const entry = document.createElement("button"); entry.type = "button"; entry.className = `history-entry${item.id === activeHistoryId ? " active" : ""}`;
     entry.dataset.model = item.model;
     entry.dataset.class = item.top_class;
@@ -553,7 +549,7 @@ function renderHistory() {
         const saved = await historyTransaction("readonly", (store) => store.get(item.id));
         if (!saved) return;
         input.value = saved.source_id; modelSelect.value = saved.model; updateModelDescription();
-        xDomain = null; renderResult(saved.data, saved.id);
+        xDomain = null; showClassifierPage(); renderResult(saved.data, saved.id);
         message(`Showing saved ${saved.source_id} classification.`);
         if (window.innerWidth <= 900) setSidebar(false);
       } catch { message("Could not open this saved classification.", true); }
@@ -570,6 +566,7 @@ function renderHistory() {
     row.append(remove, entry);
     list.append(row);
   }
+  renderTrends();
 }
 async function deleteHistoryItem(item) {
   if (!historyDb || busy) return;
@@ -590,7 +587,139 @@ async function saveHistory(data) {
   await historyTransaction("readwrite", (store) => store.put(item));
   activeHistoryId = item.id;
   historyItems.unshift(item);
+  historyFilter = "";
+  const searchInput = $("history-search");
+  if (searchInput) searchInput.value = "";
   renderHistory();
+}
+$("history-search")?.addEventListener("input", (event) => {
+  historyFilter = event.target.value;
+  renderHistory();
+});
+function showTrendsPage() {
+  $("classifier-view").hidden = true;
+  $("trends-page").hidden = false;
+  renderTrends();
+  window.scrollTo(0, 0);
+}
+function showClassifierPage() {
+  $("trends-page").hidden = true;
+  $("classifier-view").hidden = false;
+}
+$("open-trends").addEventListener("click", showTrendsPage);
+$("trends-back").addEventListener("click", () => { showClassifierPage(); input.focus(); });
+let trendsPieSlices = [];
+let trendsSkyPoints = [];
+function sizeCanvas(canvas) {
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width < 10 || rect.height < 10) return null;
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = Math.round(rect.width * ratio);
+  canvas.height = Math.round(rect.height * ratio);
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  return { ctx, width: rect.width, height: rect.height };
+}
+function renderTrends() {
+  if ($("trends-page").hidden) return;
+  $("trends-count").textContent = Number(historyItems.length).toLocaleString();
+  trendsPieSlices = Object.entries(historyItems.reduce((counts, item) => {
+    counts[item.top_class] = (counts[item.top_class] || 0) + 1;
+    return counts;
+  }, {})).sort((a, b) => b[1] - a[1]).map(([name, count]) => ({ name, count }));
+  $("trends-nclasses").textContent = Number(trendsPieSlices.length).toLocaleString();
+  $("trends-classes-empty").hidden = historyItems.length > 0;
+  const legend = $("trends-legend");
+  legend.replaceChildren();
+  legend.hidden = !historyItems.length;
+  $("trends-pie").closest(".trends-pie-wrap").hidden = !historyItems.length;
+  for (const { name, count } of trendsPieSlices) {
+    const row = document.createElement("div"); row.className = "trends-legend-item";
+    const dot = document.createElement("span"); dot.className = "trends-legend-dot"; dot.style.background = classColors[name] || "#aaa";
+    const label = document.createElement("span"); label.textContent = name;
+    const value = document.createElement("strong"); value.textContent = `${count} · ${percent(historyItems.length ? count / historyItems.length : 0)}`;
+    row.append(dot, label, value); legend.append(row);
+  }
+  trendsSkyPoints = [];
+  for (const item of historyItems) {
+    const ra = Number(item.data?.source?.ra), dec = Number(item.data?.source?.dec);
+    if (Number.isFinite(ra) && Number.isFinite(dec) && ra >= 0 && ra < 360 && dec >= -90 && dec <= 90)
+      trendsSkyPoints.push({ ra, dec, cls: item.top_class });
+  }
+  $("trends-sky-empty").hidden = trendsSkyPoints.length > 0;
+  $("trends-sky-note").hidden = !trendsSkyPoints.length;
+  requestAnimationFrame(() => { drawTrendsPie(); drawTrendsSky(); });
+}
+function drawTrendsPie() {
+  if ($("trends-page").hidden || !trendsPieSlices.length) return;
+  const sized = sizeCanvas($("trends-pie"));
+  if (!sized) return;
+  const { ctx, width, height } = sized;
+  const total = trendsPieSlices.reduce((sum, slice) => sum + slice.count, 0);
+  const cx = width / 2, cy = height / 2, radius = Math.min(width, height) / 2 - 4;
+  ctx.clearRect(0, 0, width, height);
+  let angle = -Math.PI / 2;
+  for (const { name, count } of trendsPieSlices) {
+    const sweep = count / total * Math.PI * 2;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, radius, angle, angle + sweep); ctx.closePath();
+    ctx.fillStyle = classColors[name] || "#aaa"; ctx.fill();
+    angle += sweep;
+  }
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.beginPath(); ctx.arc(cx, cy, radius * 0.58, 0, Math.PI * 2); ctx.fill();
+  ctx.globalCompositeOperation = "source-over";
+}
+function mollweideTheta(phi) {
+  let theta = phi / 2;
+  for (let i = 0; i < 12; i++) {
+    theta -= (2 * theta + Math.sin(2 * theta) - Math.PI * Math.sin(phi)) / (2 + 2 * Math.cos(2 * theta));
+  }
+  return theta;
+}
+function drawTrendsSky() {
+  if ($("trends-page").hidden) return;
+  const sized = sizeCanvas($("trends-sky"));
+  if (!sized) return;
+  const { ctx, width, height } = sized;
+  const light = document.documentElement.dataset.theme === "light";
+  const project = (ra, dec) => {
+    const lambda = ((ra % 360) + 540) % 360 - 180;
+    const theta = mollweideTheta(dec * Math.PI / 180);
+    const x = 2 * Math.SQRT2 / Math.PI * (lambda * Math.PI / 180) * Math.cos(theta);
+    const y = Math.SQRT2 * Math.sin(theta);
+    return [width / 2 - x / (2 * Math.SQRT2) * width / 2, height / 2 - y / Math.SQRT2 * height / 2];
+  };
+  ctx.clearRect(0, 0, width, height);
+  ctx.strokeStyle = light ? "#c4cfdc" : "#3a3e45";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.ellipse(width / 2, height / 2, width / 2 - 1, height / 2 - 1, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = light ? "#dbe3ec" : "#2c2f35";
+  ctx.lineWidth = 1;
+  for (let lon = -150; lon <= 150; lon += 30) {
+    ctx.beginPath();
+    for (let lat = -90; lat <= 90; lat += 3) {
+      const ra = ((lon + 360) % 360);
+      const [px, py] = project(ra, lat);
+      lat === -90 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+  for (let lat = -60; lat <= 60; lat += 30) {
+    ctx.beginPath();
+    for (let lon = -180; lon <= 180; lon += 3) {
+      const ra = ((lon + 360) % 360);
+      const [px, py] = project(ra, lat);
+      lon === -180 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+  for (const point of trendsSkyPoints) {
+    const [px, py] = project(point.ra, point.dec);
+    ctx.beginPath(); ctx.arc(px, py, 3, 0, Math.PI * 2);
+    ctx.fillStyle = classColors[point.cls] || "#aaa"; ctx.fill();
+  }
 }
 const historyReady = openHistoryDb().then(async (db) => {
   historyDb = db;
@@ -604,12 +733,13 @@ form.addEventListener("submit", async (event) => {
   const objectId = input.value.trim();
   if (!/^ZTF\d{2}[a-z]+$/i.test(objectId)) { message("Enter a ZTF object ID, such as ZTF18abmrfqv.", true); return; }
   source = null; rolling = null; rollingPlot = null; linkedIndex = null; xDomain = null; plotted = []; activeHistoryId = null;
+  showClassifierPage();
   $("workspace").hidden = true; $("empty-state").hidden = false;
   const pendingOod = $("ood-warning");
   if (pendingOod) pendingOod.hidden = true;
   resetRollingDataPanel();
   const useRolling = $("rolling-enabled").checked;
-  setBusy(true); message(`Fetching ${objectId} and running ${modelNames[modelSelect.value]}${useRolling ? " after each observation" : ""}…`);
+  setBusy(true); message(`Fetching ${objectId}…`);
   try {
     const data = await postJson("/api/analyze", { object_id: objectId, model: modelSelect.value, rolling: useRolling });
     renderResult(data);
@@ -699,7 +829,9 @@ function applyTheme(theme) {
   document.querySelector('meta[name="theme-color"]').content = light ? "#fafbfe" : "#000000";
   drawLightCurve();
   drawRolling();
+  renderTrends();
 }
+window.addEventListener("resize", () => { if (!$("trends-page").hidden) renderTrends(); });
 applyTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark");
 themeToggle.addEventListener("click", () => {
   const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";

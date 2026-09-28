@@ -462,8 +462,8 @@ function applyTheme(theme) {
   document.documentElement.dataset.theme = light ? "light" : "dark";
   themeToggle.setAttribute("aria-pressed", String(light));
   themeToggle.setAttribute("aria-label", light ? "Switch to dark mode" : "Switch to light mode");
+  themeToggle.title = light ? "Switch to dark mode" : "Switch to light mode";
   $("theme-icon").textContent = light ? "☾" : "☀";
-  $("theme-label").textContent = light ? "Dark mode" : "Light mode";
   document.querySelector('meta[name="theme-color"]').content = light ? "#fafbfe" : "#000000";
   drawLightCurve();
   drawRolling();

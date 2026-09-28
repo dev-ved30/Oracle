@@ -34,7 +34,10 @@ function setBusy(value) {
   busy = value;
   button.disabled = value;
   modelSelect.disabled = value;
-  button.innerHTML = value ? "Fetching & classifying…" : 'Classify <span aria-hidden="true">↗</span>';
+  $("new-source").disabled = value;
+  button.setAttribute("aria-label", value ? "Fetching and classifying source" : "Classify source");
+  button.title = value ? "Fetching and classifying source" : "Classify source";
+  button.firstElementChild.textContent = value ? "…" : "↑";
 }
 function updateModelDescription() { $("model-description").textContent = modelDescriptions[modelSelect.value] || ""; }
 modelSelect.addEventListener("change", updateModelDescription);
@@ -297,6 +300,22 @@ function setSidebar(open) {
 }
 $("history-open").addEventListener("click", () => setSidebar(true));
 $("history-close").addEventListener("click", () => setSidebar(false));
+$("new-source").addEventListener("click", () => {
+  if (busy) return;
+  source = null; rolling = null; rollingPlot = null; xDomain = null; plotted = []; activeHistoryId = null;
+  $("workspace").hidden = true;
+  $("empty-state").hidden = false;
+  $("prediction").hidden = true;
+  $("rolling-section").hidden = true;
+  document.querySelector(".app-shell").classList.remove("has-result");
+  input.value = "";
+  $("rolling-enabled").checked = false;
+  $("advanced-options").open = false;
+  message("");
+  renderHistory();
+  if (window.innerWidth <= 900) setSidebar(false);
+  input.focus();
+});
 let sidebarPreference = null;
 try { sidebarPreference = localStorage.getItem("oracle-history-open"); } catch {}
 setSidebar(sidebarPreference === null ? window.innerWidth > 900 : sidebarPreference === "true");
@@ -326,9 +345,13 @@ function renderHistory() {
   for (const item of historyItems) {
     const entry = document.createElement("button"); entry.type = "button"; entry.className = `history-entry${item.id === activeHistoryId ? " active" : ""}`;
     const title = document.createElement("strong"); title.textContent = item.source_id;
-    const detail = document.createElement("span"); detail.textContent = `${modelNames[item.model] || item.model} · ${item.top_class} ${percent(item.top_probability)}`;
+    const model = document.createElement("span"); model.className = "history-model"; model.textContent = modelNames[item.model] || item.model;
+    const detail = document.createElement("span"); detail.className = "history-result";
+    const topClass = document.createElement("strong"); topClass.textContent = item.top_class;
+    const score = document.createElement("strong"); score.textContent = percent(item.top_probability);
+    detail.append(topClass, score);
     const time = document.createElement("small"); time.textContent = new Date(item.created_at).toLocaleString() + (item.rolling ? " · Rolling" : "");
-    entry.append(title, detail, time);
+    entry.append(title, model, detail, time);
     entry.addEventListener("click", async () => {
       if (!historyDb || busy) return;
       try {

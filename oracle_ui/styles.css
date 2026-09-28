@@ -125,3 +125,23 @@ html[data-theme="light"] .history-entry.active{background:#e3f0ff;border-color:#
 html[data-theme="light"] .history-open{background:#fff;color:#344b65}
 @media(max-width:900px){body.sidebar-open{padding-left:0}.history-sidebar{width:min(280px,85vw);box-shadow:8px 0 35px #0008}}
 @media(max-width:640px){.query-main{display:block}.query-main>input{width:100%}.query-extras{padding-top:9px}.model-description{max-width:65%}}
+
+.button-primary{display:grid;place-items:center;width:42px;min-width:42px;padding:0;border-radius:999px}
+.button-primary span{margin:0;font-size:23px;font-weight:520;line-height:1;transform:translateY(-1px)}
+.app-shell.has-result .button-primary{width:36px;min-width:36px}
+.query-extras{padding:10px 12px 9px}
+.advanced-options summary{font-size:11px;line-height:1.6}
+.advanced-options[open] .rolling-option{right:-12px;top:29px;width:min(310px,calc(100vw - 42px));padding:19px;gap:13px}
+.rolling-option span{gap:7px}.rolling-option small{line-height:1.55}
+.new-source{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;height:36px;margin:15px 0 7px;border:1px solid #294e78;border-radius:8px;background:#102137;color:#a9d2ff;font-size:11px;font-weight:700}
+.new-source:hover{background:#173451;border-color:var(--accent)}
+.new-source:disabled{opacity:.55;cursor:wait}
+.new-source span{font-size:17px;line-height:1;font-weight:400}
+.history-hint{margin-bottom:16px}
+.history-entry{gap:6px;padding:12px}
+.history-entry .history-model{justify-self:start;padding:3px 7px;border-radius:5px;background:#132640;color:#8dc1ff;font-size:10px;font-weight:680;line-height:1.2}
+.history-entry .history-result{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--accent)}
+.history-entry .history-result strong{color:inherit;font-size:12px;font-weight:750;font-variant-numeric:tabular-nums}
+html[data-theme="light"] .new-source{background:#e7f2ff;border-color:#bbd7fa;color:#0064c9}
+html[data-theme="light"] .new-source:hover{background:#d8eaff}
+html[data-theme="light"] .history-entry .history-model{background:#e3f0ff;color:#0064c9}

@@ -13,6 +13,7 @@
   <body>
     <aside id="history-sidebar" class="history-sidebar" aria-label="Past classifications">
       <div class="history-head"><strong>History</strong><button id="history-close" type="button" aria-label="Hide history sidebar">×</button></div>
+      <button id="new-source" class="new-source" type="button"><span aria-hidden="true">＋</span> New source</button>
       <p class="history-hint">Saved in this browser</p>
       <div id="history-list" class="history-list"><p class="history-empty">Classified sources will appear here.</p></div>
     </aside>
@@ -36,10 +37,10 @@
                 <option value="BTSv2">ORACLE-2</option>
                 <option value="BTSv2-lite">ORACLE-2 Lite</option>
               </select><span aria-hidden="true">⌄</span></div>
-              <button id="analyze-button" type="submit" class="button-primary">Classify <span aria-hidden="true">↗</span></button>
+              <button id="analyze-button" type="submit" class="button-primary" aria-label="Classify source" title="Classify source"><span aria-hidden="true">↑</span></button>
             </div>
           </div>
-          <div class="query-extras"><p id="model-description" class="model-description"></p><details id="advanced-options" class="advanced-options"><summary>Advanced mode</summary><label class="rolling-option"><input id="rolling-enabled" type="checkbox"><span><strong>Rolling classification</strong><small>Classify after each observation and plot class probabilities over time. This takes longer.</small></span></label></details></div>
+          <div class="query-extras"><p id="model-description" class="model-description"></p><details id="advanced-options" class="advanced-options"><summary>Rolling mode</summary><label class="rolling-option"><input id="rolling-enabled" type="checkbox"><span><strong>Classify every observation</strong><small>Plot class probabilities as the light curve grows. This takes longer and is off by default.</small></span></label></details></div>
         </form>
         <p class="query-help">Your Babamul API token stays on this machine.</p>
         <p id="app-message" class="app-message" role="status" aria-live="polite" hidden></p>

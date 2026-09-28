@@ -303,7 +303,13 @@ function setSidebar(open) {
   requestAnimationFrame(() => { drawLightCurve(); drawRolling(); });
 }
 $("history-open").addEventListener("click", () => setSidebar(!document.body.classList.contains("sidebar-open")));
-$("history-close").addEventListener("click", () => setSidebar(false));
+$("sidebar-backdrop").addEventListener("click", () => { setSidebar(false); $("history-open").focus(); });
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && document.body.classList.contains("sidebar-open")) {
+    setSidebar(false);
+    $("history-open").focus();
+  }
+});
 $("new-source").addEventListener("click", () => {
   if (busy) return;
   source = null; rolling = null; rollingPlot = null; xDomain = null; plotted = []; activeHistoryId = null;

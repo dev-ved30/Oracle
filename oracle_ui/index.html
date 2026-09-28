@@ -12,11 +12,12 @@
   </head>
   <body>
     <aside id="history-sidebar" class="history-sidebar" aria-label="Past classifications">
-      <div class="history-head"><strong>History</strong><button id="history-close" class="sidebar-toggle" type="button" aria-label="Hide history sidebar" title="Hide history sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="3.5" width="19" height="17" rx="2.5"></rect><path d="M8.5 3.5v17"></path><path d="M15.5 9l-2.5 2.5 2.5 2.5"></path></svg></button></div>
+      <div class="history-head"><strong>History</strong></div>
       <button id="new-source" class="new-source" type="button"><span aria-hidden="true">＋</span> New source</button>
       <p class="history-hint">Saved in this browser</p>
       <div id="history-list" class="history-list"><p class="history-empty">Classified sources will appear here.</p></div>
     </aside>
+    <button id="sidebar-backdrop" class="sidebar-backdrop" type="button" aria-label="Close history sidebar" tabindex="-1"></button>
     <div class="app-shell">
       <main>
         <div class="theme-row"><button id="history-open" class="sidebar-toggle" type="button" aria-label="Show history sidebar" aria-expanded="false" aria-controls="history-sidebar" title="Show history sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="3.5" width="19" height="17" rx="2.5"></rect><path d="M8.5 3.5v17"></path><path d="M15.5 9l-2.5 2.5 2.5 2.5"></path></svg></button><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to light mode" aria-pressed="false" title="Switch to light mode"><span id="theme-icon" aria-hidden="true">☀</span></button></div>

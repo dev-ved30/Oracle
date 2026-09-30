@@ -51,6 +51,14 @@ let historyItems = [];
 let activeHistoryId = null;
 let currentMessage = "";
 let currentMessageError = false;
+let currentReport = null;
+let reportClassifiedAt = null;
+function clearCurrentReport() {
+  currentReport = null;
+  reportClassifiedAt = null;
+  $("save-report").hidden = true;
+  $("save-report").disabled = true;
+}
 
 function renderMessage() {
   const target = $("app-message");
@@ -70,6 +78,7 @@ function setBusy(value) {
   button.disabled = value;
   modelSelect.disabled = value;
   modelPickerToggle.disabled = value;
+  $("save-report").disabled = value || !currentReport?.classification;
   if (value) closeModelPicker();
   $("new-source").disabled = value;
   button.setAttribute("aria-label", value ? "Fetching and classifying source" : "Classify source");
@@ -544,6 +553,10 @@ function updateOodWarning() {
   banner.hidden = !isOodSource(source);
 }
 function renderResult(data, historyId = null) {
+  currentReport = data;
+  reportClassifiedAt = historyItems.find((item) => item.id === historyId)?.created_at || new Date().toISOString();
+  $("save-report").hidden = !data.classification;
+  $("save-report").disabled = busy || !data.classification;
   source = data.source;
   source.classification = data.classification;
   activeHistoryId = historyId;
@@ -573,6 +586,7 @@ document.addEventListener("keydown", (event) => {
 });
 $("new-source").addEventListener("click", () => {
   if (busy) return;
+  clearCurrentReport();
   source = null; rolling = null; rollingPlot = null; linkedIndex = null; xDomain = null; plotted = []; activeHistoryId = null;
   showClassifierPage();
   $("workspace").hidden = true;
@@ -614,17 +628,128 @@ function historyTransaction(mode, action) {
   });
 }
 let historyFilter = "";
+const historyFilters = { class: "", model: "", sort: "newest" };
 function historyMatches(item, query) {
   if (!query) return true;
   const haystack = `${item.source_id} ${item.top_class} ${modelNames[item.model] || item.model}`.toLowerCase();
   return query.split(/\s+/).every((term) => haystack.includes(term));
 }
+function filteredHistoryItems() {
+  const query = historyFilter.trim().toLowerCase();
+  const visible = historyItems.filter((item) => {
+    if (!historyMatches(item, query) || (historyFilters.class && item.top_class !== historyFilters.class)
+      || (historyFilters.model && item.model !== historyFilters.model)) return false;
+    return true;
+  });
+  return visible.sort((a, b) => {
+    const byDate = new Date(b.created_at) - new Date(a.created_at);
+    if (historyFilters.sort === "highest") return b.top_probability - a.top_probability || byDate;
+    if (historyFilters.sort === "lowest") return a.top_probability - b.top_probability || byDate;
+    return historyFilters.sort === "oldest" ? -byDate : byDate;
+  });
+}
+const historyPickers = [];
+function createHistoryPicker(id, key, ariaLabel) {
+  const picker = $(id);
+  const toggle = picker.querySelector(".history-picker-toggle");
+  const menu = picker.querySelector(".history-picker-options");
+  let signature = "";
+  const close = (restoreFocus = false) => {
+    menu.hidden = true;
+    toggle.setAttribute("aria-expanded", "false");
+    if (restoreFocus) toggle.focus();
+  };
+  const open = () => {
+    historyPickers.forEach((other) => other.close());
+    menu.hidden = false;
+    toggle.setAttribute("aria-expanded", "true");
+    menu.querySelector('[aria-selected="true"]')?.focus();
+  };
+  toggle.addEventListener("click", () => menu.hidden ? open() : close());
+  toggle.addEventListener("keydown", (event) => {
+    if (["ArrowDown", "ArrowUp"].includes(event.key)) { event.preventDefault(); event.stopPropagation(); open(); }
+  });
+  picker.addEventListener("keydown", (event) => {
+    if (menu.hidden) return;
+    if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); close(true); }
+    else if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+      event.preventDefault();
+      const options = [...menu.children];
+      const current = options.indexOf(document.activeElement);
+      const next = event.key === "Home" ? 0 : event.key === "End" ? options.length - 1
+        : (current + (event.key === "ArrowDown" ? 1 : -1) + options.length) % options.length;
+      options[next]?.focus();
+    }
+  });
+  picker.addEventListener("focusout", (event) => { if (!picker.contains(event.relatedTarget)) close(); });
+  document.addEventListener("pointerdown", (event) => { if (!picker.contains(event.target)) close(); });
+  const update = (choices) => {
+    const nextSignature = JSON.stringify(choices);
+    if (signature !== nextSignature) {
+      signature = nextSignature;
+      close();
+      menu.replaceChildren(...choices.map(([value, label]) => {
+        const option = document.createElement("button");
+        option.type = "button"; option.className = "history-picker-option";
+        option.setAttribute("role", "option"); option.tabIndex = -1;
+        option.dataset.value = value; option.textContent = label;
+        if (key === "class" && value) option.dataset.class = value;
+        option.addEventListener("click", () => {
+          historyFilters[key] = value;
+          renderHistory();
+          close(true);
+        });
+        return option;
+      }));
+    }
+    const label = choices.find(([value]) => value === historyFilters[key])?.[1] || choices[0][1];
+    toggle.querySelector(".history-picker-label").textContent = label;
+    toggle.setAttribute("aria-label", `${ariaLabel}: ${label}`); toggle.title = label;
+    [...menu.children].forEach((option) => option.setAttribute("aria-selected", String(option.dataset.value === historyFilters[key])));
+  };
+  const control = { close, update };
+  historyPickers.push(control);
+  return control;
+}
+const historyClassPicker = createHistoryPicker("history-class-picker", "class", "Filter by class");
+const historyModelPicker = createHistoryPicker("history-model-picker", "model", "Filter by model");
+const historySortPicker = createHistoryPicker("history-sort-picker", "sort", "Sort history");
+function updateHistoryControls(visibleCount) {
+  const classes = [...new Set([...historyItems.map((item) => item.top_class), historyFilters.class].filter(Boolean))].sort();
+  const models = [...new Set([...historyItems.map((item) => item.model), historyFilters.model].filter(Boolean))]
+    .sort((a, b) => (modelNames[a] || a).localeCompare(modelNames[b] || b));
+  historyClassPicker.update([["", "All classes"], ...classes.map((name) => [name, name])]);
+  historyModelPicker.update([["", "All models"], ...models.map((name) => [name, modelNames[name] || name])]);
+  historySortPicker.update([["newest", "Newest first"], ["oldest", "Oldest first"], ["highest", "Highest probability"], ["lowest", "Lowest probability"]]);
+  const count = [historyFilters.class, historyFilters.model].filter(Boolean).length;
+  $("history-filter-count").textContent = count;
+  $("history-filter-count").hidden = count === 0;
+  $("history-filters-toggle").classList.toggle("is-filtered", count > 0);
+  $("history-filter-summary").hidden = !count && !historyFilter.trim() && historyFilters.sort === "newest";
+  $("history-results-count").textContent = `${visibleCount} of ${historyItems.length} ${historyItems.length === 1 ? "classification" : "classifications"}`;
+}
+$("history-filters-toggle").addEventListener("click", () => {
+  const panel = $("history-filters");
+  panel.hidden = !panel.hidden;
+  $("history-filters-toggle").setAttribute("aria-expanded", String(!panel.hidden));
+  if (panel.hidden) historyPickers.forEach((picker) => picker.close());
+});
+function clearHistoryFilters() {
+  historyFilter = "";
+  Object.assign(historyFilters, { class: "", model: "", sort: "newest" });
+  $("history-search").value = "";
+}
+$("history-filters-clear").addEventListener("click", () => {
+  clearHistoryFilters();
+  renderHistory();
+  $("history-search").focus();
+});
 function renderHistory() {
   const list = $("history-list"); list.replaceChildren();
+  const visible = filteredHistoryItems();
+  updateHistoryControls(visible.length);
   if (!historyItems.length) { const empty = document.createElement("p"); empty.className = "history-empty"; empty.textContent = "Classified sources will appear here."; list.append(empty); renderTrends(); return; }
-  const query = historyFilter.trim().toLowerCase();
-  const visible = historyItems.filter((item) => historyMatches(item, query));
-  if (!visible.length) { const empty = document.createElement("p"); empty.className = "history-empty"; empty.textContent = `No matches for "${historyFilter.trim()}".`; list.append(empty); renderTrends(); return; }
+  if (!visible.length) { const empty = document.createElement("p"); empty.className = "history-empty"; empty.textContent = "No classifications match your filters."; list.append(empty); renderTrends(); return; }
   for (const item of visible) {
     const entry = document.createElement("button"); entry.type = "button"; entry.className = `history-entry${item.id === activeHistoryId ? " active" : ""}`;
     entry.dataset.model = item.model;
@@ -694,9 +819,7 @@ async function saveHistory(data) {
   await historyTransaction("readwrite", (store) => store.put(item));
   activeHistoryId = item.id;
   historyItems.unshift(item);
-  historyFilter = "";
-  const searchInput = $("history-search");
-  if (searchInput) searchInput.value = "";
+  clearHistoryFilters();
   renderHistory();
 }
 $("history-search")?.addEventListener("input", (event) => {
@@ -715,6 +838,20 @@ function showClassifierPage() {
 }
 $("open-trends").addEventListener("click", showTrendsPage);
 $("trends-back").addEventListener("click", () => { showClassifierPage(); input.focus(); });
+$("save-report").addEventListener("click", () => {
+  if (busy || !currentReport?.classification) return;
+  const report = buildClassificationReport(currentReport, { classifiedAt: reportClassifiedAt });
+  const url = URL.createObjectURL(new Blob([report], { type: "text/html;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  const sourceName = currentReport.source.source_id.replace(/[^a-zA-Z0-9_-]/g, "_");
+  const modelName = currentReport.classification.model.replace(/[^a-zA-Z0-9_-]/g, "_");
+  link.download = `${sourceName}_${modelName}_classification_report.html`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
 $("history-download").addEventListener("click", () => {
   if (!historyItems.length) return;
   const rows = [["source_id", "model", "final_classification", "probability", "classified_at"],
@@ -901,6 +1038,7 @@ form.addEventListener("submit", async (event) => {
   const objectId = extractObjectId(input.value);
   input.value = objectId;
   if (!/^ZTF\d{2}[a-z]+$/i.test(objectId)) { message("Enter a ZTF object ID, such as ZTF18abmrfqv.", true); return; }
+  clearCurrentReport();
   source = null; rolling = null; rollingPlot = null; linkedIndex = null; xDomain = null; plotted = []; activeHistoryId = null;
   showClassifierPage();
   $("workspace").hidden = true; $("empty-state").hidden = false;

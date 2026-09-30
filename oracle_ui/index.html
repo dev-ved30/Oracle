@@ -8,18 +8,30 @@
     <meta name="description" content="Classify a ZTF source with ORACLE-2 using Babamul data.">
     <script>try { if (localStorage.getItem("oracle-theme") === "light") { document.documentElement.dataset.theme = "light"; document.querySelector('meta[name="theme-color"]').content = "#fafbfe"; } } catch {}</script>
     <link rel="stylesheet" href="/assets/styles.css">
+    <script src="/assets/report.js" defer></script>
     <script src="/assets/app.js" defer></script>
   </head>
   <body>
     <aside id="history-sidebar" class="history-sidebar" aria-label="Past classifications">
       <div class="history-search"><input id="history-search" type="search" placeholder="Search history" aria-label="Search history" autocomplete="off"></div>
+      <div class="history-controls">
+        <div class="history-toolbar">
+          <button id="history-filters-toggle" class="history-control-button" type="button" aria-expanded="false" aria-controls="history-filters"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12M4 8h8M6 12h4"></path></svg>Filters<span id="history-filter-count" class="history-filter-count" hidden></span></button>
+          <div id="history-sort-picker" class="history-picker"><button class="history-picker-toggle history-control-button" type="button" aria-label="Sort history: Newest first" aria-haspopup="listbox" aria-expanded="false" aria-controls="history-sort-options"><span class="history-picker-label">Newest first</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"></path></svg></button><div id="history-sort-options" class="history-picker-options" role="listbox" aria-label="Sort history" hidden></div></div>
+        </div>
+        <div id="history-filters" class="history-filters" hidden>
+          <div class="history-filter-field"><span id="history-class-label">Class</span><div id="history-class-picker" class="history-picker"><button class="history-picker-toggle history-control-button" type="button" aria-label="Filter by class: All classes" aria-haspopup="listbox" aria-expanded="false" aria-controls="history-class-options"><span class="history-picker-label">All classes</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"></path></svg></button><div id="history-class-options" class="history-picker-options" role="listbox" aria-labelledby="history-class-label" hidden></div></div></div>
+          <div class="history-filter-field"><span id="history-model-label">Model</span><div id="history-model-picker" class="history-picker"><button class="history-picker-toggle history-control-button" type="button" aria-label="Filter by model: All models" aria-haspopup="listbox" aria-expanded="false" aria-controls="history-model-options"><span class="history-picker-label">All models</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"></path></svg></button><div id="history-model-options" class="history-picker-options" role="listbox" aria-labelledby="history-model-label" hidden></div></div></div>
+        </div>
+        <div id="history-filter-summary" class="history-filter-summary" hidden><span id="history-results-count" role="status" aria-live="polite"></span><button id="history-filters-clear" type="button">Clear</button></div>
+      </div>
       <div id="history-list" class="history-list"><p class="history-empty">Classified sources will appear here.</p></div>
       <div class="sidebar-foot"><button id="open-trends" class="trends-open" type="button" aria-label="Show classification history and trends" title="Show classification history and trends"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></button><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to light mode" aria-pressed="false" title="Switch to light mode"><span id="theme-icon" aria-hidden="true">☀</span></button></div>
     </aside>
     <button id="sidebar-backdrop" class="sidebar-backdrop" type="button" aria-label="Close history sidebar" tabindex="-1"></button>
     <div class="app-shell">
       <main>
-        <div class="theme-row"><div class="topbar-left"><button id="history-open" class="sidebar-toggle" type="button" aria-label="Show history sidebar" aria-expanded="false" aria-controls="history-sidebar" title="Show history sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="3.5" width="19" height="17" rx="2.5"></rect><path d="M8.5 3.5v17"></path><path d="M15.5 9l-2.5 2.5 2.5 2.5"></path></svg></button><button id="new-source" class="new-source" type="button" aria-label="New source" title="New source"><span aria-hidden="true">＋</span></button><span class="wordmark">ORACLE<sup>2</sup></span></div><span class="complete-badge"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.4l3.3 3.3L13 4.8"></path></svg><span>Completed using <strong id="completed-model">—</strong></span></span></div>
+        <div class="theme-row"><div class="topbar-left"><button id="history-open" class="sidebar-toggle" type="button" aria-label="Show history sidebar" aria-expanded="false" aria-controls="history-sidebar" title="Show history sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="3.5" width="19" height="17" rx="2.5"></rect><path d="M8.5 3.5v17"></path><path d="M15.5 9l-2.5 2.5 2.5 2.5"></path></svg></button><button id="new-source" class="new-source" type="button" aria-label="New source" title="New source"><span aria-hidden="true">＋</span></button><span class="wordmark">ORACLE<sup>2</sup></span></div><span class="complete-badge"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.4l3.3 3.3L13 4.8"></path></svg><span>Completed using <strong id="completed-model">—</strong></span></span><button id="save-report" class="chart-button save-report" type="button" hidden disabled>Save report ↓</button></div>
         <div id="classifier-view">
         <div id="ood-warning" class="ood-warning" role="alert" hidden><span aria-hidden="true">⚠</span><p><strong>Out of distribution:</strong> No detections brighter than 18.5 mag. Classification may be less reliable.</p></div>
         <section class="intro" aria-labelledby="page-title">

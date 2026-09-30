@@ -127,6 +127,32 @@ html[data-theme="light"] .history-table-panel tbody tr:hover td{background:#f2f6
 html[data-theme="light"] .history-search input{background:#fff}
 html[data-theme="light"] .history-search input:focus{border-color:#9fadc0}
 html[data-theme="light"] .history-search input::placeholder{color:#93a1b2}
+.history-controls{flex:none;padding:8px 4px 0;position:relative;z-index:2}
+.history-toolbar{display:flex;gap:6px}
+.history-control-button{display:flex;align-items:center;gap:6px;width:100%;height:30px;padding:0 8px;border:1px solid var(--line);border-radius:6px;background:#17191d;color:var(--muted);font-size:10px;font-weight:600;text-align:left}
+.history-control-button:hover{background:#23262c;color:var(--ink)}
+.history-control-button:focus-visible,.history-picker-option:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.history-control-button svg{width:13px;height:13px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+#history-filters-toggle{width:auto;flex:none}
+#history-filters-toggle[aria-expanded="true"],#history-filters-toggle.is-filtered{color:var(--accent);border-color:var(--accent)}
+.history-filter-count{min-width:14px;padding:1px 3px;border-radius:3px;background:var(--accent);color:#fff;font-size:9px;text-align:center}
+.history-picker{position:relative;min-width:0;flex:1}
+.history-picker-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.history-picker-toggle[aria-expanded="true"]{border-color:var(--accent)}
+.history-picker-options{position:absolute;z-index:3;top:calc(100% + 5px);left:0;right:0;padding:4px;max-height:210px;overflow-y:auto;overscroll-behavior:contain;border:1px solid var(--line);border-radius:7px;background:#17191d;box-shadow:0 8px 24px #0008}
+#history-model-options{left:auto;width:calc(200% + 8px)}
+.history-picker-option{display:flex;align-items:center;gap:6px;width:100%;padding:8px 6px;border:0;border-radius:4px;background:transparent;color:var(--ink);font-size:11px;text-align:left}
+.history-picker-option[data-class]::before{content:"";width:6px;height:6px;flex:none;border-radius:50%;background:var(--class-color,var(--muted))}
+.history-picker-option:hover,.history-picker-option:focus{background:#252930}
+.history-picker-option[aria-selected="true"]{background:#172b40;color:var(--accent)}
+.history-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 8px;padding-top:12px}
+.history-filter-field{display:grid;gap:5px;min-width:0;color:var(--muted);font-size:10px}
+.history-filter-summary{display:flex;align-items:center;gap:6px;padding-top:9px;color:var(--muted);font-size:10px;line-height:1.4}
+.history-filter-summary button{margin-left:auto;padding:0;border:0;background:transparent;color:var(--accent);font-size:10px}
+.history-filter-summary button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+html[data-theme="light"] .history-control-button,html[data-theme="light"] .history-picker-options{background:#fff}
+html[data-theme="light"] .history-control-button:hover,html[data-theme="light"] .history-picker-option:hover,html[data-theme="light"] .history-picker-option:focus{background:#eaf0f8}
+html[data-theme="light"] .history-picker-option[aria-selected="true"]{background:#e6f1ff}
 .history-list{display:grid;gap:5px;align-content:start;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
 .history-empty{padding:9px 6px;color:var(--muted);font-size:11px;line-height:1.5}
 .history-entry{display:grid;gap:5px;width:100%;padding:12px 10px;text-align:left;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--ink)}
@@ -385,3 +411,6 @@ html[data-theme="light"] .chart-button:hover,html[data-theme="light"] .chart-act
 html[data-theme="light"] .class-toggle[aria-pressed="true"]{color:var(--class-color,var(--ink));background:#f6faff}
 html[data-theme="light"] .class-toggle[aria-pressed="false"]{color:var(--muted);background:transparent}
 html[data-theme="light"] .chart-tooltip{background:#fff}
+
+.save-report{display:none;flex:none}
+.app-shell.has-result:has(#classifier-view:not([hidden]) #workspace:not([hidden])) .save-report{display:inline-flex}

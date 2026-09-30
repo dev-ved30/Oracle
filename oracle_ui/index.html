@@ -14,13 +14,14 @@
     <aside id="history-sidebar" class="history-sidebar" aria-label="Past classifications">
       <div class="history-search"><input id="history-search" type="search" placeholder="Search history" aria-label="Search history" autocomplete="off"></div>
       <div id="history-list" class="history-list"><p class="history-empty">Classified sources will appear here.</p></div>
-      <div class="sidebar-foot"><button id="open-trends" class="trends-open" type="button" aria-label="Show classification trends" title="Show classification trends"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></button><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to light mode" aria-pressed="false" title="Switch to light mode"><span id="theme-icon" aria-hidden="true">☀</span></button></div>
+      <div class="sidebar-foot"><button id="open-trends" class="trends-open" type="button" aria-label="Show classification history and trends" title="Show classification history and trends"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></button><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to light mode" aria-pressed="false" title="Switch to light mode"><span id="theme-icon" aria-hidden="true">☀</span></button></div>
     </aside>
     <button id="sidebar-backdrop" class="sidebar-backdrop" type="button" aria-label="Close history sidebar" tabindex="-1"></button>
     <div class="app-shell">
       <main>
-        <div class="theme-row"><div class="topbar-left"><button id="history-open" class="sidebar-toggle" type="button" aria-label="Show history sidebar" aria-expanded="false" aria-controls="history-sidebar" title="Show history sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="3.5" width="19" height="17" rx="2.5"></rect><path d="M8.5 3.5v17"></path><path d="M15.5 9l-2.5 2.5 2.5 2.5"></path></svg></button><button id="new-source" class="new-source" type="button" aria-label="New source" title="New source"><span aria-hidden="true">＋</span></button><span class="wordmark">ORACLE<sup>2</sup></span></div><span class="complete-badge"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.4l3.3 3.3L13 4.8"></path></svg>Completed</span></div>
+        <div class="theme-row"><div class="topbar-left"><button id="history-open" class="sidebar-toggle" type="button" aria-label="Show history sidebar" aria-expanded="false" aria-controls="history-sidebar" title="Show history sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="3.5" width="19" height="17" rx="2.5"></rect><path d="M8.5 3.5v17"></path><path d="M15.5 9l-2.5 2.5 2.5 2.5"></path></svg></button><button id="new-source" class="new-source" type="button" aria-label="New source" title="New source"><span aria-hidden="true">＋</span></button><span class="wordmark">ORACLE<sup>2</sup></span></div><span class="complete-badge"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.4l3.3 3.3L13 4.8"></path></svg><span>Completed using <strong id="completed-model">—</strong></span></span></div>
         <div id="classifier-view">
+        <div id="ood-warning" class="ood-warning" role="alert" hidden><span aria-hidden="true">⚠</span><p><strong>Out of distribution:</strong> No detections brighter than 18.5 mag. Classification may be less reliable.</p></div>
         <section class="intro" aria-labelledby="page-title">
           <h1 id="page-title">What's lighting up the sky?</h1>
         </section>
@@ -31,12 +32,15 @@
             <label class="sr-only" for="source-id">ZTF object ID</label>
             <input id="source-id" name="source-id" type="text" value="ZTF23aabidjl" placeholder="ZTF object ID" autocomplete="off" autocapitalize="off" spellcheck="false" required>
             <div class="query-actions">
-              <label class="sr-only" for="model-select">Model</label>
-              <div class="select-wrap"><select id="model-select" name="model" aria-label="Model" aria-describedby="model-description">
-                <option value="BTSv2-pro">ORACLE-2 Omni</option>
-                <option value="BTSv2">ORACLE-2</option>
-                <option value="BTSv2-lite">ORACLE-2 Lite</option>
-              </select><span aria-hidden="true">⌄</span></div>
+              <div id="model-picker" class="model-picker">
+                <input id="model-select" name="model" type="hidden" value="BTSv2-pro">
+                <button id="model-picker-toggle" class="model-picker-toggle" type="button" aria-label="Model: ORACLE-2 Omni (default)" aria-haspopup="listbox" aria-expanded="false" aria-controls="model-options" aria-describedby="model-description"><span id="model-picker-label">ORACLE-2 Omni</span><span id="model-picker-default" class="model-default">Default</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"></path></svg></button>
+                <div id="model-options" class="model-options" role="listbox" aria-label="Model" hidden>
+                  <button class="model-option" type="button" role="option" data-value="BTSv2-pro" aria-selected="true" tabindex="-1"><span class="model-option-copy"><span class="model-option-heading">ORACLE-2 Omni <span class="model-default">Default</span></span><span class="model-option-description">Light curve + source context + ZTF reference image</span></span><span class="model-option-check" aria-hidden="true">✓</span></button>
+                  <button class="model-option" type="button" role="option" data-value="BTSv2" aria-selected="false" tabindex="-1"><span class="model-option-copy"><span class="model-option-heading">ORACLE-2</span><span class="model-option-description">Light curve + source context</span></span><span class="model-option-check" aria-hidden="true">✓</span></button>
+                  <button class="model-option" type="button" role="option" data-value="BTSv2-lite" aria-selected="false" tabindex="-1"><span class="model-option-copy"><span class="model-option-heading">ORACLE-2 Lite</span><span class="model-option-description">Light curve only</span></span><span class="model-option-check" aria-hidden="true">✓</span></button>
+                </div>
+              </div>
               <button id="analyze-button" type="submit" class="button-primary" aria-label="Classify source" title="Classify source"><span aria-hidden="true">↑</span></button>
             </div>
           </div>
@@ -52,7 +56,7 @@
         <div id="workspace" hidden>
           <section class="source-summary" aria-labelledby="source-title">
             <div class="source-heading">
-              <div><p class="eyebrow">Source</p><div class="source-title-row"><h2 id="source-title">—</h2><button id="copy-source-id" class="copy-button" type="button" aria-label="Copy source ID" title="Copy source ID"><span aria-hidden="true">⧉</span></button></div><p id="source-subtitle" class="subtle"></p></div>
+              <div><p class="eyebrow">Source</p><div class="source-title-row"><h2 id="source-title">—</h2><button id="copy-source-id" class="copy-button" type="button" aria-label="Copy source ID" title="Copy source ID"><span aria-hidden="true">⧉</span></button></div></div>
               <div class="source-links"><a id="broker-link" class="text-link" href="#" target="_blank" rel="noopener noreferrer">Open in Babamul ↗</a><a id="fritz-link" class="text-link" href="#" target="_blank" rel="noopener noreferrer">Open in Fritz ↗</a></div>
             </div>
             <div class="summary-strip" aria-label="Source summary">
@@ -63,31 +67,28 @@
             </div>
           </section>
 
-          <div id="ood-warning" class="ood-warning" role="alert" hidden><span aria-hidden="true">⚠</span><p><strong>Out-of-distribution:</strong> no detection brighter than 18.5 mag. This source is fainter than the training set, so classification reliability may vary.</p></div>
 
-          <section id="prediction" class="result-section" aria-labelledby="prediction-title" hidden>
-            <div class="section-head"><div><p class="eyebrow">ORACLE-2 result</p><h3 id="prediction-title">Classification</h3></div><span id="prediction-model" class="subtle">—</span></div>
-            <div class="prediction-lead"><div><span>Highest leaf probability</span><strong id="top-class">—</strong></div><strong id="top-probability">—</strong></div>
+          <section id="prediction" class="result-section" aria-label="Classification" hidden>
+            <div class="prediction-lead"><div><span>Predicted class</span><strong id="top-class">—</strong></div><div class="prediction-probability"><span>Probability</span><strong id="top-probability">—</strong></div></div>
             <div id="taxonomy" class="taxonomy" aria-label="Classification probabilities"></div>
-            <p id="prediction-note" class="figure-note"></p>
           </section>
           <section id="rolling-section" class="result-section rolling-section" aria-labelledby="rolling-title" hidden>
             <div class="section-head"><div><p class="eyebrow">Evolution · Observation by observation</p><h3 id="rolling-title">Evolution over time</h3></div></div>
             <div id="rolling-legend" class="rolling-legend" aria-label="Show or hide classes"></div>
             <div class="rolling-chart-wrap"><canvas id="rolling-chart" role="img" aria-label="Class probabilities after each observation over days since first detection"></canvas><div id="rolling-tooltip" class="chart-tooltip" hidden></div></div>
             <p id="rolling-note" class="figure-note"></p>
-            <div class="rolling-data-actions"><button id="rolling-data-toggle" type="button" aria-expanded="false" aria-controls="rolling-data-panel">View data</button><button id="rolling-download" type="button">Download CSV ↓</button></div>
+            <div class="rolling-data-actions"><button id="rolling-data-toggle" class="chart-button" type="button" aria-expanded="false" aria-controls="rolling-data-panel">View data</button><button id="rolling-download" class="chart-button" type="button">Export CSV ↓</button></div>
             <div id="rolling-data-panel" class="rolling-data-panel" hidden><div class="rolling-data-scroll"><table><caption class="sr-only">Class probabilities after each ZTF observation</caption><thead id="rolling-data-head"></thead><tbody id="rolling-data-body"></tbody></table></div></div>
           </section>
 
           <details id="data-details" class="data-details result-section" open>
-            <summary id="data-summary" class="data-summary section-head" aria-label="Hide input data"><div><p class="eyebrow">Model input</p><h3>Input data</h3></div><span class="data-toggle" aria-hidden="true"><svg id="eye-open" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg><svg id="eye-closed" viewBox="0 0 24 24" hidden><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg></span></summary>
+            <summary id="data-summary" class="data-summary section-head" aria-label="Hide input data"><span class="data-toggle" aria-hidden="true"><svg id="eye-open" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg><svg id="eye-closed" viewBox="0 0 24 24" hidden><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg></span></summary>
             <div class="visual-grid">
               <section class="visual-section lightcurve-section" aria-labelledby="lightcurve-title">
                 <div class="section-head">
                   <div><p class="eyebrow">Photometry</p><h3 id="lightcurve-title">Light curve</h3></div>
-                  <div class="chart-actions"><span class="band-legend" aria-label="ZTF bands"><span class="band-g">g</span><span class="band-r">r</span><span class="band-i">i</span></span><button id="zoom-in" type="button" aria-label="Zoom in on light curve" title="Zoom in">+</button><button id="zoom-out" type="button" aria-label="Zoom out on light curve" title="Zoom out">−</button><button id="zoom-reset" type="button" title="Reset zoom">Reset</button></div>
                 </div>
+                <div class="chart-toolbar"><span class="band-legend" aria-label="ZTF bands"><span class="band-g">g</span><span class="band-r">r</span><span class="band-i">i</span></span><div class="chart-actions" role="group" aria-label="Light curve zoom"><button id="zoom-in" class="chart-button chart-button-icon" type="button" aria-label="Zoom in on light curve" title="Zoom in">+</button><button id="zoom-out" class="chart-button chart-button-icon" type="button" aria-label="Zoom out on light curve" title="Zoom out">−</button><button id="zoom-reset" class="chart-button" type="button" aria-label="Reset light curve zoom" title="Reset zoom">Reset</button></div></div>
               <div class="chart-wrap"><canvas id="lightcurve-chart" role="img" aria-label="ZTF light curve by filter. Hold control or command and scroll to zoom; drag to pan; double click to reset."></canvas><div id="chart-tooltip" class="chart-tooltip" hidden></div></div>
               <p class="figure-note">Magnitude · lower is brighter · days since first detection · ctrl/cmd + scroll to zoom, drag to pan</p>
               </section>
@@ -114,38 +115,50 @@
           </details>
         </div>
         </div>
-        <section id="trends-page" aria-labelledby="trends-page-title" hidden>
-          <div class="section-head"><div><p class="eyebrow">Overview</p><h2 id="trends-page-title">Trends</h2></div><button id="trends-back" class="trends-back" type="button">← Classifier</button></div>
-          <div class="trends-cards">
-            <div class="trends-card"><span>Sources classified</span><strong id="trends-count">0</strong></div>
-            <div class="trends-card"><span>Classes seen</span><strong id="trends-nclasses">0</strong></div>
-          </div>
+        <section id="trends-page" aria-label="Classification history and trends" hidden>
+          <div class="section-head trends-page-actions"><button id="trends-back" class="trends-back" type="button">← Classifier</button></div>
           <div class="trends-grid">
-            <div class="trends-col">
+            <section class="trends-panel-block trends-sky-panel" aria-labelledby="trends-sky-title">
+              <div class="section-head"><div><p class="eyebrow">Positions</p><h3 id="trends-sky-title">Sky distribution</h3></div></div>
+              <div class="trends-sky-wrap"><canvas id="trends-sky" role="img" aria-label="Mollweide sky map of classified source positions"></canvas></div>
+              <p id="trends-sky-empty" class="history-empty" hidden>No source positions available yet.</p>
+            </section>
+            <div class="trends-breakdowns">
             <section class="trends-panel-block" aria-labelledby="trends-classes-title">
               <div class="section-head"><div><p class="eyebrow">Breakdown</p><h3 id="trends-classes-title">By class</h3></div></div>
               <div class="trends-pie-wrap"><canvas id="trends-pie" role="img" aria-label="Share of classified sources per predicted class"></canvas></div>
               <div id="trends-legend" class="trends-legend"></div>
+              <p id="trends-class-total" class="trends-total">0 classes</p>
               <p id="trends-classes-empty" class="history-empty" hidden>Classify a source to see the class breakdown.</p>
             </section>
             <section class="trends-panel-block" aria-labelledby="trends-models-title">
               <div class="section-head"><div><p class="eyebrow">Usage</p><h3 id="trends-models-title">By model</h3></div></div>
+              <div class="trends-pie-wrap"><canvas id="trends-model-pie" role="img" aria-label="Share of saved classifications by model"></canvas></div>
               <div id="trends-model-legend" class="trends-legend"></div>
+              <p id="trends-model-total" class="trends-total">0 models</p>
               <p id="trends-models-empty" class="history-empty" hidden>Classify a source to see model usage.</p>
             </section>
             </div>
-            <section class="trends-panel-block" aria-labelledby="trends-sky-title">
-              <div class="section-head"><div><p class="eyebrow">Positions</p><h3 id="trends-sky-title">Sky distribution</h3></div></div>
-              <div class="trends-sky-wrap"><canvas id="trends-sky" role="img" aria-label="Mollweide sky map of classified source positions"></canvas></div>
-              <p id="trends-sky-note" class="figure-note">Mollweide projection · RA 0° center</p>
-              <p id="trends-sky-empty" class="history-empty" hidden>No source positions available yet.</p>
-            </section>
           </div>
+          <section class="history-table-section" aria-labelledby="history-table-title">
+            <div class="section-head"><div><p class="eyebrow">Saved classifications</p><h3 id="history-table-title">Classification history</h3></div><button id="history-download" class="trends-back" type="button" disabled>Export history CSV ↓</button></div>
+            <p class="figure-note">One row per saved classification, newest first.</p>
+            <div id="history-table-panel" class="history-table-panel" hidden>
+              <div class="history-table-scroll" role="region" aria-label="Saved classifications table" tabindex="0">
+                <table>
+                  <caption class="sr-only">Saved sources, models, and final classifications</caption>
+                  <thead><tr><th scope="col">Source</th><th scope="col">Model used</th><th scope="col">Final classification</th><th scope="col">Probability</th><th scope="col">Classified at</th></tr></thead>
+                  <tbody id="history-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+            <p id="history-table-empty" class="history-empty">Classified sources will appear here.</p>
+          </section>
         </section>
       </main>
       <footer class="footer">
         <span>Powered by ORACLE · Local inference</span>
-        <span>Made with <span class="footer-heart" role="img" aria-label="heart">♥</span></span>
+        <span>&lt;/&gt; with <span class="footer-heart" role="img" aria-label="heart">♥</span></span>
         <nav class="footer-links" aria-label="Project links">
           <a href="https://github.com/dev-ved30/Oracle" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
           <a href="https://dev-ved30.github.io/Oracle/" target="_blank" rel="noopener noreferrer">Docs ↗</a>

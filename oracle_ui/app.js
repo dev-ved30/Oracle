@@ -2,6 +2,9 @@ const $ = (id) => document.getElementById(id);
 const form = $("source-form");
 const input = $("source-id");
 const modelSelect = $("model-select");
+const modelPicker = $("model-picker");
+const modelPickerToggle = $("model-picker-toggle");
+const modelOptions = [...$("model-options").querySelectorAll(".model-option")];
 const button = $("analyze-button");
 const chart = $("lightcurve-chart");
 const tooltip = $("chart-tooltip");
@@ -66,6 +69,8 @@ function setBusy(value) {
   document.querySelector(".app-shell").classList.toggle("is-busy", value);
   button.disabled = value;
   modelSelect.disabled = value;
+  modelPickerToggle.disabled = value;
+  if (value) closeModelPicker();
   $("new-source").disabled = value;
   button.setAttribute("aria-label", value ? "Fetching and classifying source" : "Classify source");
   button.title = value ? "Fetching and classifying source" : "Classify source";
@@ -74,7 +79,59 @@ function setBusy(value) {
   button.firstElementChild.textContent = value ? "" : "↑";
   renderMessage();
 }
-function updateModelDescription() { $("model-description").textContent = modelDescriptions[modelSelect.value] || ""; }
+function updateModelDescription() {
+  const name = modelNames[modelSelect.value] || modelSelect.value;
+  const isDefault = modelSelect.value === "BTSv2-pro";
+  $("model-description").textContent = modelDescriptions[modelSelect.value] || "";
+  $("model-picker-label").textContent = name;
+  $("model-picker-default").hidden = !isDefault;
+  modelPickerToggle.setAttribute("aria-label", `Model: ${name}${isDefault ? " (default)" : ""}`);
+  modelOptions.forEach((option) => option.setAttribute("aria-selected", String(option.dataset.value === modelSelect.value)));
+}
+function closeModelPicker(restoreFocus = false) {
+  $("model-options").hidden = true;
+  modelPickerToggle.setAttribute("aria-expanded", "false");
+  if (restoreFocus) modelPickerToggle.focus();
+}
+function openModelPicker() {
+  if (busy) return;
+  $("model-options").hidden = false;
+  modelPickerToggle.setAttribute("aria-expanded", "true");
+  (modelOptions.find((option) => option.dataset.value === modelSelect.value) || modelOptions[0]).focus();
+}
+modelPickerToggle.addEventListener("click", () => {
+  if ($("model-options").hidden) openModelPicker();
+  else closeModelPicker();
+});
+modelPickerToggle.addEventListener("keydown", (event) => {
+  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+    event.preventDefault();
+    event.stopPropagation();
+    openModelPicker();
+  }
+});
+modelOptions.forEach((option) => option.addEventListener("click", () => {
+  if (busy) return;
+  modelSelect.value = option.dataset.value;
+  modelSelect.dispatchEvent(new Event("change"));
+  closeModelPicker(true);
+}));
+modelPicker.addEventListener("keydown", (event) => {
+  if ($("model-options").hidden) return;
+  if (event.key === "Escape") {
+    event.preventDefault();
+    event.stopPropagation();
+    closeModelPicker(true);
+  } else if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key) && modelOptions.includes(document.activeElement)) {
+    event.preventDefault();
+    const current = modelOptions.indexOf(document.activeElement);
+    const next = event.key === "Home" ? 0 : event.key === "End" ? modelOptions.length - 1
+      : (current + (event.key === "ArrowDown" ? 1 : -1) + modelOptions.length) % modelOptions.length;
+    modelOptions[next].focus();
+  }
+});
+document.addEventListener("pointerdown", (event) => { if (!modelPicker.contains(event.target)) closeModelPicker(); });
+modelPicker.addEventListener("focusout", (event) => { if (!modelPicker.contains(event.relatedTarget)) closeModelPicker(); });
 modelSelect.addEventListener("change", updateModelDescription);
 updateModelDescription();
 fetch("/api/config")
@@ -112,7 +169,6 @@ function renderMetadata() {
 }
 function renderSource() {
   $("source-title").textContent = source.source_id;
-  $("source-subtitle").textContent = `Babamul · Latest detection JD ${number(source.last_jd, 5)}`;
   $("broker-link").href = `https://babamul.caltech.edu/objects/ZTF/${encodeURIComponent(source.source_id)}`;
   $("fritz-link").href = `https://fritz.science/source/${encodeURIComponent(source.source_id)}`;
   $("metric-detections").textContent = Number(source.detections).toLocaleString();
@@ -163,6 +219,7 @@ function zoom(factor, fraction = .5) {
 }
 function drawLightCurve() {
   if (!source || !source.photometry.length || $("workspace").hidden) return;
+  tooltip.hidden = true;
   const rect = chart.getBoundingClientRect();
   if (rect.width < 10 || rect.height < 10) return;
   const ratio = window.devicePixelRatio || 1;
@@ -184,13 +241,15 @@ function drawLightCurve() {
   ctx.clearRect(0, 0, rect.width, rect.height);
   ctx.font = "11px Inter, system-ui, sans-serif";
   const lightTheme = document.documentElement.dataset.theme === "light";
-  ctx.strokeStyle = lightTheme ? "#e7edf5" : "#303238";
+  ctx.strokeStyle = lightTheme ? "#edf1f6" : "#23262c";
   ctx.fillStyle = lightTheme ? "#7d8c9b" : "#a8adb6";
   ctx.lineWidth = 1;
   for (let tick = 0; tick <= 4; tick++) {
     const yy = plot.top + tick / 4 * (plot.bottom - plot.top);
     const magnitude = minMag + tick / 4 * magSpan;
-    ctx.beginPath(); ctx.moveTo(plot.left, yy); ctx.lineTo(plot.right, yy); ctx.stroke();
+    if (tick % 2 === 0) {
+      ctx.beginPath(); ctx.moveTo(plot.left, yy); ctx.lineTo(plot.right, yy); ctx.stroke();
+    }
     ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillText(magnitude.toFixed(1), plot.left - 8, yy);
     const xx = plot.left + tick / 4 * (plot.right - plot.left);
     ctx.textAlign = "center"; ctx.textBaseline = "top";
@@ -242,8 +301,11 @@ function renderTaxonomy(result) {
     const list = document.createElement("div"); list.className = "leaf-list";
     for (const name of [...children].sort((a, b) => (leaves[b] || 0) - (leaves[a] || 0))) {
       const row = document.createElement("div"); row.className = `leaf-row${name === topLeaf?.[0] ? " top-leaf" : ""}`;
+      row.dataset.class = name;
       const childLabel = document.createElement("span"); childLabel.textContent = name;
-      const childScore = document.createElement("strong"); childScore.textContent = percent(leaves[name] || 0);
+      const childScore = document.createElement("strong");
+      childScore.textContent = name === topLeaf?.[0] ? "Highest" : percent(leaves[name] || 0);
+      if (name === topLeaf?.[0]) childScore.className = "leaf-top-label";
       row.append(childLabel, childScore); list.append(row);
     }
     branch.append(header, track, list); columns.append(branch);
@@ -253,12 +315,20 @@ function renderTaxonomy(result) {
   $("top-probability").textContent = topLeaf ? percent(topLeaf[1]) : "—";
   $("prediction").dataset.model = result.model;
   $("prediction").dataset.class = topLeaf?.[0] || "";
-  $("prediction-model").textContent = modelNames[result.model] || result.model;
-  $("prediction-note").textContent = "Probabilities are model outputs.";
+  $("completed-model").textContent = modelNames[result.model] || result.model;
   $("prediction").hidden = false;
   document.querySelector(".app-shell").classList.add("has-result");
 }
-const classColors = { AGN: "#0a84ff", CV: "#59d39a", Varstar: "#e9b66f", "SN-Ia": "#b395ff", "SN-II": "#ff8477", "SN-Ib/c": "#f2a5d8", SLSN: "#63cee2" };
+const classColorVars = { AGN: "--class-agn", CV: "--class-cv", Varstar: "--class-varstar", "SN-Ia": "--class-sn-ia", "SN-II": "--class-sn-ii", "SN-Ib/c": "--class-sn-ibc", SLSN: "--class-slsn" };
+const classColorCache = new Map();
+function classColor(name) {
+  const key = `${document.documentElement.dataset.theme}:${name}`;
+  if (!classColorCache.has(key)) {
+    const styles = getComputedStyle(document.documentElement);
+    classColorCache.set(key, styles.getPropertyValue(classColorVars[name] || "--muted").trim());
+  }
+  return classColorCache.get(key);
+}
 function renderRolling(data) {
   rolling = data;
   linkedIndex = null;
@@ -271,12 +341,20 @@ function renderRolling(data) {
   visibleClasses = new Set([...leaves].sort((a, b) => data.points.at(-1).probabilities[b] - data.points.at(-1).probabilities[a]).slice(0, 3));
   const legend = $("rolling-legend"); legend.replaceChildren();
   for (const name of leaves) {
-    const label = document.createElement("label"); label.className = "rolling-legend-item";
-    const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.checked = visibleClasses.has(name);
-    checkbox.addEventListener("change", () => { if (checkbox.checked) visibleClasses.add(name); else visibleClasses.delete(name); drawRolling(); });
-    const dot = document.createElement("span"); dot.className = "rolling-legend-dot"; dot.style.background = classColors[name] || "#aaa";
+    const toggle = document.createElement("button"); toggle.type = "button"; toggle.className = "chart-button class-toggle";
+    toggle.dataset.class = name;
+    const syncToggle = () => {
+      toggle.setAttribute("aria-pressed", String(visibleClasses.has(name)));
+      toggle.setAttribute("aria-label", `${visibleClasses.has(name) ? "Hide" : "Show"} ${name}`);
+    };
+    syncToggle();
+    toggle.addEventListener("click", () => {
+      if (visibleClasses.has(name)) visibleClasses.delete(name); else visibleClasses.add(name);
+      syncToggle(); drawRolling();
+    });
+    const dot = document.createElement("span"); dot.className = "rolling-legend-dot"; dot.setAttribute("aria-hidden", "true");
     const caption = document.createElement("span"); caption.textContent = name;
-    label.append(checkbox, dot, caption); legend.append(label);
+    toggle.append(dot, caption); legend.append(toggle);
   }
   $("rolling-note").textContent = data.note || "Class probabilities after each observation.";
   requestAnimationFrame(drawRolling);
@@ -299,8 +377,10 @@ function drawRolling() {
   ctx.font = "11px Inter, system-ui, sans-serif"; ctx.lineWidth = 1;
   for (let tick = 0; tick <= 4; tick++) {
     const yy = y(tick / 4), xx = plot.left + tick / 4 * (plot.right - plot.left);
-    ctx.strokeStyle = light ? "#e7edf5" : "#303238";
-    ctx.beginPath(); ctx.moveTo(plot.left, yy); ctx.lineTo(plot.right, yy); ctx.stroke();
+    ctx.strokeStyle = light ? "#edf1f6" : "#23262c";
+    if (tick % 2 === 0) {
+      ctx.beginPath(); ctx.moveTo(plot.left, yy); ctx.lineTo(plot.right, yy); ctx.stroke();
+    }
     ctx.fillStyle = light ? "#7d8c9b" : "#a8adb6";
     ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillText(`${tick * 25}%`, plot.left - 8, yy);
     ctx.textAlign = "center"; ctx.textBaseline = "top";
@@ -308,11 +388,11 @@ function drawRolling() {
   }
   ctx.save(); ctx.beginPath(); ctx.rect(plot.left, plot.top, plot.right - plot.left, plot.bottom - plot.top); ctx.clip();
   for (const name of visibleClasses) {
-    ctx.strokeStyle = classColors[name] || "#aaa"; ctx.lineWidth = 2; ctx.beginPath();
+    ctx.strokeStyle = classColor(name); ctx.lineWidth = 2; ctx.beginPath();
     points.forEach((point, index) => index ? ctx.lineTo(x(point, index), y(point.probabilities[name] || 0)) : ctx.moveTo(x(point, index), y(point.probabilities[name] || 0)));
     ctx.stroke();
     if (points.length <= 50) for (let index = 0; index < points.length; index++) {
-      ctx.beginPath(); ctx.arc(x(points[index], index), y(points[index].probabilities[name] || 0), 2.4, 0, Math.PI * 2); ctx.fillStyle = classColors[name] || "#aaa"; ctx.fill();
+      ctx.beginPath(); ctx.arc(x(points[index], index), y(points[index].probabilities[name] || 0), 2.4, 0, Math.PI * 2); ctx.fillStyle = classColor(name); ctx.fill();
     }
   }
   ctx.restore();
@@ -328,18 +408,11 @@ function drawRolling() {
       const py = y(points[linkedIndex].probabilities[name] || 0);
       ctx.beginPath(); ctx.arc(px, py, 4.5, 0, Math.PI * 2);
       ctx.fillStyle = light ? "#fafbfe" : "#0b0c0e"; ctx.fill();
-      ctx.strokeStyle = classColors[name] || "#aaa"; ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = classColor(name); ctx.lineWidth = 2; ctx.stroke();
     }
     ctx.restore();
   }
-}
-function rollingScoresLine(point) {
-  const names = [...visibleClasses].sort((a, b) => (point.probabilities[b] || 0) - (point.probabilities[a] || 0));
-  return names.map((name) => `${name} ${percent(point.probabilities[name] || 0)}`).join(" · ");
-}
-function rollingTooltipText(point) {
-  const scores = rollingScoresLine(point);
-  return `Obs ${point.observation} · JD ${number(point.jd, 5)}${scores ? ` · ${scores}` : ""}`;
+  syncRollingTooltip();
 }
 function rollingIndexFor(point) {
   if (!rolling?.points?.length) return null;
@@ -348,19 +421,30 @@ function rollingIndexFor(point) {
   const found = rolling.points.findIndex((entry) => Math.abs(entry.jd - point.jd) < 1e-6);
   return found >= 0 ? found : null;
 }
-function setTooltipLines(element, lines) {
-  element.replaceChildren(...lines.map((line, index) => {
-    const row = document.createElement("div");
-    if (index) row.className = "tooltip-sub";
-    row.textContent = line;
-    return row;
-  }));
+function setChartTooltip(element, heading, point = null, band = null) {
+  const title = document.createElement("div"); title.className = "tooltip-heading";
+  if (band) {
+    const marker = document.createElement("span"); marker.className = `tooltip-band band-${band}`; marker.textContent = band;
+    title.append(marker, " · ");
+  }
+  title.append(heading);
+  element.replaceChildren(title);
+  if (!point) return;
+  const scores = document.createElement("div"); scores.className = "tooltip-scores";
+  for (const name of [...visibleClasses].sort((a, b) => (point.probabilities[b] || 0) - (point.probabilities[a] || 0))) {
+    const row = document.createElement("div"); row.className = "tooltip-score"; row.dataset.class = name;
+    const label = document.createElement("span"); label.textContent = name;
+    const value = document.createElement("strong"); value.textContent = percent(point.probabilities[name] || 0);
+    row.append(label, value); scores.append(row);
+  }
+  if (scores.childElementCount) element.append(scores);
 }
 function syncRollingTooltip() {
   const usable = linkedIndex !== null && rollingPlot && rollingPlot.positions[linkedIndex] !== undefined
     && rolling?.points?.[linkedIndex] && !$("rolling-section").hidden;
   if (!usable) { rollingTooltip.hidden = true; return; }
-  rollingTooltip.textContent = rollingTooltipText(rolling.points[linkedIndex]);
+  const point = rolling.points[linkedIndex];
+  setChartTooltip(rollingTooltip, `Obs ${point.observation} · JD ${number(point.jd, 5)}`, point, point.band);
   rollingTooltip.hidden = false;
   const rect = rollingChart.getBoundingClientRect();
   const px = rollingPlot.positions[linkedIndex];
@@ -540,7 +624,7 @@ function renderHistory() {
   if (!historyItems.length) { const empty = document.createElement("p"); empty.className = "history-empty"; empty.textContent = "Classified sources will appear here."; list.append(empty); renderTrends(); return; }
   const query = historyFilter.trim().toLowerCase();
   const visible = historyItems.filter((item) => historyMatches(item, query));
-  if (!visible.length) { const empty = document.createElement("p"); empty.className = "history-empty"; empty.textContent = `No matches for "${historyFilter.trim()}".`; list.append(empty); return; }
+  if (!visible.length) { const empty = document.createElement("p"); empty.className = "history-empty"; empty.textContent = `No matches for "${historyFilter.trim()}".`; list.append(empty); renderTrends(); return; }
   for (const item of visible) {
     const entry = document.createElement("button"); entry.type = "button"; entry.className = `history-entry${item.id === activeHistoryId ? " active" : ""}`;
     entry.dataset.model = item.model;
@@ -561,8 +645,8 @@ function renderHistory() {
     const time = document.createElement("small"); time.textContent = new Date(item.created_at).toLocaleString();
     if (item.ood ?? isOodSource(item.data?.source)) {
       const warn = document.createElement("span"); warn.className = "history-ood"; warn.textContent = "⚠";
-      warn.title = "Out-of-distribution: no detection brighter than 18.5 mag";
-      warn.setAttribute("aria-label", "Out-of-distribution: no detection brighter than 18.5 mag");
+      warn.title = "Out of distribution: No detections brighter than 18.5 mag";
+      warn.setAttribute("aria-label", "Out of distribution: No detections brighter than 18.5 mag");
       time.prepend(warn, " · ");
     }
     entry.append(heading, detail, time);
@@ -573,7 +657,7 @@ function renderHistory() {
         if (!saved) return;
         input.value = saved.source_id; modelSelect.value = saved.model; updateModelDescription();
         xDomain = null; showClassifierPage(); renderResult(saved.data, saved.id);
-        message(`Showing saved ${saved.source_id} classification.`);
+        message("");
         if (window.innerWidth <= 900) setSidebar(false);
       } catch { message("Could not open this saved classification.", true); }
     });
@@ -631,12 +715,46 @@ function showClassifierPage() {
 }
 $("open-trends").addEventListener("click", showTrendsPage);
 $("trends-back").addEventListener("click", () => { showClassifierPage(); input.focus(); });
+$("history-download").addEventListener("click", () => {
+  if (!historyItems.length) return;
+  const rows = [["source_id", "model", "final_classification", "probability", "classified_at"],
+    ...historyItems.map((item) => [item.source_id, modelNames[item.model] || item.model,
+      item.top_class, item.top_probability, item.created_at])];
+  const csv = rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "oracle_classification_history.csv";
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+function renderHistoryTable() {
+  $("history-download").disabled = !historyItems.length;
+  $("history-table-panel").hidden = !historyItems.length;
+  $("history-table-empty").hidden = historyItems.length > 0;
+  const rows = historyItems.map((item) => {
+    const row = document.createElement("tr");
+    row.dataset.class = item.top_class;
+    const values = [item.source_id, modelNames[item.model] || item.model, item.top_class,
+      percent(item.top_probability), new Date(item.created_at).toLocaleString()];
+    for (const value of values) {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      row.append(cell);
+    }
+    return row;
+  });
+  $("history-table-body").replaceChildren(...rows);
+}
 $("copy-source-id").addEventListener("click", () => { if (source) copyText(source.source_id, $("copy-source-id")); });
 $("copy-position").addEventListener("click", () => {
   if (source && Number.isFinite(Number(source.ra)) && Number.isFinite(Number(source.dec)))
     copyText(`${source.ra} ${source.dec}`, $("copy-position"));
 });
 let trendsPieSlices = [];
+let trendsModelSlices = [];
 let trendsSkyPoints = [];
 const modelColors = { "BTSv2-pro": "#c19dff", BTSv2: "#76baff", "BTSv2-lite": "#74d6a5" };
 function sizeCanvas(canvas) {
@@ -651,12 +769,12 @@ function sizeCanvas(canvas) {
 }
 function renderTrends() {
   if ($("trends-page").hidden) return;
-  $("trends-count").textContent = Number(historyItems.length).toLocaleString();
+  renderHistoryTable();
   trendsPieSlices = Object.entries(historyItems.reduce((counts, item) => {
     counts[item.top_class] = (counts[item.top_class] || 0) + 1;
     return counts;
   }, {})).sort((a, b) => b[1] - a[1]).map(([name, count]) => ({ name, count }));
-  $("trends-nclasses").textContent = Number(trendsPieSlices.length).toLocaleString();
+  $("trends-class-total").textContent = `${trendsPieSlices.length.toLocaleString()} ${trendsPieSlices.length === 1 ? "class" : "classes"}`;
   $("trends-classes-empty").hidden = historyItems.length > 0;
   const legend = $("trends-legend");
   legend.replaceChildren();
@@ -664,20 +782,22 @@ function renderTrends() {
   $("trends-pie").closest(".trends-pie-wrap").hidden = !historyItems.length;
   for (const { name, count } of trendsPieSlices) {
     const row = document.createElement("div"); row.className = "trends-legend-item";
-    const dot = document.createElement("span"); dot.className = "trends-legend-dot"; dot.style.background = classColors[name] || "#aaa";
+    const dot = document.createElement("span"); dot.className = "trends-legend-dot"; dot.style.background = classColor(name);
     const label = document.createElement("span"); label.textContent = name;
     const value = document.createElement("strong"); value.textContent = `${count} · ${percent(historyItems.length ? count / historyItems.length : 0)}`;
     row.append(dot, label, value); legend.append(row);
   }
-  const modelSlices = Object.entries(historyItems.reduce((counts, item) => {
+  trendsModelSlices = Object.entries(historyItems.reduce((counts, item) => {
     counts[item.model] = (counts[item.model] || 0) + 1;
     return counts;
-  }, {})).sort((a, b) => b[1] - a[1]);
+  }, {})).sort((a, b) => b[1] - a[1]).map(([name, count]) => ({ name, count }));
+  $("trends-model-total").textContent = `${trendsModelSlices.length.toLocaleString()} ${trendsModelSlices.length === 1 ? "model" : "models"}`;
   $("trends-models-empty").hidden = historyItems.length > 0;
   const modelLegend = $("trends-model-legend");
   modelLegend.replaceChildren();
   modelLegend.hidden = !historyItems.length;
-  for (const [key, count] of modelSlices) {
+  $("trends-model-pie").closest(".trends-pie-wrap").hidden = !historyItems.length;
+  for (const { name: key, count } of trendsModelSlices) {
     const row = document.createElement("div"); row.className = "trends-legend-item";
     const dot = document.createElement("span"); dot.className = "trends-legend-dot"; dot.style.background = modelColors[key] || "#aaa";
     const label = document.createElement("span"); label.textContent = modelNames[key] || key;
@@ -691,22 +811,26 @@ function renderTrends() {
       trendsSkyPoints.push({ ra, dec, cls: item.top_class });
   }
   $("trends-sky-empty").hidden = trendsSkyPoints.length > 0;
-  $("trends-sky-note").hidden = !trendsSkyPoints.length;
-  requestAnimationFrame(() => { drawTrendsPie(); drawTrendsSky(); });
+  requestAnimationFrame(() => { drawTrendsPies(); drawTrendsSky(); });
 }
-function drawTrendsPie() {
-  if ($("trends-page").hidden || !trendsPieSlices.length) return;
-  const sized = sizeCanvas($("trends-pie"));
+function drawTrendsPies() {
+  if ($("trends-page").hidden) return;
+  drawDonut($("trends-pie"), trendsPieSlices, classColor);
+  drawDonut($("trends-model-pie"), trendsModelSlices, (name) => modelColors[name] || "#aaa");
+}
+function drawDonut(canvas, slices, colorFor) {
+  if (!slices.length) return;
+  const sized = sizeCanvas(canvas);
   if (!sized) return;
   const { ctx, width, height } = sized;
-  const total = trendsPieSlices.reduce((sum, slice) => sum + slice.count, 0);
+  const total = slices.reduce((sum, slice) => sum + slice.count, 0);
   const cx = width / 2, cy = height / 2, radius = Math.min(width, height) / 2 - 4;
   ctx.clearRect(0, 0, width, height);
   let angle = -Math.PI / 2;
-  for (const { name, count } of trendsPieSlices) {
+  for (const { name, count } of slices) {
     const sweep = count / total * Math.PI * 2;
     ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, radius, angle, angle + sweep); ctx.closePath();
-    ctx.fillStyle = classColors[name] || "#aaa"; ctx.fill();
+    ctx.fillStyle = colorFor(name); ctx.fill();
     angle += sweep;
   }
   ctx.globalCompositeOperation = "destination-out";
@@ -762,7 +886,7 @@ function drawTrendsSky() {
   for (const point of trendsSkyPoints) {
     const [px, py] = project(point.ra, point.dec);
     ctx.beginPath(); ctx.arc(px, py, 3, 0, Math.PI * 2);
-    ctx.fillStyle = classColors[point.cls] || "#aaa"; ctx.fill();
+    ctx.fillStyle = classColor(point.cls); ctx.fill();
   }
 }
 const historyReady = openHistoryDb().then(async (db) => {
@@ -830,12 +954,8 @@ chart.addEventListener("pointermove", (event) => {
   if (!nearest || distance > 14) { tooltip.hidden = true; setLinked(null); return; }
   const linked = rollingIndexFor(nearest);
   setLinked(linked);
-  const lines = [`${nearest.band} · JD ${nearest.jd.toFixed(5)} · ${nearest.mag.toFixed(2)} ± ${nearest.error.toFixed(2)} mag`];
-  if (linked !== null) {
-    const scores = rollingScoresLine(rolling.points[linked]);
-    if (scores) lines.push(scores);
-  }
-  setTooltipLines(tooltip, lines);
+  setChartTooltip(tooltip, `JD ${nearest.jd.toFixed(5)} · ${nearest.mag.toFixed(2)} ± ${nearest.error.toFixed(2)} mag`,
+    linked !== null ? rolling.points[linked] : null, nearest.band);
   tooltip.hidden = false;
   tooltip.style.left = `${Math.max(5, Math.min(x + 12, rect.width - tooltip.offsetWidth - 5))}px`;
   tooltip.style.top = `${Math.max(5, y - tooltip.offsetHeight - 6)}px`;

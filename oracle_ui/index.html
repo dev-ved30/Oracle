@@ -40,9 +40,10 @@
 
         <div id="babamul-warning" class="ood-warning form-warning" role="alert" hidden><span aria-hidden="true">⚠</span><p><strong>Babamul API key missing:</strong> set BABAMUL_API_TOKEN in your environment and restart the server to classify sources.</p></div>
         <form id="source-form" class="query-form">
+          <p id="alert-availability" class="alert-availability"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"></circle><path d="M8 7v4M8 4.5v.5"></path></svg><span><strong>Only uses Public ZTF alerts.</strong> Partnership and Caltech alerts are not supported.</span></p>
           <div class="query-main">
             <label class="sr-only" for="source-id">ZTF object ID</label>
-            <input id="source-id" name="source-id" type="text" value="ZTF23aabidjl" placeholder="ZTF object ID" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+            <input id="source-id" name="source-id" type="text" value="ZTF23aabidjl" placeholder="ZTF object ID" aria-describedby="alert-availability" autocomplete="off" autocapitalize="off" spellcheck="false" required>
             <div class="query-actions">
               <div id="model-picker" class="model-picker">
                 <input id="model-select" name="model" type="hidden" value="BTSv2-pro">

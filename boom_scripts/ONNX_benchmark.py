@@ -1,4 +1,4 @@
-"""Benchmark all three ORACLE-2 models on NVIDIA GPU 0.
+"""Benchmark all three ORACLE-2 models on the first visible NVIDIA GPU.
 
 Run from the repo root: python boom_scripts/ONNX_benchmark.py --lc-lengths 50 100 200
 Requires oracle, onnx, onnxruntime-gpu, and nvidia-ml-py.
@@ -76,7 +76,7 @@ def export_model(name, lc_length):
 def benchmark(case):
     name, lc_length, batch_size = case
     pynvml.nvmlInit()
-    gpu = pynvml.nvmlDeviceGetHandleByIndex(0)
+    gpus = [pynvml.nvmlDeviceGetHandleByIndex(i) for i in range(pynvml.nvmlDeviceGetCount())]
     session = ort.InferenceSession(str(OUTPUT_DIR / f"{name}.onnx"), providers=["CUDAExecutionProvider"])
     session.disable_fallback()
     inputs = make_inputs(name, batch_size, lc_length)
@@ -84,7 +84,7 @@ def benchmark(case):
     stop = threading.Event()
 
     def sample_vram():
-        processes = pynvml.nvmlDeviceGetComputeRunningProcesses(gpu)
+        processes = [p for gpu in gpus for p in pynvml.nvmlDeviceGetComputeRunningProcesses(gpu)]
         samples.append(sum(p.usedGpuMemory for p in processes if p.pid == os.getpid()) / 2**20)
 
     def monitor():

@@ -13,9 +13,10 @@
 #SBATCH --error=onnx-benchmark-%j.out
 
 set -e
+trap 'benchmark_status=$?; echo "Benchmark exited with status $benchmark_status" >&2' EXIT
 
 cd /projects/b1094/ved/code/Hierarchical-VT/
 module purge all
 
 echo "Running ONNX benchmark with $HOME/.conda/envs/oracle2/bin/python"
-exec "$HOME/.conda/envs/oracle2/bin/python" -u boom_scripts/ONNX_benchmark.py "$@"
+"$HOME/.conda/envs/oracle2/bin/python" -u -X faulthandler boom_scripts/ONNX_benchmark.py "$@"

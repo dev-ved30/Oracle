@@ -7,7 +7,9 @@ every 5 ms during warmup and inference. Latency includes host/device transfers.
 """
 
 import argparse
+from concurrent.futures import ProcessPoolExecutor
 import csv
+import faulthandler
 from itertools import product
 import multiprocessing as mp
 import os
@@ -60,6 +62,8 @@ def make_inputs(name, batch_size, lc_length):
 
 def export_model(name, lc_length):
     print(f"Exporting {name}...", flush=True)
+    torch.set_num_threads(1)
+    faulthandler.dump_traceback_later(60, repeat=True)
     model = ExportModel(get_model(name).cpu()).eval()
     model.model.load_state_dict(torch.load(CHECKPOINTS[name], map_location="cpu", weights_only=True))
     inputs = make_inputs(name, 1, lc_length)
@@ -72,6 +76,7 @@ def export_model(name, lc_length):
             input_names=list(inputs), output_names=["logits"], dynamic_axes=axes,
             opset_version=17, dynamo=False,
         )
+    faulthandler.cancel_dump_traceback_later()
     print(f"Exported {OUTPUT_DIR / f'{name}.onnx'}", flush=True)
 
 
@@ -82,6 +87,7 @@ def benchmark(case):
     gpus = [pynvml.nvmlDeviceGetHandleByIndex(i) for i in range(pynvml.nvmlDeviceGetCount())]
     session = ort.InferenceSession(str(OUTPUT_DIR / f"{name}.onnx"), providers=["CUDAExecutionProvider"])
     session.disable_fallback()
+    assert "CUDAExecutionProvider" in session.get_providers(), "CUDA provider failed to load"
     inputs = make_inputs(name, batch_size, lc_length)
     samples = []
     stop = threading.Event()
@@ -117,15 +123,16 @@ def main():
     for name in CHECKPOINTS:
         export_model(name, args.lc_lengths[0])
 
-    # A fresh worker for each case prevents CUDA arena reuse across batch sizes.
-    with mp.get_context("spawn").Pool(1, maxtasksperchild=1) as pool:
-        with (OUTPUT_DIR / "benchmark.csv").open("w", newline="") as file:
-            writer = csv.DictWriter(file, fieldnames=FIELDS)
-            writer.writeheader()
-            for result in pool.imap(benchmark, product(CHECKPOINTS, args.lc_lengths, BATCH_SIZES)):
-                writer.writerow(result)
-                file.flush()
-                print(result, flush=True)
+    with (OUTPUT_DIR / "benchmark.csv").open("w", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=FIELDS)
+        writer.writeheader()
+        for case in product(CHECKPOINTS, args.lc_lengths, BATCH_SIZES):
+            # Fresh workers release CUDA arenas and report abrupt termination.
+            with ProcessPoolExecutor(max_workers=1, mp_context=mp.get_context("spawn")) as executor:
+                result = executor.submit(benchmark, case).result()
+            writer.writerow(result)
+            file.flush()
+            print(result, flush=True)
     print(f"Results saved to {OUTPUT_DIR / 'benchmark.csv'}", flush=True)
 
 

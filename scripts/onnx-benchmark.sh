@@ -12,10 +12,10 @@
 #SBATCH --output=onnx-benchmark-%j.out
 #SBATCH --error=onnx-benchmark-%j.out
 
+set -e
+
 cd /projects/b1094/ved/code/Hierarchical-VT/
 module purge all
-conda init bash
-conda deactivate
-source activate oracle2
 
-exec python boom_scripts/ONNX_benchmark.py "$@"
+echo "Running ONNX benchmark with $HOME/.conda/envs/oracle2/bin/python"
+exec "$HOME/.conda/envs/oracle2/bin/python" -u boom_scripts/ONNX_benchmark.py "$@"

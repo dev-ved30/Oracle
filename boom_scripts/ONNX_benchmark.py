@@ -59,6 +59,7 @@ def make_inputs(name, batch_size, lc_length):
 
 
 def export_model(name, lc_length):
+    print(f"Exporting {name}...", flush=True)
     model = ExportModel(get_model(name).cpu()).eval()
     model.model.load_state_dict(torch.load(CHECKPOINTS[name], map_location="cpu", weights_only=True))
     inputs = make_inputs(name, 1, lc_length)
@@ -71,10 +72,12 @@ def export_model(name, lc_length):
             input_names=list(inputs), output_names=["logits"], dynamic_axes=axes,
             opset_version=17, dynamo=False,
         )
+    print(f"Exported {OUTPUT_DIR / f'{name}.onnx'}", flush=True)
 
 
 def benchmark(case):
     name, lc_length, batch_size = case
+    print(f"Benchmarking {name}: lc_length={lc_length}, batch_size={batch_size}", flush=True)
     pynvml.nvmlInit()
     gpus = [pynvml.nvmlDeviceGetHandleByIndex(i) for i in range(pynvml.nvmlDeviceGetCount())]
     session = ort.InferenceSession(str(OUTPUT_DIR / f"{name}.onnx"), providers=["CUDAExecutionProvider"])
@@ -123,6 +126,7 @@ def main():
                 writer.writerow(result)
                 file.flush()
                 print(result, flush=True)
+    print(f"Results saved to {OUTPUT_DIR / 'benchmark.csv'}", flush=True)
 
 
 if __name__ == "__main__":

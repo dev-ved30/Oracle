@@ -91,7 +91,7 @@ class BTS_LC_Dataset(torch.utils.data.Dataset):
                  parquet_file_path, 
                  mapper=None,
                  max_n_per_class=None, 
-                 include_postage_stamps=True, 
+                 include_postage_stamps=False, 
                  include_lc_plots=False, 
                  include_PS_images=False,
                  transform=None, 

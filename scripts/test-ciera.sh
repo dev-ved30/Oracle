@@ -19,23 +19,23 @@ source activate oracle2
 
 # Final inference runs after HPO sweeps:
 
-# oracle-test models/BTSv2/peachy-sweep-4
-# oracle-test models/BTSv2/rare-night-119
-# oracle-test models/BTSv2/winter-meadow-120
-# oracle-test models/BTSv2/rural-tree-121
-# oracle-test models/BTSv2/resilient-feather-125
+# oracle-test models/BTSv2/polar-sky-593
+# oracle-test models/BTSv2/legendary-frost-594
+# oracle-test models/BTSv2/lucky-thunder-595
+# oracle-test models/BTSv2/vague-thunder-596
+# oracle-test models/BTSv2/fancy-sponge-597
 
-# oracle-test models/BTSv2-lite/gentle-sweep-1
-# oracle-test models/BTSv2-lite/comfy-smoke-128
-# oracle-test models/BTSv2-lite/deft-monkey-129
-# oracle-test models/BTSv2-lite/flowing-feather-130
-# oracle-test models/BTSv2-lite/stilted-dawn-131
+# oracle-test models/BTSv2-lite/fast-aardvark-588
+# oracle-test models/BTSv2-lite/ethereal-water-589
+# oracle-test models/BTSv2-lite/dstellar-morning-590
+# oracle-test models/BTSv2-lite/blooming-rain-591
+# oracle-test models/BTSv2-lite/robust-resonance-592
 
-# oracle-test models/BTSv2-pro/woven-sweep-9 --batch_size 64
-# oracle-test models/BTSv2-pro/smooth-haze-141 --batch_size 64
-# oracle-test models/BTSv2-pro/splendid-sun-142 --batch_size 64
-# oracle-test models/BTSv2-pro/sweet-glade-143 --batch_size 64
-# oracle-test models/BTSv2-pro/dazzling-thunder-144 --batch_size 64
+# oracle-test models/BTSv2-pro/morning-feather-610 --batch_size 64
+# oracle-test models/BTSv2-pro/summer-feather-611 --batch_size 64
+# oracle-test models/BTSv2-pro/vivid-monkey-612 --batch_size 64
+# oracle-test models/BTSv2-pro/desert-cherry-613 --batch_size 64
+# oracle-test models/BTSv2-pro/celestial-jazz-614 --batch_size 64
 
 # oracle-test models/ELAsTiCCv2/icy-violet-168 --max_n_per_class 1000
 # oracle-test models/ELAsTiCCv2/dazzling-river-171 --max_n_per_class 1000

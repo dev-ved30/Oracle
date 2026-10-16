@@ -68,17 +68,17 @@ The script can be rerun to resume interrupted downloads and skip completed files
 
 ## ZTF data
 
-The public ZTF dataset is available in [this Google Drive folder](https://drive.google.com/drive/folders/1g7KBbTqmSHshTd3u-hruWfALEzJ6bvqi?usp=drive_link). Download its train, validation, and test splits into `data/BTSv3/` with:
+The public ZTF dataset is available in [this Google Drive folder](https://drive.google.com/drive/folders/1g7KBbTqmSHshTd3u-hruWfALEzJ6bvqi?usp=drive_link). Download its train, validation, and test splits into `data/BTS_public/` with:
 
 ```bash
 python -m pip install gdown
 bash scripts/download-ztf.sh
 ```
 
-The BTS dataloaders expect `train_PS_ZTF.parquet`, `val_PS_ZTF.parquet`, and `test_PS_ZTF.parquet` directly in `data/BTSv3/`. The script resumes partial downloads and skips existing files. If those splits are already present and you want the public versions, move the existing files elsewhere before running it.
+The BTS dataloaders expect `train_PS_ZTF.parquet`, `val_PS_ZTF.parquet`, and `test_PS_ZTF.parquet` directly in `data/BTS_public/`. The script resumes partial downloads and skips existing files. If those splits are already present and you want the public versions, move the existing files elsewhere before running it.
 
-> [!WARNING]
-> The ZTF models reported in the ORACLE-2 paper were trained on both public and partnership data. This download contains only public data, so results from training or evaluating on it will not exactly match the paper, though you should expect the same overall trends.
+<!-- > [!WARNING]
+> The ZTF models reported in the ORACLE-2 paper were trained on both public and partnership data. This download contains only public data, so results from training or evaluating on it will not exactly match the paper, though you should expect the same overall trends. -->
 
 # Classification Taxonomy
 

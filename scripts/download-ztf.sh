@@ -7,7 +7,7 @@ if ! command -v gdown >/dev/null 2>&1; then
 fi
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-data_dir="$repo_root/data/BTSv3"
+data_dir="$repo_root/data/BTS_public"
 mkdir -p "$data_dir"
 
 gdown "https://drive.google.com/drive/folders/1g7KBbTqmSHshTd3u-hruWfALEzJ6bvqi" \

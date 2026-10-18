@@ -68,7 +68,7 @@ The script can be rerun to resume interrupted downloads and skip completed files
 
 ## ZTF data
 
-The public ZTF dataset is available in [this Google Drive folder]([https://drive.google.com/drive/folders/1g7KBbTqmSHshTd3u-hruWfALEzJ6bvqi?usp=drive_link](https://drive.google.com/drive/folders/1g7KBbTqmSHshTd3u-hruWfALEzJ6bvqi?usp=sharing)). Download its train, validation, and test splits into `data/BTS_public/` with:
+The public ZTF dataset is available in [this Google Drive folder](https://drive.google.com/drive/folders/1g7KBbTqmSHshTd3u-hruWfALEzJ6bvqi?usp=sharing). Download its train, validation, and test splits into `data/BTS_public/` with:
 
 ```bash
 python -m pip install gdown

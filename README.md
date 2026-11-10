@@ -110,7 +110,7 @@ A trap we wanted to avoid was mixing different "metaphors" for classification. F
 
 # Machine learning architecture
 
-![](figures/model_arch.png)
+![](figures/oracle2_arch.png)
 
 Once again, we have much more detailed discussion in the paper.
 

@@ -80,6 +80,22 @@ The BTS dataloaders expect `train_PS_ZTF.parquet`, `val_PS_ZTF.parquet`, and `te
 <!-- > [!WARNING]
 > The ZTF models reported in the ORACLE-2 paper were trained on both public and partnership data. This download contains only public data, so results from training or evaluating on it will not exactly match the paper, though you should expect the same overall trends. -->
 
+## Models and architectures
+
+Each model in the papers corresponds to an architecture class in `src/oracle/architectures.py`. The `model_choice` strings accepted by `get_model` in `src/oracle/presets.py` (and the training/testing scripts) select the architecture and taxonomy for each dataset:
+
+| Model | Architecture class | Inputs | `model_choice` |
+|---|---|---|---|
+| ORACLE-1 (light curve only) | `GRU` | Light curves | `ELAsTiCC-lite`, `BTS-lite`, `ZTF_Sims-lite` |
+| ORACLE-1 | `GRU_MD` | Light curves + metadata | `ELAsTiCC`, `BTS` |
+| ORACLE-2 Lite | `GRU_Improved` | Light curves | `ELAsTiCCv2-lite`, `BTSv2-lite` |
+| ORACLE-2 | `GRU_MD_Improved` | Light curves + metadata | `ELAsTiCCv2`, `BTSv2` |
+| ORACLE-2 Omni | `GRU_MD_MM_Improved` | Light curves + metadata + images | `BTSv2-pro` |
+| Image Backbone (image only) | `ConvNeXt` | Images | `BTSv2_PSonly` |
+
+ORACLE-2 Omni is only trained for ZTF, since ELAsTiCC has no images. It is built from a trained ORACLE-2 (`GRU_MD_Improved`) model and a trained Image Backbone (`ConvNeXt`) model, whose weights are loaded and frozen, with only a small head trained on top of their concatenated embeddings.
+
+
 # Classification Taxonomy
 
 There is no universally correct classification taxonomy - however we want to build something that is able to best serve real world science cases. For obvious reasons, the leaf nodes need to be the true class of the object however what we decide for nodes higher up in the taxonomy is ultimately determined by the science case. 

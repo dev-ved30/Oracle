@@ -122,8 +122,11 @@ If you like what we're doing and want to contribute to the project, please start
 
 # Some cool results:
 
-Overall model performance:
+ Late-Time Re-brightening of AT 2025amdo Identified by ORACLE-2 Omni (https://www.wis-tns.org/astronotes/astronote/2026-201)
 
+![](figures/SN25amdo.png)
+
+Overall model performance:
 
 ![](figures/f1-performance.jpg)
 

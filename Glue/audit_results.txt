@@ -1,0 +1,51 @@
+Glue.ipynb cell 8:19: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+Glue.ipynb cell 17:33: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+Glue.ipynb cell 19:51: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+FRESH EXECUTION: all code cells passed; both saved CSVs match
+DATA 463528 unique IDs 463528 redshift null 0 outside bins 0
+True SLSN label/redshift mismatches 0
+Independent confusion counts and all rate-bin sums: PASS
+RESULTS
+                 P_lo           P_hi  FP fraction (lo)  FP fraction (hi)         R   sigma_R
+model                                                                                      
+naive   87479.942279  214902.616878          0.333526          0.136440  2.456593  0.009852
+O       94299.888861  367245.900995          0.309405          0.079841  3.894447  0.014217
+Fe     132071.387771  718339.825038          0.220917          0.040818  5.439027  0.016284
+TIME Fe naive curve 5-sigma day 67.71867188933598 displayed label 67.19323800825956 actual curve Z at label 4.633313845531738
+TIME O naive curve 5-sigma day 77.21488816234447 displayed label 75.65532631811371 actual curve Z at label 4.695701449425731
+TIME Fe O curve 5-sigma day 81.88599488161371 displayed label 76.52008547053981 actual curve Z at label 4.1832815976611615
+N_CLASS {'naive': {'lo': np.int64(60133), 'hi': np.int64(221008)}, 'O': {'lo': np.int64(63476), 'hi': np.int64(403463)}, 'Fe': {'lo': np.int64(94752), 'hi': np.int64(823247)}}
+ORACLE {'recall_lo': np.float64(0.8096381697890894), 'precision_lo': np.float64(0.556538685272521), 'recall_hi': np.float64(0.8242498984617282), 'precision_hi': np.float64(0.8469879612060491)}
+SIMPLIFIED_COUNTS naive {'lo': np.float64(87479.94227946112), 'hi': np.float64(215074.86517262744)} LEAKAGE {'lo': 9617.147593200034, 'hi': 3561.3254481446497}
+SIMPLIFIED_COUNTS O {'lo': np.float64(90186.56268106605), 'hi': np.float64(365463.38039646205)} LEAKAGE {'lo': 13779.894105666344, 'hi': 3826.364369905962}
+SIMPLIFIED_COUNTS Fe {'lo': np.float64(115508.8060793896), 'hi': np.float64(711470.2997723203)} LEAKAGE {'lo': 26376.180882139615, 'hi': 6120.184687352006}
+CONTAMINANTS_BY_CLASS
+ pred_label     hi    lo
+true_g                 
+SNII         1309  1994
+PISN          936   345
+SNIb/c        136   543
+ILOT          133    36
+SNIa          124   132
+TDE            80    97
+CART           79    23
+SNIax          77    23
+AGN            51    31
+uLens          19     0
+SNI91bg         7     1
+Dwarf Novae     4     0
+EB              2     0
+CALIBRATION_CONDITIONAL naive sigma_R 0.022721960410887768 Poisson 0.009852274180756192
+CALIBRATION_CONDITIONAL O sigma_R 0.036392323860380195 Poisson 0.014217364704513886
+CALIBRATION_CONDITIONAL Fe sigma_R 0.05438088873757885 Poisson 0.01628419705747699
+CALIBRATION_CONTRAST Fe naive 0.035850783160053155
+CALIBRATION_CONTRAST O naive 0.015367946466842895
+CALIBRATION_CONTRAST Fe O 0.02161934791365041
+FP_SYS Fe naive contrast derivative -1.0696754545271088 derivatives -1.7837630182949393 -0.7140875637678306 delta R 3.700884362009362
+FP_SYS O naive contrast derivative -0.6641213223858007 derivatives -1.3782088861536312 -0.7140875637678306 delta R 1.5937420917297342
+FP_SYS Fe O contrast derivative -0.4055541321413081 derivatives -1.7837630182949393 -1.3782088861536312 delta R 2.1071422702796276
+INVALID_INPUT_ACCEPTED 0 0.5 inf
+INVALID_INPUT_ACCEPTED -0.1 0.5 nan
+INVALID_INPUT_ACCEPTED 1.1 0.5 16.981367204917994
+INVALID_INPUT_ACCEPTED 0.8 0 inf
+INVALID_INPUT_ACCEPTED 0.8 1.1 37.550975509700685
